@@ -1,0 +1,23 @@
+<h1>Liste des beatmaps</h1>
+<div>
+slider http://www.eyecon.ro/bootstrap-slider/
+https://github.com/seiyria/bootstrap-slider
+</div>
+<div style="float:left;" ng-repeat="diff in filters.difficultiesRanges" >
+    <input type="checkbox" ng-model="diff.selected" id="filter_difficulty_{{$id}}" ng-change="draw()" />
+    <label for="filter_difficulty_{{$id}}" >{{diff.name}}</label>
+</div>
+<br />
+<br />
+<div ng-repeat="beatmap_set in beatmap_sets"  >
+    <!--<img src="http://b.ppy.sh/thumb/{{ beatmap.beatmap_id }}.jpg" />-->
+    {{ beatmap_set.name }} {{ beatmap_set._id }}
+    <ul>
+        <li ng-repeat="beatmap in beatmap_set.beatmaps">
+            {{ beatmap.difficulty }} - {{ beatmap.beatmap_id }} - {{ beatmap.title }}
+        </li>
+    </ul>
+    {{ beatmap_set.beatmapset_id }}
+    <a ng-click="downloadSet(beatmap_set)" >Download</a> - <a ng-click="playBeatmap(beatmap_set.beatmapset_id)"  >Listen</a>
+</div>
+<audio id="player" src="http://b.ppy.sh/preview/149685.mp3" type="audio/mp3" >
