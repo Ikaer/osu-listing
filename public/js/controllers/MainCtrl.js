@@ -53,7 +53,7 @@ angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$s
             beatmapIds:[]
         };
         _.each(beatmapSet.beatmaps,function(b){
-            filters.beatmapIds.push(b.beatmap_id);
+            filters.beatmapIds.push(b.title);
         });
         beatmapAPI.download(filters)
     }

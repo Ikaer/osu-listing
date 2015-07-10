@@ -80,10 +80,12 @@ module.exports = function (app) {
                         var filesToRezip = [];
                         _.each(files, function (file) {
                             if (S(file).endsWith('.osu')) {
+                               // if(filters.bea)
                                 console.log('osu file: ' + file);
-                                var read = fs.readFileSync(pathOfWorking + file, function (err, data) {
-                                    console.log(data);
-                                });
+                                //fs.readFile(pathOfWorking + 'osudownload_1/' + file,'utf-8', function(err, data){
+                                //    console.log(data);
+                                //});
+
                             }
                             else {
                                 filesToRezip.push(file)
