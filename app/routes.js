@@ -59,12 +59,12 @@ module.exports = function (app) {
         //    res.json(beatmaps); // return all beatmaps in JSON format
         //});
     });
-    app.get('/api/beatmaps/download', function (req, res)
+    app.get('/api/beatmaps/download', function (req, res) {
         var readyToDowload = Q.defer();
         var filters = req.query.f ? JSON.parse(req.query.f) : null;
         console.log(filters)
         var beatmapSet_Ids = filters.beatmapSet_Ids;
-var pathOfWorking = 'c:/osutest/'
+        var pathOfWorking = 'c:/osutest/'
 
         var file = fs.createWriteStream(pathOfWorking + 'osudownload_1.osz')
 
@@ -81,11 +81,11 @@ var pathOfWorking = 'c:/osutest/'
                         _.each(files, function (file) {
                             if (S(file).endsWith('.osu')) {
                                 console.log('osu file: ' + file);
-                                var read = fs.readFileSync(pathOfWorking + file, function(err, data){
+                                var read = fs.readFileSync(pathOfWorking + file, function (err, data) {
                                     console.log(data);
                                 });
                             }
-                            else{
+                            else {
                                 filesToRezip.push(file)
                             }
                         })
