@@ -13,11 +13,10 @@
     "method-override": "~2.0.2",
     "mongoose": "~3.8.0",
     "morgan": "^1.6.1",
+    "node-zip": "^1.1.1",
     "npm-flatten": "0.0.1",
     "q": "^1.4.1",
     "string": "^3.3.0",
-    "underscore": "^1.8.3",
-    "unzip": "^0.1.11",
-    "zlib": "^1.0.5"
+    "underscore": "^1.8.3"
   }
 }

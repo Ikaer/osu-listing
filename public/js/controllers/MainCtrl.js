@@ -4,9 +4,23 @@
 angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$scope', 'Beatmap', function ($scope, beatmapAPI) {
 
     // todo: -trier comme la version de base du site.
-    // todo: -reproduire les beatmap_sets
-    // todo: -filtrer les beatmpat_sets à partir des filtres
     // todo: scanner un  folder local pour récupérer le listing des beatmaps du user et en faire une "playlist"
+
+    $scope.converter ={
+        difficulty:{
+            '1': 'easy',
+            '2': 'normal',
+            '3': 'hard',
+            '4': 'insane',
+            '5': 'expert'
+        },
+        mode:{
+            '0' : 'osu',
+            '1' : 'taiko',
+            '2' : 'ctb',
+            '3' : 'osumania'
+        }
+    }
 
     $scope.filters = {
         difficultiesRanges: [
@@ -15,26 +29,17 @@ angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$s
             {difficulty: 3, selected: true, name:'Hard' },
             {difficulty: 4, selected: true, name:'Insane' },
             {difficulty: 5, selected: true, name:'Expert' }
-        ]
+        ],
+        pageSizes:[20, 40, 60, 80, 100],
+        pageSize:20,
+        pageIndex: 0
     };
-    //beatmapAPI.get(function (errMessage) {
-    //
-    //}, function (beatmaps) {
-    //    $scope.beatmaps = beatmaps.slice(0, 100);
-    //})
-    //beatmapAPI.getDifficultyRange(function (err) {
-    //}, function (range) {
-    //    console.log(range);
-    //    for (var i = range.min; i <= range.max; i++) {
-    //        $scope.filters.difficultiesRanges.push({difficulty: i, selected: true});
-    //    }
-    //})
 
     $scope.draw = function(){
         beatmapAPI.get(function (errMessage) {
 
         }, function (beatmaps) {
-            $scope.beatmap_sets = beatmaps.slice(0, 100);
+            $scope.packs = beatmaps;
         }, $scope.filters);
     }
     $scope.draw();
@@ -45,17 +50,6 @@ angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$s
         zik.setAttribute('src', 'http://b.ppy.sh/preview/' + beatmapId + '.mp3');
         zik.play();
     }
-    $scope.downloadSet=function(beatmapSet){
-        console.log(JSON.stringify(beatmapSet))
 
-        var filters = {
-            beatmapSet_Ids: beatmapSet.beatmapset_id ,
-            beatmapIds:[]
-        };
-        _.each(beatmapSet.beatmaps,function(b){
-            filters.beatmapIds.push(b.title);
-        });
-        beatmapAPI.download(filters)
-    }
 }]);
 

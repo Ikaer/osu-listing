@@ -1,7 +1,5 @@
-/**
- * Created by Xavier on 01/07/2015.
- */
 var mongoose = require('mongoose');
+
 module.exports = mongoose.model('Beatmap', {
     "approved"         : Number,                   // 3 = qualified, 2 = approved, 1 = ranked, 0 = pending, -1 = WIP, -2 = graveyard
     "approved_date"    : Date, // date ranked, UTC+8 for now
@@ -12,6 +10,7 @@ module.exports = mongoose.model('Beatmap', {
     "bpm"              : Number,
     "creator"          : String,
     "difficultyrating" : Number,             // The amount of stars the map would have ingame and on the website
+    "difficulty"       : Number,
     "diff_size"        : Number,                   // Circle size value (CS)
     "diff_overall"     : Number,                   // Overall difficulty (OD)
     "diff_approach"    : Number,                   // Approach Rate (AR)
@@ -22,4 +21,4 @@ module.exports = mongoose.model('Beatmap', {
     "total_length"     : Number,                 // seconds from first note to last note including breaks
     "version"          : String,            // difficulty name
     "mode"             : Number                    // game mode
-});
+}, 'beatmaps');

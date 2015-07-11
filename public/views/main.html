@@ -1,23 +1,41 @@
 <h1>Liste des beatmaps</h1>
-<div>
-slider http://www.eyecon.ro/bootstrap-slider/
-https://github.com/seiyria/bootstrap-slider
+<div class="table">
+    <div class="row">
+        <div class="cell">
+            <div style="float:left;padding:2px;" ng-repeat="diff in filters.difficultiesRanges">
+                <input type="checkbox" ng-model="diff.selected" id="filter_difficulty_{{$id}}" ng-change="draw()"/>
+                <label for="filter_difficulty_{{$id}}">{{diff.name}}</label>
+            </div>
+        </div>
+        <div class="cell">
+            <img src="/img/listing1.png" style="width:32px;" />
+            <select ng-change="draw()" ng-model="filters.pageSize"
+                    ng-options="pageSize as pageSize for pageSize in filters.pageSizes"></select>
+        </div>
+    </div>
 </div>
-<div style="float:left;" ng-repeat="diff in filters.difficultiesRanges" >
-    <input type="checkbox" ng-model="diff.selected" id="filter_difficulty_{{$id}}" ng-change="draw()" />
-    <label for="filter_difficulty_{{$id}}" >{{diff.name}}</label>
+<div class="table">
+    <div ng-repeat="pack in packs" class="row" >
+        <!--<img src="http://b.ppy.sh/thumb/{{ pack.beatmapset_id }}.jpg" />-->
+        <div class="cell" >{{ pack.name }}</div>
+        <div class="cell" ><div style="height:60px;width:80px;background-color:grey;margin:1px;"></div></div>
+        <div class="cell" >
+            <div ng-repeat="beatmap in pack.beatmaps" style="float:left;">
+                <img src="/img/mode/{{converter.mode[beatmap.mode]}}/{{converter.difficulty[beatmap.difficulty]}}.png"
+                     alt="created by {{beatmap.creator}}" title="created by {{beatmap.creator}}"/>
+            </div>
+        </div>
+        <div class="cell" >
+            <a target="_self" href="{{pack.downloadLink}}"
+               download="{{pack.downloadName}}">
+                <img src="/img/arrow457.png" style="width:50px;">
+            </a>
+        </div>
+        <div class="cell" >
+            <a ng-click="playBeatmap(pack.beatmapset_id)" style="cursor:pointer;">
+                <img src="/img/play43.png" style="width:50px;">
+            </a>
+        </div>
+    </div>
+    <audio id="player" src="http://b.ppy.sh/preview/149685.mp3" type="audio/mp3">
 </div>
-<br />
-<br />
-<div ng-repeat="beatmap_set in beatmap_sets"  >
-    <!--<img src="http://b.ppy.sh/thumb/{{ beatmap.beatmap_id }}.jpg" />-->
-    {{ beatmap_set.name }} {{ beatmap_set._id }}
-    <ul>
-        <li ng-repeat="beatmap in beatmap_set.beatmaps">
-            {{ beatmap.difficulty }} - {{ beatmap.beatmap_id }} - {{ beatmap.title }}
-        </li>
-    </ul>
-    {{ beatmap_set.beatmapset_id }}
-    <a ng-click="downloadSet(beatmap_set)" >Download</a> - <a ng-click="playBeatmap(beatmap_set.beatmapset_id)"  >Listen</a>
-</div>
-<audio id="player" src="http://b.ppy.sh/preview/149685.mp3" type="audio/mp3" >
