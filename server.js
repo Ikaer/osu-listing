@@ -11,6 +11,7 @@ var morgan = require('morgan');
 mongoose.connect('mongodb://127.0.0.1:27017/OSU');
 
 app.use(express.static(__dirname + '/public'));                 // set the static files location /public/img will be /img for users
+app.use("/media", express.static('G:/osu library'));
 app.use(bodyParser.urlencoded({'extended':'true'}));            // parse application/x-www-form-urlencoded
 app.use(bodyParser.json());                                     // parse application/json
 app.use(bodyParser.json({ type: 'application/vnd.api+json' })); // parse application/vnd.api+json as json

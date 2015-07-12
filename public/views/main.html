@@ -18,8 +18,10 @@
     <div ng-repeat="pack in packs" class="row" >
         <!--<img src="http://b.ppy.sh/thumb/{{ pack.beatmapset_id }}.jpg" />-->
         <div class="cell" >{{ pack.name }}</div>
-        <div class="cell" ><div style="height:60px;width:80px;background-color:grey;margin:1px;"></div></div>
         <div class="cell" >
+            <img src="/media/{{pack.beatmapset_id}}/{{pack.beatmapset_id}}.jpg" />
+        </div>
+        <div class="cell" style="width:15%">
             <div ng-repeat="beatmap in pack.beatmaps" style="float:left;">
                 <img src="/img/mode/{{converter.mode[beatmap.mode]}}/{{converter.difficulty[beatmap.difficulty]}}.png"
                      alt="created by {{beatmap.creator}}" title="created by {{beatmap.creator}}"/>

@@ -6,8 +6,8 @@ var Q = require('q');
 var _ = require('underscore');
 var http = require('http');
 var fs = require('fs');
+var JSZip = require("jszip");
 var S = require('string');
-var nodeZip = require('node-zip');
 var util = require('util');
 function QueryTools() {
     this.pipes = {
@@ -163,6 +163,24 @@ module.exports = function (app) {
         var beatmapsAreReady = Q.defer();
         var filters = req.query.f ? JSON.parse(req.query.f) : null;
         console.log(filters);
+
+
+
+
+
+
+// read a zip file
+        fs.readFile("G:\\288\\288.zip", function(err, data) {
+            if (err) throw err;
+            var zip = new JSZip(data);
+            zip.remove("Ikkitousen Dragon Destiny OP.mp3");
+            var buffer = zip.generate({type:"nodebuffer"});
+
+            fs.writeFile("G:\\288\\test.zip", buffer, function(err) {
+                if (err) throw err;
+            });
+        });
+
 
         var zip = nodeZip();
         BeatmapWithData.find({'beatmap_id': {$in: filters.beatmapsIds}}, function (err, beatmapsWithData) {

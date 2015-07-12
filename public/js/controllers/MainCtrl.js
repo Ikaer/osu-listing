@@ -47,9 +47,8 @@ angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$s
     $scope.playBeatmap = function(beatmapId){
         console.log(beatmapId)
         var zik = document.getElementById('player')
-        zik.setAttribute('src', 'http://b.ppy.sh/preview/' + beatmapId + '.mp3');
+        zik.setAttribute('src', '/media/' + beatmapId +  '/' + beatmapId + '.mp3');
         zik.play();
     }
-
 }]);
 
