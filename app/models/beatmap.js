@@ -20,5 +20,6 @@ module.exports = mongoose.model('Beatmap', {
     "title"            : String,      // song name
     "total_length"     : Number,                 // seconds from first note to last note including breaks
     "version"          : String,            // difficulty name
-    "mode"             : Number                    // game mode
+    "mode"             : Number,                    // game mode
+    "xFileName"        : String
 }, 'beatmaps');

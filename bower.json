@@ -8,6 +8,7 @@
     "bootstrap": "latest",
     "font-awesome": "latest",
     "jquery": "latest",
-    "underscore": "latest"
+    "underscore": "latest",
+    "angular-bootstrap": "~0.13.0"
   }
 }

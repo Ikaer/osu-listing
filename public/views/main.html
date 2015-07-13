@@ -1,25 +1,66 @@
-<h1>Liste des beatmaps</h1>
+<script type="text/ng-template" id="creatorTemplate.html">
+    <a>
+        {{match.model.name }} ({{match.model.beatmapCount}})
+    </a>
+</script>
 <div class="table">
     <div class="row">
         <div class="cell">
-            <div style="float:left;padding:2px;" ng-repeat="diff in filters.difficultiesRanges">
-                <input type="checkbox" ng-model="diff.selected" id="filter_difficulty_{{$id}}" ng-change="draw()"/>
-                <label for="filter_difficulty_{{$id}}">{{diff.name}}</label>
+            <div class="cell tag-box" >
+                <button class="tag btn btn-default .btn-sm" ng-repeat="tag in filters.tags" ng-click="removeTag(tag.tagId)"  ng-class="tag.classes">
+                    {{tag.label }}
+                </button>
             </div>
-        </div>
-        <div class="cell">
-            <img src="/img/listing1.png" style="width:32px;" />
-            <select ng-change="draw()" ng-model="filters.pageSize"
-                    ng-options="pageSize as pageSize for pageSize in filters.pageSizes"></select>
         </div>
     </div>
 </div>
 <div class="table">
-    <div ng-repeat="pack in packs" class="row" >
+    <div class="row">
+        <div class="cell">
+            <input type="text"
+                   placeholder="Add a difficulty" typeahead-loading="loadingLocations"
+                   typeahead="x.name for x in getDifficulties()"
+                   ng-model="selectedDifficulty"
+                   typeahead-on-select="addDifficulty($item)"
+                   class="form-control"/>
+            <i ng-show="loadingLocations" class="glyphicon glyphicon-refresh"></i>
+        </div>
+        <div class="cell">
+            <input type="text"
+                   placeholder="Add a mode" typeahead-loading="loadingLocations"
+                   typeahead="x.name for x in getDifficulties()"
+                   ng-model="selectedDifficulty"
+                   typeahead-on-select="addDifficulty($item)"
+                   class="form-control"/>
+            <i ng-show="loadingLocations" class="glyphicon glyphicon-refresh"></i>
+        </div>
+        <div class="cell">
+            <input type="text"
+                   placeholder="Search a creator"
+                   typeahead-template-url="creatorTemplate.html" typeahead-loading="loadingLocations"
+                   typeahead="x.creator as x.creator for x in getCreators($viewValue)"
+                   ng-model="selectedCreator"
+                   typeahead-on-select="addCreator($item, $model, $label)"
+                   class="form-control"/>
+            <i ng-show="loadingLocations" class="glyphicon glyphicon-refresh"></i>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="cell">
+        <div style="float:left;padding:2px;" ng-repeat="diff in filters.difficultiesRanges">
+            <input type="checkbox" ng-model="diff.selected" id="filter_difficulty_{{$id}}" ng-change="draw()"/>
+            <label for="filter_difficulty_{{$id}}">{{diff.name}}</label>
+        </div>
+    </div>
+
+</div>
+<div class="table">
+    <div ng-repeat="pack in packs" class="row">
         <!--<img src="http://b.ppy.sh/thumb/{{ pack.beatmapset_id }}.jpg" />-->
-        <div class="cell" >{{ pack.name }}</div>
-        <div class="cell" >
-            <img src="/media/{{pack.beatmapset_id}}/{{pack.beatmapset_id}}.jpg" />
+        <div class="cell">{{ pack.name }}</div>
+        <div class="cell">
+            <img src="/media/{{pack.beatmapset_id}}/{{pack.beatmapset_id}}.jpg"/>
         </div>
         <div class="cell" style="width:15%">
             <div ng-repeat="beatmap in pack.beatmaps" style="float:left;">
@@ -27,17 +68,22 @@
                      alt="created by {{beatmap.creator}}" title="created by {{beatmap.creator}}"/>
             </div>
         </div>
-        <div class="cell" >
+        <div class="cell">
             <a target="_self" href="{{pack.downloadLink}}"
                download="{{pack.downloadName}}">
                 <img src="/img/arrow457.png" style="width:50px;">
             </a>
         </div>
-        <div class="cell" >
+        <div class="cell">
             <a ng-click="playBeatmap(pack.beatmapset_id)" style="cursor:pointer;">
                 <img src="/img/play43.png" style="width:50px;">
             </a>
         </div>
     </div>
-    <audio id="player" src="http://b.ppy.sh/preview/149685.mp3" type="audio/mp3">
+    <audio id="player" src="http://b.ppy.sh/preview/149685.mp3" type="audio/mp3" ></audio>
+</div>
+<div class="cell">
+    <img src="/img/listing1.png" style="width:32px;"/>
+    <select ng-change="draw()" ng-model="filters.pageSize"
+            ng-options="pageSize as pageSize for pageSize in filters.pageSizes"></select>
 </div>

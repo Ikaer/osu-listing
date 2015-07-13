@@ -1,14 +1,18 @@
-var BeatmapWithData = require('./models/beatmapWithData');
 var Beatmap = require('./models/beatmap');
 var BeatmapSet = require('./models/beatmapSet');
 
-var Q = require('q');
+
+var nconf = require('nconf');
+nconf.file({file: 'config.json'});
+
 var _ = require('underscore');
 var http = require('http');
 var fs = require('fs');
 var JSZip = require("jszip");
 var S = require('string');
 var util = require('util');
+
+
 function QueryTools() {
     this.pipes = {
         projects: {
@@ -51,17 +55,9 @@ QueryTools.prototype.searchCreators = function (callback, search, sort) {
         sortFitler['creator'] = 1
     }
     if (search && search !== '') {
-        //db.users.find({name: /a/})  //like '%a%'
-        //out: paulo, patric
-        //
-        //db.users.find({name: /^pa/}) //like 'pa%'
-        //out: paulo, patric
-        //
-        //db.users.find({name: /ro$/}) //like '%ro'
-
         var regex = new RegExp(search, 'i');
         pipeline.push({
-            $match:{
+            $match: {
                 creator: regex
             }
         })
@@ -71,21 +67,22 @@ QueryTools.prototype.searchCreators = function (callback, search, sort) {
             _id: {
                 "creator": "$creator"
             },
-            creator: {$first: "$creator"},
+            name: {$first: "$creator"},
             beatmapCount: {$sum: 1}
         }
     })
     pipeline.push({
         $project: {
             _id: 0,
-            creator: 1,
+            name: 1,
             beatmapCount: 1
         }
     });
 
 
+
     Beatmap.aggregate(pipeline)
-        .sort({'creator': 1})
+        .sort({'beatmapCount': -1})
         .exec(callback);
 }
 var queryTools = new QueryTools();
@@ -117,7 +114,7 @@ module.exports = function (app) {
         };
 
         var matchPipeline = {
-            $match: {}
+            $match: {$and: []}
         };
 
         if (filters && filters.groupBy) {
@@ -125,16 +122,40 @@ module.exports = function (app) {
                 groupPipe.$group._id[gb] = "$" + gb;
             });
         }
-        if (filters && filters.difficulties) {
-            matchPipeline.$match.difficulty = {
-                $in: filters.difficulties
-            }
+
+        if (filters && filters.tags) {
+            var groupedTags = _.groupBy(filters.tags, 'type');
+            _.each(groupedTags, function (v, k) {
+                if ('creator' === k) {
+                    var creatorsFilters = _.map(v, function (creator) {
+                        return creator.model.name;
+                    });
+                    matchPipeline.$match.$and.push({
+                        creator: {
+                            $in: creatorsFilters
+                        }
+                    });
+                }
+                else if('difficulty' === k){
+                    var difficultiesFilter = _.map(v, function (difficulty) {
+                        return difficulty.model.value;
+                    });
+                    matchPipeline.$match.$and.push({
+                        difficulty: {
+                            $in: difficultiesFilter
+                        }
+                    });
+                }
+            });
         }
+
         var aggregatePipeline = [];
         aggregatePipeline.push(matchPipeline);
         aggregatePipeline.push(queryTools.pipes.projects.cleanBeatmap);
         aggregatePipeline.push({$sort: {'difficultyrating': 1}});
         aggregatePipeline.push(groupPipe);
+
+        console.log(JSON.stringify(aggregatePipeline))
 
         var query = Beatmap.aggregate(aggregatePipeline);
         query.sort({'name': 1});
@@ -143,7 +164,7 @@ module.exports = function (app) {
 
         query.exec(function (err, packs) {
             if (err) {
-                res.send(err);
+                res.send([]);
             }
             else {
                 _.each(packs, function (pack) {
@@ -159,54 +180,55 @@ module.exports = function (app) {
         })
     });
     app.get('/api/beatmaps/download', function (req, res) {
-        var beatmapSetIsReady = Q.defer();
-        var beatmapsAreReady = Q.defer();
+        //var beatmapSetIsReady = Q.defer();
+        //var beatmapsAreReady = Q.defer();
         var filters = req.query.f ? JSON.parse(req.query.f) : null;
         console.log(filters);
 
 
-
-
-
-
-// read a zip file
-        fs.readFile("G:\\288\\288.zip", function(err, data) {
-            if (err) throw err;
-            var zip = new JSZip(data);
-            zip.remove("Ikkitousen Dragon Destiny OP.mp3");
-            var buffer = zip.generate({type:"nodebuffer"});
-
-            fs.writeFile("G:\\288\\test.zip", buffer, function(err) {
-                if (err) throw err;
-            });
-        });
-
-
-        var zip = nodeZip();
-        BeatmapWithData.find({'beatmap_id': {$in: filters.beatmapsIds}}, function (err, beatmapsWithData) {
-            _.each(beatmapsWithData, function (map) {
-                zip.file(map.xFile.name, map.xFile.data);
-            });
-            beatmapsAreReady.resolve();
-        });
         BeatmapSet.findOne({'beatmapset_id': filters.beatmapSetId}, function (err, beatmapSet) {
-            _.each(beatmapSet.xFiles, function (xF) {
-                zip.file(xF.name, xF.data);
-            });
-            var fileName = util.format('%s %s - %s.osz', beatmapSet.beatmapset_id, beatmapSet.artist, beatmapSet.title);
-            beatmapSetIsReady.resolve(fileName);
-        });
 
-        Q.allSettled([beatmapSetIsReady.promise, beatmapsAreReady.promise]).then(function (results) {
-            var data = zip.generate({base64: false, compression: 'DEFLATE'});
-            var headers = {
-                'Content-Disposition': 'attachment;filename="' + results[0].value + '"',
-                'Content-Length': data.length,
-                'Content-Type': 'application/download'
-            };
-            res.writeHead(200, headers);
-            res.write(data, 'binary');
-            res.end();
+            var fileName = util.format('%s %s - %s.osz', beatmapSet.beatmapset_id, beatmapSet.artist, beatmapSet.title);
+
+            Beatmap.find({'beatmapset_id': filters.beatmapSetId}, function (err, allBeatmaps) {
+                var excludedBeatmaps = _.filter(allBeatmaps, function (beatmap) {
+                    return (undefined === _.find(filters.beatmapsIds, function (selectedId) {
+                        return beatmap.beatmap_id === selectedId;
+                    }));
+                });
+
+                fs.readFile(nconf.get('stuffPath') + filters.beatmapSetId + '/' + filters.beatmapSetId + '.osz', function (err, data) {
+                    if (err) throw err;
+                    var zip = new JSZip(data);
+                    _.each(excludedBeatmaps, function (excludedBeatmap) {
+                        var replaceInvalidCharacters = excludedBeatmap.xFileName.replace(/[\/:*?"<>|.]/g, "");
+                        var cleanExtenstion = S(replaceInvalidCharacters).left(replaceInvalidCharacters.length - 3).toString();
+                        var addExtension = cleanExtenstion + '.osu';
+
+                        zip.remove(addExtension);
+                    });
+                    try {
+                        //var buffer = zip.generate({type: "nodebuffer"});
+                        var buffer = zip.generate({base64: false, compression: 'DEFLATE'});
+                        //var data = zip.generate({base64: false, compression: 'DEFLATE'});
+                        var headers = {
+                            'Content-Disposition': 'attachment;filename="' + fileName + '"',
+                            'Content-Length': buffer.length,
+                            'Content-Type': 'application/download'
+                        };
+                        res.writeHead(200, headers);
+                        res.write(buffer, 'binary');
+                        res.end();
+                        res.on('finish', function (err) {
+                            console.log('fichier téléchargé');
+                        });
+                    }
+                    catch (e) {
+                        throw e;
+                    }
+                });
+
+            });
         });
     });
     app.get('/api/authors', function (req, res) {
@@ -215,7 +237,7 @@ module.exports = function (app) {
         });
     });
     app.get('/api/authors/:search', function (req, res) {
-        queryTools.searchCreators( function (error, creators) {
+        queryTools.searchCreators(function (error, creators) {
             res.json(creators);
         }, req.params.search);
     });

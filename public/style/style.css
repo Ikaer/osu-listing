@@ -8,6 +8,36 @@
 }
 
 .cell {
-    vertical-align:top;
+    vertical-align: top;
     display: table-cell;
 }
+
+.tag-box .tag {
+    display: inline-block;
+    margin: 1px;
+}
+
+
+
+
+/*.tag-box .tag.difficulty.easy {*/
+    /**/
+/*}*/
+/*.tag-box .tag.difficulty.normal {*/
+    /*background-color: #7AAC01;*/
+    /*border-color: #496701*/
+/*}*/
+/*.tag-box .tag.difficulty.hard {*/
+    /*background-color: #E18B4B;*/
+    /*border-color: #704626*/
+/*}*/
+/*.tag-box .tag.difficulty.insane {*/
+    /*background-color: #7AAC01;*/
+    /*border-color: #496701*/
+/*}*/
+/*.tag-box .tag.difficulty.expert {*/
+    /*background-color: #A95A96;*/
+    /*border-color: #65365A*/
+/*}*/
+
+
