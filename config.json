@@ -1,4 +1,5 @@
 {
   "stuffPath":"G:/osu library/",
-  "mongodbPath" : "mongodb://127.0.0.1:27017/OSU"
+  "mongodbPath" : "mongodb://127.0.0.1:27017/OSU",
+  "port":8080
 }

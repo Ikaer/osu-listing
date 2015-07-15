@@ -31,5 +31,5 @@ var Beatmap = require('./app/models/beatmap')
 
 
 // listen (start app with node server.js) ======================================
-app.listen(8080);
-console.log("App listening on port 8080");
+app.listen(nconf.get('port'));
+console.log("App listening on port " + process.env.PORT);
