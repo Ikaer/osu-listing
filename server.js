@@ -20,6 +20,11 @@ app.use(bodyParser.json());                                     // parse applica
 app.use(bodyParser.json({ type: 'application/vnd.api+json' })); // parse application/vnd.api+json as json
 app.use(methodOverride());
 app.use(morgan('dev'));
+var fs = require('fs')
+// create a write stream (in append mode)
+var accessLogStream = fs.createWriteStream(__dirname + '/access.log', {flags: 'a'})
+//app.use(morgan('dev'));
+app.use(morgan('combined', {stream: accessLogStream}))
 
 var Beatmap = require('./app/models/beatmap')
  require('./app/routes')(app);
