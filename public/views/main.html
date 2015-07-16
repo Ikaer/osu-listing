@@ -7,7 +7,13 @@
     <div class="row">
         <div class="cell">
             <div class="cell tag-box" >
-                <button class="tag btn btn-default .btn-sm" ng-repeat="tag in filters.tags" ng-click="removeTag(tag.tagId)"  ng-class="tag.classes">
+                <div class="btn-group" data-toggle="buttons" role="group"  >
+                    <label class="btn btn-default btn-sm active" ng-repeat="difficulty in difficulties">
+                        <img src="/img/mode/osu/{{converter.difficulty[difficulty.value]}}.png" style="vertical-align: top;" />
+                        <input type="checkbox"   >{{difficulty.name}}
+                    </label>
+                </div>
+                <button class="tag btn btn-default btn-sm" ng-repeat="tag in filters.tags" ng-click="removeTag(tag.tagId)"  ng-class="tag.classes">
                     {{tag.label }}
                 </button>
             </div>

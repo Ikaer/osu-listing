@@ -40,7 +40,7 @@ angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$s
     var tagId = 0;
 
     var listingTools = new Listingtools();
-
+    $scope.difficulties = listingTools.difficulties;
 
 
 

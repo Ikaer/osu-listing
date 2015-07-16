@@ -31,5 +31,9 @@ var Beatmap = require('./app/models/beatmap')
 
 
 // listen (start app with node server.js) ======================================
-app.listen(nconf.get('port'));
-console.log("App listening on port " + process.env.PORT);
+var portToList = process.env.PORT === undefined ? '80' : process.env.PORT;
+ app.listen(portToList);
+console.log('App is listing on ' + portToList);
+
+
+

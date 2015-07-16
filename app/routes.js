@@ -1,3 +1,5 @@
+// todo: create rss feed about creator with download link
+
 var Beatmap = require('./models/beatmap');
 var BeatmapSet = require('./models/beatmapSet');
 
@@ -220,7 +222,7 @@ module.exports = function (app) {
                         res.write(buffer, 'binary');
                         res.end();
                         res.on('finish', function (err) {
-                            console.log('fichier téléchargé');
+                            console.log('fichier tï¿½lï¿½chargï¿½');
                         });
                     }
                     catch (e) {
