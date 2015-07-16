@@ -5,41 +5,36 @@
 </script>
 <div class="table">
     <div class="row">
-        <div class="cell">
-            <div class="cell tag-box" >
-                <div class="btn-group" data-toggle="buttons" role="group"  >
-                    <label class="btn btn-default btn-sm active" ng-repeat="difficulty in difficulties" >
-                        <img src="/img/mode/osu/{{converter.difficulty[difficulty.value]}}.png" style="vertical-align: top;"/>
-                        <input type="checkbox"   ng-model="difficulty.active"  ng-change="draw()" >{{difficulty.name}}
-                    </label>
-                </div>
-                <button class="tag btn btn-default btn-sm" ng-repeat="tag in filters.tags" ng-click="removeTag(tag.tagId)"  ng-class="tag.classes">
-                    {{tag.label }}
-                </button>
+        <div class="cell" >
+            <div class="btn-group">
+                <label ng-model="d.active" ng-change="draw()" btn-checkbox class="btn btn-default"
+                       ng-repeat="d in constants.difficulties">
+                    <img src="/img/mode/osu/{{constants.converter.difficulty[d.value]}}.png"
+                         style="vertical-align: top;"/>
+                    {{d.name}}
+                </label>
             </div>
+            <div class="btn-group">
+                <label ng-model="m.active" ng-change="draw()" btn-checkbox class="btn btn-default"
+                       ng-repeat="m in constants.modes">
+                    <img src="/img/mode/{{constants.converter.mode[m.value]}}/mode.gif" style="vertical-align: top;"/>
+                    {{m.name}}
+                </label>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="cell tag-box">
+            <button class="tag btn btn-default" ng-repeat="tag in tags" ng-click="removeTag(tag.tagId)"
+                    ng-class="tag.classes">
+                <img src="/img/{{tag.type}}.png"  style="vertical-align: top;width:20px;"/>
+                {{ tag.label }}
+            </button>
         </div>
     </div>
 </div>
 <div class="table">
     <div class="row">
-        <div class="cell">
-            <input type="text"
-                   placeholder="Add a difficulty" typeahead-loading="loadingLocations"
-                   typeahead="x.name for x in getDifficulties()"
-                   ng-model="selectedDifficulty"
-                   typeahead-on-select="addDifficulty($item)"
-                   class="form-control"/>
-            <i ng-show="loadingLocations" class="glyphicon glyphicon-refresh"></i>
-        </div>
-        <div class="cell">
-            <input type="text"
-                   placeholder="Add a mode" typeahead-loading="loadingLocations"
-                   typeahead="x.name for x in getDifficulties()"
-                   ng-model="selectedDifficulty"
-                   typeahead-on-select="addDifficulty($item)"
-                   class="form-control"/>
-            <i ng-show="loadingLocations" class="glyphicon glyphicon-refresh"></i>
-        </div>
         <div class="cell">
             <input type="text"
                    placeholder="Search a creator"
@@ -52,15 +47,6 @@
         </div>
     </div>
 </div>
-<div class="row">
-    <div class="cell">
-        <div style="float:left;padding:2px;" ng-repeat="diff in filters.difficultiesRanges">
-            <input type="checkbox" ng-model="diff.selected" id="filter_difficulty_{{$id}}" ng-change="draw()"/>
-            <label for="filter_difficulty_{{$id}}">{{diff.name}}</label>
-        </div>
-    </div>
-
-</div>
 <div class="table">
     <div ng-repeat="pack in packs" class="row beatmapset">
         <!--<img src="http://b.ppy.sh/thumb/{{ pack.beatmapset_id }}.jpg" />-->
@@ -70,7 +56,7 @@
         </div>
         <div class="cell" style="width:15%">
             <div ng-repeat="beatmap in pack.beatmaps" style="float:left;">
-                <img src="/img/mode/{{converter.mode[beatmap.mode]}}/{{converter.difficulty[beatmap.difficulty]}}.png"
+                <img src="/img/mode/{{constants.converter.mode[beatmap.mode]}}/{{constants.converter.difficulty[beatmap.difficulty]}}.png"
                      alt="created by {{beatmap.creator}}" title="created by {{beatmap.creator}}"/>
             </div>
         </div>
@@ -86,10 +72,10 @@
             </a>
         </div>
     </div>
-    <audio id="player" src="http://b.ppy.sh/preview/149685.mp3" type="audio/mp3" ></audio>
+    <audio id="player" src="http://b.ppy.sh/preview/149685.mp3" type="audio/mp3"></audio>
 </div>
 <div class="cell">
     <img src="/img/listing1.png" style="width:32px;"/>
-    <select ng-change="draw()" ng-model="filters.pageSize"
-            ng-options="pageSize as pageSize for pageSize in filters.pageSizes"></select>
+    <select ng-change="draw()" ng-model="pageSize"
+            ng-options="pageSize as pageSize for pageSize in constants.pageSizes"></select>
 </div>

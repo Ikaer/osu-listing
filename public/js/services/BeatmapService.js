@@ -9,29 +9,15 @@ angular.module('BeatmapService', []).factory('Beatmap', ['$http', function ($htt
 
     return {
         // call to get all nerds
-        get: function (err, fnCallbackWithData, filters) {
+        get: function (err, fnCallbackWithData, pageIndex, pageSize, filters) {
 
-            var url = '/api/beatmaps/' + filters.pageIndex + '/' + filters.pageSize + '/';
+
+            var url = '/api/beatmaps/' + pageIndex + '/' + pageSize + '/';
+
             if (filters) {
-                var urlFilter = {};
-                if (filters.difficultiesRanges && filters.difficultiesRanges.length > 0) {
-                    var selectedFilters = _.where(filters.difficultiesRanges, {selected: true});
-                    urlFilter.difficulties = _.map(selectedFilters, function (dr) {
-                        return dr.difficulty;
-                    })
-                }
-
-                urlFilter.tags = filters.tags;
-
-
-                //urlFilter.groupBy = ['difficulty']
-
-                if (JSON.stringify(urlFilter) !== '{}') {
-                    url += '?f=' + JSON.stringify(urlFilter);
-                }
-
+                url += '?f=' + JSON.stringify(filters);
             }
-
+            console.log(url);
             $http.get(url).
                 success(function (data, status, headers, config) {
                     fnCallbackWithData(data)

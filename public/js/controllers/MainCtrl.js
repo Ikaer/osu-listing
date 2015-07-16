@@ -1,49 +1,23 @@
 /**
  * Created by Xavier on 01/07/2015.
  */
-function Listingtools() {
-    this.tagId = 0;
-    this.difficulties = [
-        {value: 1, name: 'Easy', classes: 'difficulty easy', active: true},
-        {value: 2, name: 'Normal', classes: 'difficulty normal', active: true},
-        {value: 3, name: 'Hard', classes: 'difficulty hard', active: true},
-        {value: 4, name: 'Insane', classes: 'difficulty insane', active: true},
-        {value: 5, name: 'Expert', classes: 'difficulty expert', active: true}
+
+function ListingConstants() {
+    this.modes = [
+        {value: 0, name: 'Osu!', active: true},
+        {value: 1, name: 'Taiko', active: true},
+        {value: 2, name: 'Catch the beat', active: true},
+        {value: 3, name: 'Osu!Mania', active: true}
     ]
-}
-Listingtools.prototype.createTag = function (tag, type, label, classes) {
-    var that = this;
-    return {
-        tagId: that.tagId++,
-        type: type,
-        model: tag,
-        label: label,
-        classes: classes
-    };
-}
-Listingtools.prototype.getTagsByType = function (tags, type) {
-    var selectedTags = [];
-    _.each(tags, function (t) {
-        if (t.type === type) {
-            selectedTags.push(t.model);
-        }
-    });
-    return selectedTags;
-}
-
-
-angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$scope', 'Beatmap', function ($scope, beatmapAPI) {
-
-    // todo: -trier comme la version de base du site.
-    // todo: scanner un  folder local pour récupérer le listing des beatmaps du user et en faire une "playlist"
-
-    var tagId = 0;
-
-    var listingTools = new Listingtools();
-    $scope.difficulties = listingTools.difficulties;
-
-
-    $scope.converter = {
+    this.difficulties = [
+        {value: 1, name: 'Easy', active: true},
+        {value: 2, name: 'Normal', active: true},
+        {value: 3, name: 'Hard', active: true},
+        {value: 4, name: 'Insane', active: true},
+        {value: 5, name: 'Expert', active: true}
+    ];
+    this.pageSizes = [10, 20, 50, 100, 200];
+    this.converter = {
         difficulty: {
             '1': 'easy',
             '2': 'normal',
@@ -57,26 +31,59 @@ angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$s
             '2': 'ctb',
             '3': 'osumania'
         }
-    }
-
-    $scope.filters = {
-        pageSizes: [20, 40, 60, 80, 100],
-        pageSize: 20,
-        pageIndex: 0,
-        tags: _.map(listingTools.difficulties, function (d) {
-            return listingTools.createTag(d, 'difficulty', d.name, d.classes);
-        })
     };
+}
 
-    $scope.addTag = function (tag, type, label, classes) {
-        var newTag = listingTools.createTag(tag, type, label, classes);
-        $scope.filters.tags.push(newTag);
-        console.log(JSON.stringify($scope.filters.tags))
+function TagTools() {
+    this.tagId = 0;
+}
+TagTools.prototype.createTag = function (tag, type, label, value) {
+    var that = this;
+    return {
+        tagId: that.tagId++,
+        type: type,
+        model: tag,
+        label: label,
+        value: value
+    };
+}
+TagTools.prototype.getTagsByType = function (tags, type) {
+    var selectedTags = [];
+    _.each(tags, function (t) {
+        if (t.type === type) {
+            selectedTags.push(t.value);
+        }
+    });
+    return selectedTags;
+}
+
+
+angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$scope', 'Beatmap', function ($scope, beatmapAPI) {
+
+    // todo: -trier comme la version de base du site.
+    // todo: scanner un  folder local pour récupérer le listing des beatmaps du user et en faire une "playlist"
+
+
+    var tagTools = new TagTools();
+    $scope.constants = new ListingConstants();
+
+
+    $scope.pageSize = 20;
+    $scope.pageIndex = 0;
+    $scope.tags = _.map(tagTools.difficulties, function (d) {
+        return tagTools.createTag(d, 'difficulty', d.name, d.classes);
+    })
+
+
+    $scope.addTag = function (tag, type, label, value) {
+        var newTag = tagTools.createTag(tag, type, label, value);
+        $scope.tags.push(newTag);
+        console.log(JSON.stringify($scope.tags))
         $scope.draw();
     }
 
     $scope.removeTag = function (tagId) {
-        $scope.filters.tags = _.reject($scope.filters.tags, function (tag) {
+        $scope.tags = _.reject($scope.tags, function (tag) {
             return tag.tagId === tagId;
         });
         $scope.draw();
@@ -88,55 +95,52 @@ angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$s
         return beatmapAPI.getCreators(search);
     }
     $scope.addCreator = function (item) {
-        $scope.addTag(item, 'creator', item.name + '(' + item.beatmapCount + ')');
+        $scope.addTag(item, 'creator', item.name + ' (' + item.beatmapCount + ')',  item.name);
         $scope.selectedCreator = null;
     }
-
-
-    $scope.selectedDifficulty = null;
-    $scope.getDifficulties = function () {
-        var notSelectedDifficulties = [];
-        var selectedDifficulties = listingTools.getTagsByType($scope.filters.tags, 'difficulty');
-
-        _.each(listingTools.difficulties, function (d) {
-            if (undefined === _.find(selectedDifficulties, function (sd) {
-                    return sd.value === d.value;
-
-                })) {
-                notSelectedDifficulties.push(d)
-            }
-        });
-
-        return notSelectedDifficulties;
-    }
-    $scope.addDifficulty = function (item) {
-        $scope.addTag(item, 'difficulty', item.name, item.classes);
-        $scope.selectedDifficulty = null;
-    }
-
 
     $scope.getTagClass = function (tag) {
         return tag.classes;
     }
 
-
     $scope.playBeatmap = function (beatmapId) {
         var zik = document.getElementById('player')
         zik.setAttribute('src', '/media/' + beatmapId + '/' + beatmapId + '.mp3');
         zik.play();
-    }
+    };
+
+    $scope.checkModel = [{"active": true, "name": "left"}, {"active": false, "name": "right"}, {
+        "active": true,
+        "name": "center"
+    }]
+
     $scope.draw = function () {
+        console.log('calling draw')
         var filters = {
-            difficulties: _.map(_.where($scope.difficulties, {active: true}), function (difficulty) {
+            difficulties: _.map(_.where($scope.constants.difficulties, {active: true}), function (difficulty) {
                 return difficulty.value;
-            })
+            }),
+            modes: _.map(_.where($scope.constants.modes, {active: true}), function (mode) {
+                return mode.value;
+            }),
+            tags :{
+                creators: tagTools.getTagsByType($scope.tags, 'creator')
+            }
         }
         beatmapAPI.get(function (errMessage) {
-
-        }, function (beatmaps) {
-            $scope.packs = beatmaps;
-        }, filters);
+            },
+            function (beatmaps) {
+                $scope.packs = beatmaps;
+            },
+            $scope.pageIndex,
+            $scope.pageSize,
+            filters);
     }
     $scope.draw();
+
+
+    $scope.foo = function () {
+        console.log('foo');
+    }
 }]);
 

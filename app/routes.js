@@ -82,7 +82,6 @@ QueryTools.prototype.searchCreators = function (callback, search, sort) {
     });
 
 
-
     Beatmap.aggregate(pipeline)
         .sort({'beatmapCount': -1})
         .exec(callback);
@@ -126,27 +125,30 @@ module.exports = function (app) {
         }
 
         if (filters && filters.tags) {
-            var groupedTags = _.groupBy(filters.tags, 'type');
-            _.each(groupedTags, function (v, k) {
-                if ('creator' === k) {
-                    var creatorsFilters = _.map(v, function (creator) {
-                        return creator.model.name;
-                    });
-                    matchPipeline.$match.$and.push({
-                        creator: {
-                            $in: creatorsFilters
-                        }
-                    });
+            _.each(filters.tags, function (v, k) {
+                if (v.length > 0) {
+                    if ('creators' === k) {
+                        matchPipeline.$match.$and.push({
+                            creator: {
+                                $in: v
+                            }
+                        });
+                    }
                 }
-                else if('difficulty' === k){
-                    var difficultiesFilter = _.map(v, function (difficulty) {
-                        return difficulty.model.value;
-                    });
-                    matchPipeline.$match.$and.push({
-                        difficulty: {
-                            $in: difficultiesFilter
-                        }
-                    });
+            });
+        }
+        if (filters && filters.difficulties) {
+            matchPipeline.$match.$and.push({
+                difficulty: {
+                    $in: filters.difficulties
+                }
+            });
+        }
+        ;
+        if (filters && filters.modes) {
+            matchPipeline.$match.$and.push({
+                mode: {
+                    $in: filters.modes
                 }
             });
         }
