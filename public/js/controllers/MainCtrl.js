@@ -4,29 +4,29 @@
 function Listingtools() {
     this.tagId = 0;
     this.difficulties = [
-        {value: 1, name: 'Easy', classes:'difficulty easy'},
-        {value: 2, name: 'Normal', classes:'difficulty normal'},
-        {value: 3, name: 'Hard', classes:'difficulty hard'},
-        {value: 4, name: 'Insane', classes:'difficulty insane'},
-        {value: 5, name: 'Expert', classes:'difficulty expert'}
+        {value: 1, name: 'Easy', classes: 'difficulty easy', active: true},
+        {value: 2, name: 'Normal', classes: 'difficulty normal', active: true},
+        {value: 3, name: 'Hard', classes: 'difficulty hard', active: true},
+        {value: 4, name: 'Insane', classes: 'difficulty insane', active: true},
+        {value: 5, name: 'Expert', classes: 'difficulty expert', active: true}
     ]
 }
 Listingtools.prototype.createTag = function (tag, type, label, classes) {
     var that = this;
-    return  {
+    return {
         tagId: that.tagId++,
         type: type,
         model: tag,
         label: label,
-        classes:classes
+        classes: classes
     };
 }
-Listingtools.prototype.getTagsByType = function(tags, type){
+Listingtools.prototype.getTagsByType = function (tags, type) {
     var selectedTags = [];
-    _.each(tags, function(t){
-       if(t.type === type){
-           selectedTags.push(t.model);
-       }
+    _.each(tags, function (t) {
+        if (t.type === type) {
+            selectedTags.push(t.model);
+        }
     });
     return selectedTags;
 }
@@ -41,7 +41,6 @@ angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$s
 
     var listingTools = new Listingtools();
     $scope.difficulties = listingTools.difficulties;
-
 
 
     $scope.converter = {
@@ -69,7 +68,7 @@ angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$s
         })
     };
 
-    $scope.addTag = function(tag, type, label, classes) {
+    $scope.addTag = function (tag, type, label, classes) {
         var newTag = listingTools.createTag(tag, type, label, classes);
         $scope.filters.tags.push(newTag);
         console.log(JSON.stringify($scope.filters.tags))
@@ -99,11 +98,11 @@ angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$s
         var notSelectedDifficulties = [];
         var selectedDifficulties = listingTools.getTagsByType($scope.filters.tags, 'difficulty');
 
-        _.each(listingTools.difficulties, function(d){
-            if(undefined === _.find(selectedDifficulties, function(sd){
+        _.each(listingTools.difficulties, function (d) {
+            if (undefined === _.find(selectedDifficulties, function (sd) {
                     return sd.value === d.value;
 
-                })){
+                })) {
                 notSelectedDifficulties.push(d)
             }
         });
@@ -111,18 +110,14 @@ angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$s
         return notSelectedDifficulties;
     }
     $scope.addDifficulty = function (item) {
-        $scope.addTag(item, 'difficulty', item.name,  item.classes);
+        $scope.addTag(item, 'difficulty', item.name, item.classes);
         $scope.selectedDifficulty = null;
     }
 
 
-
-
-
-    $scope.getTagClass = function(tag){
+    $scope.getTagClass = function (tag) {
         return tag.classes;
     }
-
 
 
     $scope.playBeatmap = function (beatmapId) {
@@ -131,11 +126,16 @@ angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$s
         zik.play();
     }
     $scope.draw = function () {
+        var filters = {
+            difficulties: _.map(_.where($scope.difficulties, {active: true}), function (difficulty) {
+                return difficulty.value;
+            })
+        }
         beatmapAPI.get(function (errMessage) {
 
         }, function (beatmaps) {
             $scope.packs = beatmaps;
-        }, $scope.filters);
+        }, filters);
     }
     $scope.draw();
 }]);

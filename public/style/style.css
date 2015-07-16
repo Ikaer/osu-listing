@@ -6,9 +6,11 @@
 .row {
     display: table-row;
 }
-
+.row.beatmapset .cell{
+    height:60px;
+}
 .cell {
-    vertical-align: top;
+    vertical-align: middle;
     display: table-cell;
 }
 
