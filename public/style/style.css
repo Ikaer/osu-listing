@@ -1,23 +1,23 @@
-.table {
-    display: table;
-    width: 100%;
-}
+/*.table {*/
+    /*display: table;*/
+    /*width: 100%;*/
+/*}*/
 
-.row {
-    display: table-row;
-}
-.row.beatmapset .cell{
-    height:60px;
-}
-.cell {
-    vertical-align: middle;
-    display: table-cell;
-}
+/*.row {*/
+    /*display: table-row;*/
+/*}*/
+/*..beatmapset {*/
+    /*height:60px;*/
+/*}*/
+/*.cell {*/
+    /*vertical-align: middle;*/
+    /*display: table-cell;*/
+/*}*/
 
-.tag-box .tag {
-    display: inline-block;
-    margin: 1px;
-}
+/*.tag-box .tag {*/
+    /*display: inline-block;*/
+    /*margin: 1px;*/
+/*}*/
 
 
 

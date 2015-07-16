@@ -31,6 +31,12 @@ angular.module('BeatmapService', []).factory('Beatmap', ['$http', function ($htt
             return $http.get(url).then(function (response) {
                 return response.data;
             });
+        },
+        getTags: function (search) {
+            var url = '/api/tags/' + search;
+            return $http.get(url).then(function (response) {
+                return response.data;
+            });
         }
     }
 }]);

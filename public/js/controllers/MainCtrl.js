@@ -37,15 +37,10 @@ function ListingConstants() {
 function TagTools() {
     this.tagId = 0;
 }
-TagTools.prototype.createTag = function (tag, type, label, value) {
+TagTools.prototype.createTag = function (tag) {
     var that = this;
-    return {
-        tagId: that.tagId++,
-        type: type,
-        model: tag,
-        label: label,
-        value: value
-    };
+    tag.tagId = that.tagId++;
+    return tag;
 }
 TagTools.prototype.getTagsByType = function (tags, type) {
     var selectedTags = [];
@@ -75,8 +70,9 @@ angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$s
     })
 
 
-    $scope.addTag = function (tag, type, label, value) {
-        var newTag = tagTools.createTag(tag, type, label, value);
+    $scope.addTag = function (tag) {
+        var newTag = tagTools.createTag(tag);
+        $scope.selectedTag = null;
         $scope.tags.push(newTag);
         console.log(JSON.stringify($scope.tags))
         $scope.draw();
@@ -90,18 +86,14 @@ angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$s
     }
 
 
-    $scope.selectedCreator = null
-    $scope.getCreators = function (search) {
-        return beatmapAPI.getCreators(search);
-    }
-    $scope.addCreator = function (item) {
-        $scope.addTag(item, 'creator', item.name + ' (' + item.beatmapCount + ')',  item.name);
-        $scope.selectedCreator = null;
+    $scope.selectedTag = null
+    $scope.getTags = function (search) {
+        return beatmapAPI.getTags(search);
     }
 
-    $scope.getTagClass = function (tag) {
-        return tag.classes;
-    }
+    //$scope.getTagClass = function (tag) {
+    //    return tag.classes;
+    //}
 
     $scope.playBeatmap = function (beatmapId) {
         var zik = document.getElementById('player')
@@ -124,7 +116,9 @@ angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$s
                 return mode.value;
             }),
             tags :{
-                creators: tagTools.getTagsByType($scope.tags, 'creator')
+                creator: tagTools.getTagsByType($scope.tags, 'creator'),
+                artist: tagTools.getTagsByType($scope.tags, 'artist'),
+                title: tagTools.getTagsByType($scope.tags, 'title')
             }
         }
         beatmapAPI.get(function (errMessage) {

@@ -13,7 +13,7 @@ var fs = require('fs');
 var JSZip = require("jszip");
 var S = require('string');
 var util = require('util');
-
+var Q = require('q');
 
 function QueryTools() {
     this.pipes = {
@@ -47,44 +47,117 @@ function QueryTools() {
         }
     };
 }
-QueryTools.prototype.searchCreators = function (callback, search, sort) {
-    var sortFitler = {};
+
+QueryTools.prototype.searchGeneric = function (search, field, sortByCount, sortIsDesc) {
+    var d = Q.defer();
+    var sortFilter = {};
     var pipeline = [];
-    if (sort && sort !== '') {
-        sortFitler[sort] = 1
-    }
-    else {
-        sortFitler['creator'] = 1
-    }
+
+    // filter beatmaps table
     if (search && search !== '') {
         var regex = new RegExp(search, 'i');
+        var $match = {};
+        $match[field] = regex;
         pipeline.push({
-            $match: {
-                creator: regex
-            }
+            $match: $match
         })
     }
+
+    // group by a field with count
+    var $group = {
+        _id: {},
+        count: {$sum: 1}
+    };
+    $group._id[field] = '$' + field;
+    $group.value = {$first: '$' + field};
     pipeline.push({
-        $group: {
-            _id: {
-                "creator": "$creator"
-            },
-            name: {$first: "$creator"},
-            beatmapCount: {$sum: 1}
-        }
-    })
+        $group: $group
+    });
+
+    // result to get
     pipeline.push({
         $project: {
             _id: 0,
-            name: 1,
-            beatmapCount: 1
+            value: 1,
+            type: {$literal: field},
+            count: 1
         }
     });
 
+    // sort to apply (value or count)
+    var sortField = true === sortByCount ? 'count' : 'value';
+    sortFilter[sortField] = true === sortIsDesc ? -1 : 1;
 
+    // exec.
     Beatmap.aggregate(pipeline)
-        .sort({'beatmapCount': -1})
-        .exec(callback);
+        .sort(sortFilter)
+        .exec(function (err, doc) {
+            if (err) d.reject(err)
+            else d.resolve(doc);
+        });
+    return d.promise;
+}
+QueryTools.prototype.searchCreators = function (search, sortByCount, sortIsDesc) {
+    return this.searchGeneric(search, 'creator', sortByCount, sortIsDesc);
+}
+QueryTools.prototype.searchSongs = function (search, sortByCount, sortIsDesc) {
+    return this.searchGeneric(search, 'title', sortByCount, sortIsDesc);
+}
+QueryTools.prototype.searchArtists = function (search, sortByCount, sortIsDesc) {
+    return this.searchGeneric(search, 'artist', sortByCount, sortIsDesc);
+}
+QueryTools.prototype.mergeSortedTags = function (a, b, sortByCount, sortIsDesc) {
+    var sortComparison = null;
+    if (true === sortByCount) {
+        if (true === sortIsDesc) {
+            sortComparison = function (x, y) {
+                return x.count > y.count
+            }
+        }
+        else {
+            sortComparison = function (x, y) {
+                return x.count < y.count
+            }
+        }
+    }
+    else {
+        if (true === sortIsDesc) {
+            sortComparison = function (x, y) {
+                return x.value > y.value
+            }
+        }
+        else {
+            sortComparison = function (x, y) {
+                return x.value < y.value
+            }
+        }
+    }
+
+    var answer = [];
+    var i = 0, j = 0;
+    var maxCount = a.length > b.length ? a.length : b.length;
+
+    while (i < a.length && j < b.length) {
+        if (sortComparison(a[i], b[j])) {
+            answer.push(a[i]);
+            i++;
+        }
+        else {
+            answer.push(b[j]);
+            j++;
+        }
+    }
+
+    while (i < a.length) {
+        answer.push(a[i]);
+        i++;
+    }
+
+    while (j < b.length) {
+        answer.push(b[j]);
+        j++;
+    }
+    return answer;
 }
 var queryTools = new QueryTools();
 
@@ -127,13 +200,8 @@ module.exports = function (app) {
         if (filters && filters.tags) {
             _.each(filters.tags, function (v, k) {
                 if (v.length > 0) {
-                    if ('creators' === k) {
-                        matchPipeline.$match.$and.push({
-                            creator: {
-                                $in: v
-                            }
-                        });
-                    }
+                    var tagFilter = {};
+                    tagFilter[k] = {$in: v};
                 }
             });
         }
@@ -159,10 +227,10 @@ module.exports = function (app) {
         aggregatePipeline.push({$sort: {'difficultyrating': 1}});
         aggregatePipeline.push(groupPipe);
 
-        console.log(JSON.stringify(aggregatePipeline))
+//        console.log(JSON.stringify(aggregatePipeline))
 
         var query = Beatmap.aggregate(aggregatePipeline);
-        query.sort({'name': 1});
+        query.sort({'beatmapset_id':-1, 'name': 1});
         query.skip(req.pageSize * req.pageIndex);
         query.limit(req.pageSize);
 
@@ -236,18 +304,48 @@ module.exports = function (app) {
         });
     });
     app.get('/api/authors', function (req, res) {
-        queryTools.searchCreators(function (error, creators) {
-            res.json(creators);
+        Q.when(queryTools.searchCreators('', true, true)).then(function (creators) {
+            res.json(creators)
+        }).catch(function (err) {
+            res.statusCode = '500';
+            res.json = err;
         });
     });
     app.get('/api/authors/:search', function (req, res) {
+        Q.when(queryTools.searchCreators(req.params.search, true, true)).then(function (creators) {
+            res.json(creators)
+        }).catch(function (err) {
+            res.statusCode = '500';
+            res.json = err;
+        });
+    });
+    app.get('/api/tags/:search', function (req, res) {
+        var sortByCount = true;
+        var sortIsDesc = true;
+        Q.all([
+            queryTools.searchCreators(req.params.search, true, true),
+            queryTools.searchArtists(req.params.search, true, true),
+            queryTools.searchSongs(req.params.search, true, true)
+        ]).spread(function (creators, artists, songs) {
+            var finalArrays = queryTools.mergeSortedTags(creators, artists, sortByCount, sortIsDesc);
+            finalArrays = queryTools.mergeSortedTags(finalArrays, songs, sortByCount, sortIsDesc);
+            if(finalArrays.length > 20){
+                finalArrays = finalArrays.slice(0, 19);
+            }
+            res.json(finalArrays);
+        }, function(err){
+            res.statusCode = '500';
+            res.json = err;
+        })
+
         queryTools.searchCreators(function (error, creators) {
             res.json(creators);
-        }, req.params.search);
+        }, req.params.search, sortByCount, sortIsDesc);
     });
     app.get('*', function (req, res) {
         res.sendfile('./public/index.html'); // load the single view file (angular will handle the page changes on the front-end)
     });
+
 
 }
 ;
