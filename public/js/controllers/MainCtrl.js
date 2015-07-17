@@ -2,6 +2,8 @@
  * Created by Xavier on 01/07/2015.
  */
 
+// todo: 404 ou autre sur le fichier à télécharger, empécher le télchargement
+
 function ListingConstants() {
     this.modes = [
         {value: 0, name: 'Osu!', active: true},
@@ -90,10 +92,6 @@ angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$s
     $scope.getTags = function (search) {
         return beatmapAPI.getTags(search);
     }
-
-    //$scope.getTagClass = function (tag) {
-    //    return tag.classes;
-    //}
 
     $scope.playBeatmap = function (beatmapId) {
         var zik = document.getElementById('player')

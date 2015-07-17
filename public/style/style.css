@@ -1,3 +1,10 @@
+.filters{
+    padding-bottom: 10px;
+}
+.filter-row{
+    padding-top:2px;padding-bottom:2px;
+}
+
 /*.table {*/
     /*display: table;*/
     /*width: 100%;*/

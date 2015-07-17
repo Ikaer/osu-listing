@@ -183,6 +183,8 @@ module.exports = function (app) {
                 beatmapsIds: {$push: "$$ROOT.beatmap_id"},
                 beatmaps: {$push: "$$ROOT"},
                 name: {$first: "$title"},
+                title: {$first: "$title"},
+                artist: {$first: "$artist"},
                 beatmapset_id: {$first: "$beatmapset_id"}
             }
         };
@@ -201,7 +203,8 @@ module.exports = function (app) {
             _.each(filters.tags, function (v, k) {
                 if (v.length > 0) {
                     var tagFilter = {};
-                    tagFilter[k] = {$in: v};
+                    tagFilter[k] = {$in: v}
+                    matchPipeline.$match.$and.push(tagFilter);
                 }
             });
         }
@@ -230,7 +233,7 @@ module.exports = function (app) {
 //        console.log(JSON.stringify(aggregatePipeline))
 
         var query = Beatmap.aggregate(aggregatePipeline);
-        query.sort({'beatmapset_id':-1, 'name': 1});
+        query.sort({'beatmapset_id': -1, 'name': 1});
         query.skip(req.pageSize * req.pageIndex);
         query.limit(req.pageSize);
 
@@ -270,16 +273,19 @@ module.exports = function (app) {
                 });
 
                 fs.readFile(nconf.get('stuffPath') + filters.beatmapSetId + '/' + filters.beatmapSetId + '.osz', function (err, data) {
-                    if (err) throw err;
-                    var zip = new JSZip(data);
-                    _.each(excludedBeatmaps, function (excludedBeatmap) {
-                        var replaceInvalidCharacters = excludedBeatmap.xFileName.replace(/[\/:*?"<>|.]/g, "");
-                        var cleanExtenstion = S(replaceInvalidCharacters).left(replaceInvalidCharacters.length - 3).toString();
-                        var addExtension = cleanExtenstion + '.osu';
-
-                        zip.remove(addExtension);
-                    });
+                    if (err) {
+                        res.statusCode = 404;
+                        res.end();
+                    }
                     try {
+                        var zip = new JSZip(data);
+                        _.each(excludedBeatmaps, function (excludedBeatmap) {
+                            var replaceInvalidCharacters = excludedBeatmap.xFileName.replace(/[\/:*?"<>|.]/g, "");
+                            var cleanExtenstion = S(replaceInvalidCharacters).left(replaceInvalidCharacters.length - 3).toString();
+                            var addExtension = cleanExtenstion + '.osu';
+
+                            zip.remove(addExtension);
+                        });
                         //var buffer = zip.generate({type: "nodebuffer"});
                         var buffer = zip.generate({base64: false, compression: 'DEFLATE'});
                         //var data = zip.generate({base64: false, compression: 'DEFLATE'});
@@ -296,7 +302,8 @@ module.exports = function (app) {
                         });
                     }
                     catch (e) {
-                        throw e;
+                        res.statusCode = 404;
+                        res.end();
                     }
                 });
 
@@ -329,11 +336,11 @@ module.exports = function (app) {
         ]).spread(function (creators, artists, songs) {
             var finalArrays = queryTools.mergeSortedTags(creators, artists, sortByCount, sortIsDesc);
             finalArrays = queryTools.mergeSortedTags(finalArrays, songs, sortByCount, sortIsDesc);
-            if(finalArrays.length > 20){
+            if (finalArrays.length > 20) {
                 finalArrays = finalArrays.slice(0, 19);
             }
             res.json(finalArrays);
-        }, function(err){
+        }, function (err) {
             res.statusCode = '500';
             res.json = err;
         })
