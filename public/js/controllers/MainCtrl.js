@@ -35,9 +35,9 @@ angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$s
     var tagTools = new TagTools();
 
     $scope.modes = [
-        {value: 0, name: 'Osu!', active:true },
+        {value: 0, name: 'Osu!', active: true},
         {value: 1, name: 'Taiko', active: true},
-        { value: 2, name: 'Catch the beat',active: true },
+        {value: 2, name: 'Catch the beat', active: true},
         {value: 3, name: 'Osu!Mania', active: true}
     ]
     $scope.difficulties = [
@@ -66,12 +66,12 @@ angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$s
         }
     };
     $scope.sorting = 0;
-$scope.sortingDirection = -1;
+    $scope.sortingDirection = -1;
     $scope.sortings = [
-        {value:0, name:'last ranked'},
-        {value:1, name:'title'},
-        {value:2, name:'artist'},
-        {value:3, name:'creator'}
+        {value: 0, name: 'last ranked'},
+        {value: 1, name: 'title'},
+        {value: 2, name: 'artist'},
+        {value: 3, name: 'creator'}
     ]
 
     $scope.pageSize = 20;
@@ -110,6 +110,37 @@ $scope.sortingDirection = -1;
 
 
     $scope.downloadAllLink = null;
+
+    $scope.currentPopover = null;
+    $scope.showBeatmap = function (beatmap) {
+        if ($scope.currentPopover !== null) {
+            $scope.currentPopover.popover('destroy')
+        }
+        $scope.currentPopover = $('#popover-' + beatmap.beatmap_id);
+
+        var templateHtml = '<div style="">';
+
+        templateHtml += "<a type=\"button\" class=\"btn btn-default\" target=\"_self\" href='" + beatmap.downloadLink + "'";
+        templateHtml += ' download="' + beatmap.downloadName + '">';
+        templateHtml += '<span class="glyphicon glyphicon-download" aria-hidden="true"></span>&nbsp;download this beatmap only';
+        templateHtml += '</a>';
+
+
+        templateHtml += '</div>';
+
+
+
+        $scope.currentPopover.popover({
+                content:templateHtml,
+                html:true,
+                title: beatmap.version,
+                placement:'top'
+            }
+        )
+        $scope.currentPopover.popover('show')
+    }
+
+
     $scope.draw = function () {
         var filters = {
             difficulties: _.map(_.where($scope.difficulties, {active: true}), function (difficulty) {
@@ -147,5 +178,6 @@ $scope.sortingDirection = -1;
     }
 
 
-}]);
+}])
+;
 

@@ -41,7 +41,8 @@ function QueryTools() {
                     "total_length": 1,
                     "version": 1,
                     "mode": 1,
-                    "difficulty": 1
+                    "difficulty": 1,
+                    "xFileName": 1
                 }
 
             }
@@ -162,6 +163,13 @@ QueryTools.prototype.mergeSortedTags = function (a, b, sortByCount, sortIsDesc) 
 }
 var queryTools = new QueryTools();
 
+var DownloadTools = function(){
+
+}
+DownloadTools.prototype.createToDownloadParams = function(beatmapSet, beatmaps){
+    return util.format('%s|%s', beatmapSet.beatmapset_id, _.map(beatmaps,function(b){return b.beatmap_id}).join(','));
+}
+var downloadTools = new DownloadTools();
 
 module.exports = function (app) {
     app.param('pageIndex', function (req, res, next, pageIndex) {
@@ -177,6 +185,24 @@ module.exports = function (app) {
         req.isMultiPack = isMultipack == '1';
         next();
     })
+    app.param('toDownload', function (req, res, next, toDownload) {
+        req.toDownload = [];
+        var setsAndMaps = toDownload.split(';');
+        _.each(setsAndMaps, function (x) {
+                var setAndMaps = x.split('|');
+                var part = {
+                    beatmapSetId: parseInt(setAndMaps[0], 10),
+                    beatmapsIds: []
+                }
+                var mapsIds = setAndMaps[1].split(',');
+                _.each(mapsIds, function (m) {
+                    part.beatmapsIds.push(parseInt(m, 10))
+                });
+                req.toDownload.push(part);
+            }
+        );
+        next();
+    })
     app.get('/api/beatmaps/:pageIndex/:pageSize', function (req, res) {
 
         var filters = req.query.f ? JSON.parse(req.query.f) : null;
@@ -190,7 +216,7 @@ module.exports = function (app) {
                 name: {$first: "$title"},
                 title: {$first: "$title"},
                 artist: {$first: "$artist"},
-                creator:{$addToSet:"$creator"},
+                creator: {$addToSet: "$creator"},
                 beatmapset_id: {$first: "$beatmapset_id"}
             }
         };
@@ -221,7 +247,7 @@ module.exports = function (app) {
                 }
             });
         }
-        ;
+
         if (filters && filters.modes) {
             matchPipeline.$match.$and.push({
                 mode: {
@@ -233,14 +259,14 @@ module.exports = function (app) {
         var aggregatePipeline = [];
         aggregatePipeline.push(matchPipeline);
         aggregatePipeline.push(queryTools.pipes.projects.cleanBeatmap);
-        aggregatePipeline.push({$sort: {'difficultyrating': 1}});
+//        aggregatePipeline.push({$sort: {'difficultyrating': 1}});
         aggregatePipeline.push(groupPipe);
 
 //        console.log(JSON.stringify(aggregatePipeline))
 
         var sorting = {'approved_date': -1};
-        if(filters && filters.sorting){
-            switch(filters.sorting.name){
+        if (filters && filters.sorting) {
+            switch (filters.sorting.name) {
                 case 0:
                     sorting = {'approved_date': filters.sorting.direction};
                     break;
@@ -248,10 +274,10 @@ module.exports = function (app) {
                     sorting = {'title': filters.sorting.direction};
                     break;
                 case 2:
-                     sorting = {'artist': filters.sorting.direction};
+                    sorting = {'artist': filters.sorting.direction};
                     break;
                 case 3:
-                     sorting = {'creator': filters.sorting.direction};
+                    sorting = {'creator': filters.sorting.direction};
                     break;
             }
         }
@@ -275,22 +301,25 @@ module.exports = function (app) {
                 var downloadAllLink = [];
                 _.each(response.packs, function (pack) {
                     var fileName = util.format('%s %s - %s.osz', pack.beatmaps[0].beatmapset_id, pack.beatmaps[0].artist, pack.beatmaps[0].title);
-                    var filter = {
-                        "beatmapsIds": pack.beatmapsIds,
-                        "beatmapSetId": pack.beatmapset_id
-                    };
-                    downloadAllLink.push(filter);
-                    pack.downloadLink = '/api/download/0/?f=' + JSON.stringify(filter);
+
+                    var toDownloadParam = downloadTools.createToDownloadParams(pack, pack.beatmaps)
+                    downloadAllLink.push(toDownloadParam);
+                    pack.downloadLink = '/api/download/0/' + toDownloadParam;
                     pack.downloadName = fileName;
+                    _.each(pack.beatmaps, function (beatmap) {
+                        var replaceInvalidCharacters = beatmap.xFileName.replace(/[\/:*?"<>|.]/g, "");
+                        var cleanExtenstion = S(replaceInvalidCharacters).left(replaceInvalidCharacters.length - 3).toString();
+                        fileName = cleanExtenstion + '.osz';
+                        beatmap.downloadLink = '/api/download/0/' + downloadTools.createToDownloadParams(pack, [beatmap]);
+                        beatmap.downloadName = fileName;
+                    })
                 });
-                response.downloadAllLink = '/api/download/1/?f=' + JSON.stringify(downloadAllLink);
+                response.downloadAllLink = '/api/download/1/' + downloadAllLink.join(';');
                 res.json(response);
             }
         })
     });
-    app.get('/api/download/:isMultiPack', function (req, res) {
-
-        var filters = req.query.f ? JSON.parse(req.query.f) : null;
+    app.get('/api/download/:isMultiPack/:toDownload', function (req, res) {
 
         var errorOccurred = function (message, endResponse) {
             console.error(message);
@@ -299,24 +328,23 @@ module.exports = function (app) {
                 res.end();
             }
         }
-        var oszFiles = [];
+        res.on('error', function(err){
+            errorOccurred('Something happend on response: ' + err.message, true);
+        });
+
         var archive = null;
-        if (false === req.isMultiPack) {
-            oszFiles = [filters];
-        }
-        else {
-            oszFiles = filters;
+        if (true === req.isMultiPack) {
             archive = archiver('zip');
             archive.on('error', function (err) {
                 errorOccurred(err, true);
             })
             archive.pipe(res);
         }
-        _.each(oszFiles, function (filters) {
-            filters.isReady = Q.defer();
+        _.each(req.toDownload, function (x) {
+            x.isReady = Q.defer();
         });
 
-        _.each(oszFiles, function (oszFile) {
+        _.each(req.toDownload, function (oszFile) {
             BeatmapSet.findOne({'beatmapset_id': oszFile.beatmapSetId}, function (err, beatmapSet) {
                 if (err) {
                     errorOccurred(util.format('error while retrieving beatmapset %s from mongodb: %s', beatmapSet.beatmapset_id, err));
@@ -376,7 +404,9 @@ module.exports = function (app) {
         })
 
 
-        Q.all(_.map(oszFiles, function(f){ return f.isReady.promise; })).then(function () {
+        Q.all(_.map(req.toDownload, function (f) {
+            return f.isReady.promise;
+        })).then(function () {
             if (req.isMultiPack === true) {
                 try {
                     archive.finalize(function (err, bytes) {
@@ -390,7 +420,7 @@ module.exports = function (app) {
                     errorOccurred(e, true);
                 }
             }
-            else{
+            else {
                 res.end();
             }
         })

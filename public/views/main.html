@@ -95,7 +95,6 @@
                     </a>
                 </div>
                 <div class="caption">
-
                     <ul>
                         <li><h4><img src="/img/artist.png" style="width:20px;padding-right:5px;">{{pack.artist}}</h4>
                         </li>
@@ -104,10 +103,10 @@
                     </ul>
                     <div style="padding:2px;background-color:#f8fcf8">
                         <p style="text-align:right;padding:2px;">
-                            <img ng-repeat="beatmap in pack.beatmaps"
+                            <img id="popover-{{beatmap.beatmap_id}}" ng-repeat="beatmap in pack.beatmaps | orderBy:'difficultyrating'"
+                                 ng-click="showBeatmap(beatmap)"
                                  src="/img/mode/{{converter.mode[beatmap.mode]}}/{{converter.difficulty[beatmap.difficulty]}}.png"
-                                 alt="created by {{beatmap.creator}}" title="created by {{beatmap.creator}}"
-                                 style="width:20px;margin-left:2px;"/>
+                                 style="width:20px;margin-left:2px;" />
                         </p>
                     </div>
                 </div>
@@ -118,4 +117,5 @@
     </div>
 </div>
 <audio id="player" src="" type="audio/mp3"></audio>
+
 
