@@ -172,6 +172,10 @@ module.exports = function (app) {
         req.pageSize = req.pageSize > 100 ? 100 : req.pageSize;
         next();
     });
+    app.param('isMultiPack', function (res, res, next, isMultipack) {
+        req.isMultiPack = isMultipack == 'true';
+        next();
+    })
     app.get('/api/beatmaps/:pageIndex/:pageSize', function (req, res) {
 
         var filters = req.query.f ? JSON.parse(req.query.f) : null;
@@ -254,61 +258,78 @@ module.exports = function (app) {
             }
         })
     });
-    app.get('/api/beatmaps/download', function (req, res) {
+    app.get('/api/beatmaps/download/:isMultiPack', function (req, res) {
         //var beatmapSetIsReady = Q.defer();
         //var beatmapsAreReady = Q.defer();
+
         var filters = req.query.f ? JSON.parse(req.query.f) : null;
         console.log(filters);
 
+        var multiPack = [];
+        var packBuffer = null;
+        var zipPack = new JSZip();
+        if (false === req.isMultiPack) {
+            multiPack = [filters];
+        }
+        else {
+            multiPack = filters;
+        }
 
-        BeatmapSet.findOne({'beatmapset_id': filters.beatmapSetId}, function (err, beatmapSet) {
+        _.each(multiPack, function (filters) {
+            BeatmapSet.findOne({'beatmapset_id': filters.beatmapSetId}, function (err, beatmapSet) {
 
-            var fileName = util.format('%s %s - %s.osz', beatmapSet.beatmapset_id, beatmapSet.artist, beatmapSet.title);
+                var fileName = util.format('%s %s - %s.osz', beatmapSet.beatmapset_id, beatmapSet.artist, beatmapSet.title);
 
-            Beatmap.find({'beatmapset_id': filters.beatmapSetId}, function (err, allBeatmaps) {
-                var excludedBeatmaps = _.filter(allBeatmaps, function (beatmap) {
-                    return (undefined === _.find(filters.beatmapsIds, function (selectedId) {
-                        return beatmap.beatmap_id === selectedId;
-                    }));
+                Beatmap.find({'beatmapset_id': filters.beatmapSetId}, function (err, allBeatmaps) {
+                    var excludedBeatmaps = _.filter(allBeatmaps, function (beatmap) {
+                        return (undefined === _.find(filters.beatmapsIds, function (selectedId) {
+                            return beatmap.beatmap_id === selectedId;
+                        }));
+                    });
+
+                    fs.readFile(nconf.get('stuffPath') + filters.beatmapSetId + '/' + filters.beatmapSetId + '.osz', function (err, data) {
+                        if (err) {
+                            res.statusCode = 404;
+                            res.end();
+                        }
+                        try {
+                            var zip = new JSZip(data);
+                            _.each(excludedBeatmaps, function (excludedBeatmap) {
+                                var replaceInvalidCharacters = excludedBeatmap.xFileName.replace(/[\/:*?"<>|.]/g, "");
+                                var cleanExtenstion = S(replaceInvalidCharacters).left(replaceInvalidCharacters.length - 3).toString();
+                                var addExtension = cleanExtenstion + '.osu';
+
+                                zip.remove(addExtension);
+                            });
+                            if (req.isMultiPack === false) {
+                                //var buffer = zip.generate({type: "nodebuffer"});
+                                var buffer = zip.generate({base64: false, compression: 'DEFLATE'});
+                                //var data = zip.generate({base64: false, compression: 'DEFLATE'});
+                                var headers = {
+                                    'Content-Disposition': 'attachment;filename="' + fileName + '"',
+                                    'Content-Length': buffer.length,
+                                    'Content-Type': 'application/download'
+                                };
+                                res.writeHead(200, headers);
+                                res.write(buffer, 'binary');
+                                res.end();
+                                res.on('finish', function (err) {
+                                    console.log('fichier t�l�charg�');
+                                });
+                            }
+                            else{
+                                zipPack.file(nconf.get('stuffPath') + filters.beatmapSetId + '/' + filters.beatmapSetId + '.osz', zip);
+                            }
+                        }
+                        catch (e) {
+                            res.statusCode = 404;
+                            res.end();
+                        }
+                    });
+
                 });
-
-                fs.readFile(nconf.get('stuffPath') + filters.beatmapSetId + '/' + filters.beatmapSetId + '.osz', function (err, data) {
-                    if (err) {
-                        res.statusCode = 404;
-                        res.end();
-                    }
-                    try {
-                        var zip = new JSZip(data);
-                        _.each(excludedBeatmaps, function (excludedBeatmap) {
-                            var replaceInvalidCharacters = excludedBeatmap.xFileName.replace(/[\/:*?"<>|.]/g, "");
-                            var cleanExtenstion = S(replaceInvalidCharacters).left(replaceInvalidCharacters.length - 3).toString();
-                            var addExtension = cleanExtenstion + '.osu';
-
-                            zip.remove(addExtension);
-                        });
-                        //var buffer = zip.generate({type: "nodebuffer"});
-                        var buffer = zip.generate({base64: false, compression: 'DEFLATE'});
-                        //var data = zip.generate({base64: false, compression: 'DEFLATE'});
-                        var headers = {
-                            'Content-Disposition': 'attachment;filename="' + fileName + '"',
-                            'Content-Length': buffer.length,
-                            'Content-Type': 'application/download'
-                        };
-                        res.writeHead(200, headers);
-                        res.write(buffer, 'binary');
-                        res.end();
-                        res.on('finish', function (err) {
-                            console.log('fichier t�l�charg�');
-                        });
-                    }
-                    catch (e) {
-                        res.statusCode = 404;
-                        res.end();
-                    }
-                });
-
             });
-        });
+        })
     });
     app.get('/api/authors', function (req, res) {
         Q.when(queryTools.searchCreators('', true, true)).then(function (creators) {

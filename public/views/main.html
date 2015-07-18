@@ -40,6 +40,9 @@
                 <img src="/img/{{tag.type}}.png" style="vertical-align: top;width:20px;"/>
                 {{ tag.value }}
             </button>
+            <a type="button" class="btn btn-default" ng-if="tags.length > 0" ng-click="downloadAll()">
+                <span class="glyphicon glyphicon-download"></span>  Download all
+            </a>
         </div>
     </div>
 
