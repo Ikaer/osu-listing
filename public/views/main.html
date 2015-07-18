@@ -55,67 +55,72 @@
             </div>
 
         </div>
-        <div class="row row-centered filter-row">
-            <div class=" col-xs-6 col-sm-6 col-md-6 col-lg-6">
-                <img src="/img/listing1.png" style="width:32px;"/>
-                <label>
-                    <select class="form-control" ng-change="draw()" ng-model="pageSize"
-                            ng-options="pageSize as pageSize for pageSize in pageSizes"></select>
-                </label>
-            </div>
-            <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
-                <img src="/img/listing1.png" style="width:32px;"/>
-                <label>
-                    <select class="form-control" ng-change="draw()" ng-model="sorting"
-                            ng-options="sorting.value as sorting.name for sorting in sortings"></select>
-                </label>
-            </div>
-        </div>
-    </div>
-    <div class="row">
-        <div ng-repeat-start="pack in packs" class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-            <div class="thumbnail beatmapset">
-
-                <img src="/media/{{pack.beatmapset_id}}/{{pack.beatmapset_id}}l.jpg"
-                     ng-mouseover="pack.isDisplayed = true" ng-mouseleave="pack.isDisplayed=false">
-
-                <div class="viewDetail" ng-show="pack.isDisplayed"
-                     style="position:absolute;top:90px;right:115px;" ng-mouseover="pack.isDisplayed = true"
-                     ng-mouseleave="pack.isDisplayed=false">
-                    <a type="button" class="btn btn-default" target="_blank"
-                       href="https://osu.ppy.sh/s/{{pack.beatmapset_id}}">
-                        <span class="glyphicon glyphicon-link" aria-hidden="true"></span>
-                    </a>
-                    <a type="button" class="btn btn-default" target="_self" href="{{pack.downloadLink}}"
-                       download="{{pack.downloadName}}">
-                        <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
-                    </a>
-                    <a type="button" class="btn btn-default" ng-click="playBeatmap(pack.beatmapset_id)">
-                        <span class="glyphicon glyphicon-play" aria-hidden="true"></span>
-                    </a>
-                </div>
-                <div class="caption">
-                    <ul>
-                        <li><h4><img src="/img/artist.png" style="width:20px;padding-right:5px;">{{pack.artist}}</h4>
-                        </li>
-                        <li><h4><img src="/img/title.png" style="width:20px;padding-right:5px;">{{pack.title}}</h4>
-                        </li>
-                    </ul>
-                    <div style="padding:2px;background-color:#f8fcf8">
-                        <p style="text-align:right;padding:2px;">
-                            <img id="popover-{{beatmap.beatmap_id}}" ng-repeat="beatmap in pack.beatmaps | orderBy:'difficultyrating'"
-                                 ng-click="showBeatmap(beatmap)"
-                                 src="/img/mode/{{converter.mode[beatmap.mode]}}/{{converter.difficulty[beatmap.difficulty]}}.png"
-                                 style="width:20px;margin-left:2px;" />
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div ng-if="($index +1) % 3 === 0" class="clearfix"></div>
-        <div ng-repeat-end=""></div>
     </div>
 </div>
+<table class="table table-striped row beatmapsetTable">
+    <thead>
+    <tr class="beatmapsetRow">
+        <td class="beatmapsetCell">
+        </td>
+        <td class="beatmapsetCell sorting-column" ng-click="sort(sortings.artist)">
+            <img src="/img/artist.png" style="width:20px;padding-right:5px;"> artist
+        </td>
+        <td class="beatmapsetCell sorting-column" ng-click="sort(sortings.title)">
+            <img src="/img/title.png" style="width:20px;padding-right:5px;"> title
+        </td>
+        <td class="beatmapsetCell sorting-column" ng-click="sort(sortings.bpm)">
+            bpm
+        </td>
+        <td class="beatmapsetCell">
+            difficulties
+        </td>
+    </tr>
+    </thead>
+    <tbody>
+    <tr ng-repeat="pack in packs" class="beatmapsetRow">
+        <td class="beatmapsetCell">
+            <div style="min-height:60px;">
+                <img src="/media/{{pack.beatmapset_id}}/{{pack.beatmapset_id}}.jpg"
+                     ng-mouseover="pack.isDisplayed = true" ng-mouseleave="pack.isDisplayed=false">
+
+
+            </div>
+        </td>
+        <td class="beatmapsetCell"  >
+            {{pack.artist}}
+        </td>
+        <td class="beatmapsetCell" >
+            {{pack.title}}
+        </td>
+        <td class="beatmapsetCell">
+            {{pack.bpm}}
+        </td>
+        <td class="beatmapsetCell">
+            <img id="popover-{{beatmap.beatmap_id}}"
+                 ng-repeat="beatmap in pack.beatmaps | orderBy:'difficultyrating'"
+                 ng-click="showBeatmap(beatmap)"
+                 src="/img/mode/{{converter.mode[beatmap.mode]}}/{{converter.difficulty[beatmap.difficulty]}}.png"
+                 style="width:20px;margin-left:2px;"/>
+        </td>
+        <td>
+            <div class="viewDetail" >
+                <a type="button" class="btn btn-default" target="_blank"
+                   href="https://osu.ppy.sh/s/{{pack.beatmapset_id}}">
+                    <span class="glyphicon glyphicon-link" aria-hidden="true"></span>
+                </a>
+                <a type="button" class="btn btn-default" target="_self" href="{{pack.downloadLink}}"
+                   download="{{pack.downloadName}}">
+                    <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
+                </a>
+                <a type="button" class="btn btn-default" ng-click="playBeatmap(pack.beatmapset_id)">
+                    <span class="glyphicon glyphicon-play" aria-hidden="true"></span>
+                </a>
+            </div>
+        </td>
+    </tr>
+    </tbody>
+</table>
+
 <audio id="player" src="" type="audio/mp3"></audio>
 
 

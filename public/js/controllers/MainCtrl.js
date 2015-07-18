@@ -48,8 +48,6 @@ angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$s
         {value: 5, name: 'Expert', active: true}
     ];
 
-
-    $scope.pageSizes = [10, 20, 50, 100, 200];
     $scope.converter = {
         difficulty: {
             '1': 'easy',
@@ -65,14 +63,25 @@ angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$s
             '3': 'osumania'
         }
     };
-    $scope.sorting = 0;
-    $scope.sortingDirection = -1;
-    $scope.sortings = [
-        {value: 0, name: 'last ranked'},
-        {value: 1, name: 'title'},
-        {value: 2, name: 'artist'},
-        {value: 3, name: 'creator'}
-    ]
+    $scope.sorting = null;
+    $scope.sortingDirection = 1;
+    $scope.sortings = {
+        approved_date: { value: 'approved_date', defaultDirection: -1},
+        title: { value: 'title', defaultDirection: 1},
+        artist: {value: 'artist', defaultDirection: 1},
+        creator: {value: 'creator', defaultDirection: 1},
+        bpm: {value: 'bpm', defaultDirection: 1}
+    };
+    $scope.sort = function (sorting) {
+        if ($scope.sorting === sorting.value) {
+            $scope.sortingDirection = -$scope.sortingDirection;
+        }
+        else {
+            $scope.sorting = sorting.value;
+            $scope.sortingDirection = sorting.defaultDirection;
+        }
+        $scope.draw();
+    }
 
     $scope.pageSize = 20;
     $scope.pageIndex = 0;
@@ -129,12 +138,11 @@ angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$s
         templateHtml += '</div>';
 
 
-
         $scope.currentPopover.popover({
-                content:templateHtml,
-                html:true,
+                content: templateHtml,
+                html: true,
                 title: beatmap.version,
-                placement:'top'
+                placement: 'top'
             }
         )
         $scope.currentPopover.popover('show')

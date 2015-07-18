@@ -217,6 +217,7 @@ module.exports = function (app) {
                 title: {$first: "$title"},
                 artist: {$first: "$artist"},
                 creator: {$addToSet: "$creator"},
+                bpm: {$first: "$bpm"},
                 beatmapset_id: {$first: "$beatmapset_id"}
             }
         };
@@ -266,20 +267,8 @@ module.exports = function (app) {
 
         var sorting = {'approved_date': -1};
         if (filters && filters.sorting) {
-            switch (filters.sorting.name) {
-                case 0:
-                    sorting = {'approved_date': filters.sorting.direction};
-                    break;
-                case 1:
-                    sorting = {'title': filters.sorting.direction};
-                    break;
-                case 2:
-                    sorting = {'artist': filters.sorting.direction};
-                    break;
-                case 3:
-                    sorting = {'creator': filters.sorting.direction};
-                    break;
-            }
+            sorting = {};
+            sorting[filters.sorting.name] = filters.sorting.direction;
         }
 
 

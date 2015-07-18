@@ -20,3 +20,18 @@ ul{
     list-style-type:none;
 }
 
+.beatmapsetTable{
+}
+.beatmapsetRow{
+}
+.beatmapsetCell{
+}
+.beatmapsetTable thead .sorting-column {
+    cursor:pointer;
+}
+.beatmapsetTable thead .sorted-column-desc {
+    cursor:pointer;
+}
+.beatmapsetTable thead .sorted-column-asc {
+    cursor:pointer;
+}
