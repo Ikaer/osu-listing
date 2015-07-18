@@ -103,7 +103,7 @@ angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$s
         "active": true,
         "name": "center"
     }]
-
+    $scope.downloadAllLink = null;
     $scope.draw = function () {
         console.log('calling draw')
         var filters = {
@@ -113,7 +113,7 @@ angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$s
             modes: _.map(_.where($scope.constants.modes, {active: true}), function (mode) {
                 return mode.value;
             }),
-            tags :{
+            tags: {
                 creator: tagTools.getTagsByType($scope.tags, 'creator'),
                 artist: tagTools.getTagsByType($scope.tags, 'artist'),
                 title: tagTools.getTagsByType($scope.tags, 'title')
@@ -121,8 +121,9 @@ angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$s
         }
         beatmapAPI.get(function (errMessage) {
             },
-            function (beatmaps) {
-                $scope.packs = beatmaps;
+            function (res) {
+                $scope.packs = res.packs;
+                $scope.downloadAllLink = res.downloadAllLink;
             },
             $scope.pageIndex,
             $scope.pageSize,
@@ -134,5 +135,7 @@ angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$s
     $scope.foo = function () {
         console.log('foo');
     }
+
+
 }]);
 

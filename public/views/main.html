@@ -4,127 +4,113 @@
         ({{match.model.count }})
     </a>
 </script>
-<div class="filters">
-    <div class="filter-row">
-        <input type="text"
-               placeholder="Search a creator / artists / song ..."
-               typeahead-template-url="tagTemplate.html"
-               typeahead-loading="loadingLocations"
-               typeahead="x.value for x in getTags($viewValue)"
-               ng-model="selectedTag"
-               typeahead-on-select="addTag($item)"
-               class="form-control"/>
+<div class="container-fluid">
+    <div class="row row-centered filter-row">
+        <div class="btn-group col-xs-12 col-sm-12 col-md-12 col-lg-12 ">
+            <div class="col-centered">
+                <div class="btn-group">
+                    <label ng-model="d.active" ng-change="draw()" btn-checkbox class="btn btn-default"
+                           ng-repeat="d in constants.difficulties">
+                        <img src="/img/mode/osu/{{constants.converter.difficulty[d.value]}}.png"
+                             style="vertical-align: top;width:20px;"/>
+                        {{d.name}}
+                    </label>
+                    <label ng-model="m.active" ng-change="draw()" btn-checkbox class="btn btn-default"
+                           ng-repeat="m in constants.modes">
+                        <img src="/img/mode/{{constants.converter.mode[m.value]}}/mode.png"
+                             style="vertical-align: top;width:20px;"/>
+                        {{m.name}}
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row row-centered filter-row">
+        <div class="btn-group col-xs-12 col-sm-12 col-md-12 col-lg-12">
+            <div class="col-centered">
+                <div class="btn-group">
+                    <button class="tag btn btn-default" ng-repeat="tag in tags" ng-click="removeTag(tag.tagId)">
+                        <img src="/img/{{tag.type}}.png" style="vertical-align: top;width:20px;"/>
+                        {{ tag.value }}
+                    </button>
+
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row row-centered filter-row">
+        <input
+                type="text"
+                placeholder="Search a creator / artists / song ..."
+                typeahead-template-url="tagTemplate.html"
+                typeahead-loading="loadingLocations"
+                typeahead="x.value for x in getTags($viewValue)"
+                ng-model="selectedTag"
+                typeahead-on-select="addTag($item)"
+                class="form-control col-centered" style="width:80%;"/>
         <i ng-show="loadingLocations" class="glyphicon glyphicon-refresh"></i>
     </div>
-    <div class="filter-row">
-        <div class="btn-group">
-            <label ng-model="d.active" ng-change="draw()" btn-checkbox class="btn btn-default"
-                   ng-repeat="d in constants.difficulties">
-                <img src="/img/mode/osu/{{constants.converter.difficulty[d.value]}}.png"
-                     style="vertical-align: top;width:20px;"/>
-                {{d.name}}
-            </label>
-        </div>
-        <div class="btn-group" style="float:right;">
-            <label ng-model="m.active" ng-change="draw()" btn-checkbox class="btn btn-default"
-                   ng-repeat="m in constants.modes">
-                <img src="/img/mode/{{constants.converter.mode[m.value]}}/mode.png"
-                     style="vertical-align: top;width:20px;"/>
-                {{m.name}}
-            </label>
-        </div>
-    </div>
-    <div class="filter-row">
-        <div class=" tag-box">
-            <button class="tag btn btn-default" ng-repeat="tag in tags" ng-click="removeTag(tag.tagId)">
-                <img src="/img/{{tag.type}}.png" style="vertical-align: top;width:20px;"/>
-                {{ tag.value }}
-            </button>
-            <a type="button" class="btn btn-default" ng-if="tags.length > 0" ng-click="downloadAll()">
-                <span class="glyphicon glyphicon-download"></span>  Download all
-            </a>
+    <div class="row row-centered filter-row">
+        <div class="btn-group col-xs-12 col-sm-12 col-md-12 col-lg-12">
+            <div class="col-centered">
+                <a type="button" class="btn btn-default" ng-if="tags.length > 0" target="_blank" download="pack.zip" href="{{downloadAllLink}}"  >
+                    <span class="glyphicon glyphicon-download"></span> Download all
+                </a>
+            </div>
         </div>
     </div>
 
-</div>
-
-
-<div class="container-fluid">
     <div class="row">
-        <div ng-repeat-start="pack in packs" class="col-sm-6 " >
-            <ul class="media-list">
-                <li class="media">
-                    <div class="media-left">
-                        <a href="#">
-                            <img class="media-object"
-                                 src="/media/{{pack.beatmapset_id}}/{{pack.beatmapset_id}}l.jpg" alt="...">
-                        </a>
-                    </div>
-                    <div class="media-body">
-                        <div class="media-heading">
-                            <div class="media">
-                                <div class="media-left">
-                                    <a href="#">
-                                        <img class="media-object" src="/img/artist.png" alt="..."
-                                        style="width:20px;">
-                                    </a>
-                                </div>
-                                <div class="media-body">
-                                    {{pack.artist}}
-                                </div>
-                            </div>
-                            <div class="media">
-                                <div class="media-left">
-                                    <a href="#">
-                                        <img class="media-object" src="/img/title.png" alt="..."
-                                             style="width:20px;">
-                                    </a>
-                                </div>
-                                <div class="media-body">
-                                    {{pack.title}}
-                                </div>
-                            </div>
-                            <div class="media">
-                                <div class="media-left">
-                                    <a href="#" >
-                                        <span class="media-object" style="width:20px;"></span>
-                                        <!--<img class="media-object" src="/img/title.png" alt="..."-->
-                                             <!--style="width:20px;">-->
-                                    </a>
-                                </div>
-                                <div class="media-body">
-                                    <img ng-repeat="beatmap in pack.beatmaps"
-                                         src="/img/mode/{{constants.converter.mode[beatmap.mode]}}/{{constants.converter.difficulty[beatmap.difficulty]}}.png"
-                                         alt="created by {{beatmap.creator}}" title="created by {{beatmap.creator}}"
-                                         style="width:20px;margin-left:2px;"/>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="media-right">
-                        <a type="button" class="btn btn-default" target="_blank"
-                           href="https://osu.ppy.sh/s/{{pack.beatmapset_id}}">
-                            <span class="glyphicon glyphicon-link" aria-hidden="true"></span>
-                        </a>
-                        <a type="button" class="btn btn-default" target="_self" href="{{pack.downloadLink}}"
-                           download="{{pack.downloadName}}">
-                            <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
-                        </a>
-                        <a type="button" class="btn btn-default" ng-click="playBeatmap(pack.beatmapset_id)">
-                            <span class="glyphicon glyphicon-play" aria-hidden="true"></span>
-                        </a>
-                    </div>
-                </li>
-            </ul>
+        <div ng-repeat-start="pack in packs" class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+            <div class="thumbnail beatmapset">
 
+                <img src="/media/{{pack.beatmapset_id}}/{{pack.beatmapset_id}}l.jpg"
+                     ng-mouseover="pack.isDisplayed = true" ng-mouseleave="pack.isDisplayed=false">
+
+                <div class="viewDetail" ng-show="pack.isDisplayed"
+                     style="position:absolute;top:90px;right:115px;" ng-mouseover="pack.isDisplayed = true"
+                     ng-mouseleave="pack.isDisplayed=false">
+                    <a type="button" class="btn btn-default" target="_blank"
+                       href="https://osu.ppy.sh/s/{{pack.beatmapset_id}}">
+                        <span class="glyphicon glyphicon-link" aria-hidden="true"></span>
+                    </a>
+                    <a type="button" class="btn btn-default" target="_self" href="{{pack.downloadLink}}"
+                       download="{{pack.downloadName}}">
+                        <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
+                    </a>
+                    <a type="button" class="btn btn-default" ng-click="playBeatmap(pack.beatmapset_id)">
+                        <span class="glyphicon glyphicon-play" aria-hidden="true"></span>
+                    </a>
+                </div>
+                <div class="caption">
+
+                    <ul>
+                        <li><h3><img src="/img/artist.png" style="width:20px;padding-right:5px;">{{pack.artist}}</h3>
+                        </li>
+                        <li><h3><img src="/img/title.png" style="width:20px;padding-right:5px;">{{pack.title}}</h3>
+                        </li>
+                    </ul>
+                    <div style="padding:2px;background-color:#f8fcf8">
+                        <p style="text-align:right;padding:2px;">
+                            <img ng-repeat="beatmap in pack.beatmaps"
+                                 src="/img/mode/{{constants.converter.mode[beatmap.mode]}}/{{constants.converter.difficulty[beatmap.difficulty]}}.png"
+                                 alt="created by {{beatmap.creator}}" title="created by {{beatmap.creator}}"
+                                 style="width:20px;margin-left:2px;"/>
+                        </p>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div ng-if="$index % 2 != 0" class="clearfix"></div>
+        <div ng-if="($index +1) % 3 === 0" class="clearfix"></div>
         <div ng-repeat-end=""></div>
     </div>
 </div>
 <audio id="player" src="http://b.ppy.sh/preview/149685.mp3" type="audio/mp3"></audio>
 <div class="cell">
     <img src="/img/listing1.png" style="width:32px;"/>
-    <select ng-change="draw()" ng-model="pageSize"
-            ng-options="pageSize as pageSize for pageSize in constants.pageSizes"></select>
+    <label>
+        <select ng-change="draw()" ng-model="pageSize"
+                ng-options="pageSize as pageSize for pageSize in constants.pageSizes"></select>
+    </label>
 </div>

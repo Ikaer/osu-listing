@@ -14,6 +14,7 @@ var JSZip = require("jszip");
 var S = require('string');
 var util = require('util');
 var Q = require('q');
+var archiver = require('archiver');
 
 function QueryTools() {
     this.pipes = {
@@ -172,8 +173,8 @@ module.exports = function (app) {
         req.pageSize = req.pageSize > 100 ? 100 : req.pageSize;
         next();
     });
-    app.param('isMultiPack', function (res, res, next, isMultipack) {
-        req.isMultiPack = isMultipack == 'true';
+    app.param('isMultiPack', function (req, res, next, isMultipack) {
+        req.isMultiPack = isMultipack == '1';
         next();
     })
     app.get('/api/beatmaps/:pageIndex/:pageSize', function (req, res) {
@@ -242,93 +243,136 @@ module.exports = function (app) {
         query.limit(req.pageSize);
 
         query.exec(function (err, packs) {
+            var response = {
+                packs: [],
+                downloadAllLink: null
+            }
             if (err) {
-                res.send([]);
+                res.send(response);
             }
             else {
-                _.each(packs, function (pack) {
+                response.packs = packs;
+                var downloadAllLink = [];
+                _.each(response.packs, function (pack) {
                     var fileName = util.format('%s %s - %s.osz', pack.beatmaps[0].beatmapset_id, pack.beatmaps[0].artist, pack.beatmaps[0].title);
-                    pack.downloadLink = '/api/beatmaps/download?f=' + JSON.stringify({
-                            "beatmapsIds": pack.beatmapsIds,
-                            "beatmapSetId": pack.beatmapset_id
-                        });
+                    var filter = {
+                        "beatmapsIds": pack.beatmapsIds,
+                        "beatmapSetId": pack.beatmapset_id
+                    };
+                    downloadAllLink.push(filter);
+                    pack.downloadLink = '/api/download/0/?f=' + JSON.stringify(filter);
                     pack.downloadName = fileName;
                 });
-                res.json(packs);
+                response.downloadAllLink = '/api/download/1/?f=' + JSON.stringify(downloadAllLink);
+                res.json(response);
             }
         })
     });
-    app.get('/api/beatmaps/download/:isMultiPack', function (req, res) {
-        //var beatmapSetIsReady = Q.defer();
-        //var beatmapsAreReady = Q.defer();
+    app.get('/api/download/:isMultiPack', function (req, res) {
 
         var filters = req.query.f ? JSON.parse(req.query.f) : null;
-        console.log(filters);
 
-        var multiPack = [];
-        var packBuffer = null;
-        var zipPack = new JSZip();
+        var errorOccurred = function (message, endResponse) {
+            console.error(message);
+            if (false === req.isMultiPack || true === endResponse) {
+                res.statusCode = 404;
+                res.end();
+            }
+        }
+        var oszFiles = [];
+        var archive = null;
         if (false === req.isMultiPack) {
-            multiPack = [filters];
+            oszFiles = [filters];
         }
         else {
-            multiPack = filters;
+            oszFiles = filters;
+            archive = archiver('zip');
+            archive.on('error', function (err) {
+                errorOccurred(err, true);
+            })
+            archive.pipe(res);
         }
+        _.each(oszFiles, function (filters) {
+            filters.isReady = Q.defer();
+        });
 
-        _.each(multiPack, function (filters) {
-            BeatmapSet.findOne({'beatmapset_id': filters.beatmapSetId}, function (err, beatmapSet) {
+        _.each(oszFiles, function (oszFile) {
+            BeatmapSet.findOne({'beatmapset_id': oszFile.beatmapSetId}, function (err, beatmapSet) {
+                if (err) {
+                    errorOccurred(util.format('error while retrieving beatmapset %s from mongodb: %s', beatmapSet.beatmapset_id, err));
+                }
+                if (null === beatmapSet) {
+                    errorOccurred(util.format('beatmapset %s not found in mongodb', beatmapSet.beatmapset_id))
+                }
+                else {
+                    var fileName = util.format('%s %s - %s.osz', beatmapSet.beatmapset_id, beatmapSet.artist, beatmapSet.title);
 
-                var fileName = util.format('%s %s - %s.osz', beatmapSet.beatmapset_id, beatmapSet.artist, beatmapSet.title);
-
-                Beatmap.find({'beatmapset_id': filters.beatmapSetId}, function (err, allBeatmaps) {
-                    var excludedBeatmaps = _.filter(allBeatmaps, function (beatmap) {
-                        return (undefined === _.find(filters.beatmapsIds, function (selectedId) {
-                            return beatmap.beatmap_id === selectedId;
-                        }));
-                    });
-
-                    fs.readFile(nconf.get('stuffPath') + filters.beatmapSetId + '/' + filters.beatmapSetId + '.osz', function (err, data) {
+                    Beatmap.find({'beatmapset_id': oszFile.beatmapSetId}, function (err, allBeatmaps) {
                         if (err) {
-                            res.statusCode = 404;
-                            res.end();
+                            errorOccurred(util.format('error while retrieving beatmaps for beatmapset %s from mongodb: %s', beatmapSet.beatmapset_id, err))
                         }
-                        try {
-                            var zip = new JSZip(data);
-                            _.each(excludedBeatmaps, function (excludedBeatmap) {
-                                var replaceInvalidCharacters = excludedBeatmap.xFileName.replace(/[\/:*?"<>|.]/g, "");
-                                var cleanExtenstion = S(replaceInvalidCharacters).left(replaceInvalidCharacters.length - 3).toString();
-                                var addExtension = cleanExtenstion + '.osu';
+                        if (0 === allBeatmaps.length) {
+                            errorOccurred(util.format('no beatmaps found in mongodb for beatmapset %s', beatmapSet.beatmapset_id))
+                        }
+                        else {
 
-                                zip.remove(addExtension);
+                            var excludedBeatmaps = _.filter(allBeatmaps, function (beatmap) {
+                                return (undefined === _.find(oszFile.beatmapsIds, function (selectedId) {
+                                    return beatmap.beatmap_id === selectedId;
+                                }));
                             });
-                            if (req.isMultiPack === false) {
-                                //var buffer = zip.generate({type: "nodebuffer"});
-                                var buffer = zip.generate({base64: false, compression: 'DEFLATE'});
-                                //var data = zip.generate({base64: false, compression: 'DEFLATE'});
-                                var headers = {
-                                    'Content-Disposition': 'attachment;filename="' + fileName + '"',
-                                    'Content-Length': buffer.length,
-                                    'Content-Type': 'application/download'
-                                };
-                                res.writeHead(200, headers);
-                                res.write(buffer, 'binary');
-                                res.end();
-                                res.on('finish', function (err) {
-                                    console.log('fichier t�l�charg�');
-                                });
-                            }
-                            else{
-                                zipPack.file(nconf.get('stuffPath') + filters.beatmapSetId + '/' + filters.beatmapSetId + '.osz', zip);
-                            }
-                        }
-                        catch (e) {
-                            res.statusCode = 404;
-                            res.end();
+                            var filePath = nconf.get('stuffPath') + oszFile.beatmapSetId + '/' + oszFile.beatmapSetId + '.osz';
+                            fs.readFile(filePath, function (err, data) {
+                                if (err) {
+                                    errorOccurred(util.format('error when reading %s', filePath));
+                                }
+                                else {
+                                    try {
+                                        var zip = new JSZip(data);
+                                        _.each(excludedBeatmaps, function (excludedBeatmap) {
+                                            var replaceInvalidCharacters = excludedBeatmap.xFileName.replace(/[\/:*?"<>|.]/g, "");
+                                            var cleanExtenstion = S(replaceInvalidCharacters).left(replaceInvalidCharacters.length - 3).toString();
+                                            var addExtension = cleanExtenstion + '.osu';
+                                            zip.remove(addExtension);
+                                        });
+                                        var buffer = zip.generate({type: 'nodebuffer'});
+                                        if (req.isMultiPack === false) {
+                                            res.write(buffer, 'binary');
+                                        }
+                                        else {
+                                            archive.append(buffer, {name: fileName});
+                                        }
+                                        oszFile.isReady.resolve();
+                                    }
+                                    catch (e) {
+                                        errorOccurred(e.message);
+                                    }
+                                }
+                            });
                         }
                     });
+                }
+            })
+        })
 
-                });
-            });
+
+        Q.all(_.map(oszFiles, function(f){ return f.isReady.promise; })).then(function () {
+            if (req.isMultiPack === true) {
+                try {
+                    archive.finalize(function (err, bytes) {
+                        if (err) {
+                            errorOccurred(err, true);
+                        }
+                        res.end();
+                    });
+                }
+                catch (e) {
+                    errorOccurred(e, true);
+                }
+            }
+            else{
+                res.end();
+            }
         })
     });
     app.get('/api/authors', function (req, res) {

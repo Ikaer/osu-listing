@@ -5,48 +5,18 @@
     padding-top:2px;padding-bottom:2px;
 }
 
-/*.table {*/
-    /*display: table;*/
-    /*width: 100%;*/
-/*}*/
-
-/*.row {*/
-    /*display: table-row;*/
-/*}*/
-/*..beatmapset {*/
-    /*height:60px;*/
-/*}*/
-/*.cell {*/
-    /*vertical-align: middle;*/
-    /*display: table-cell;*/
-/*}*/
-
-/*.tag-box .tag {*/
-    /*display: inline-block;*/
-    /*margin: 1px;*/
-/*}*/
-
-
-
-
-/*.tag-box .tag.difficulty.easy {*/
-    /**/
-/*}*/
-/*.tag-box .tag.difficulty.normal {*/
-    /*background-color: #7AAC01;*/
-    /*border-color: #496701*/
-/*}*/
-/*.tag-box .tag.difficulty.hard {*/
-    /*background-color: #E18B4B;*/
-    /*border-color: #704626*/
-/*}*/
-/*.tag-box .tag.difficulty.insane {*/
-    /*background-color: #7AAC01;*/
-    /*border-color: #496701*/
-/*}*/
-/*.tag-box .tag.difficulty.expert {*/
-    /*background-color: #A95A96;*/
-    /*border-color: #65365A*/
-/*}*/
-
+.row-centered {
+    text-align:center;
+}
+.col-centered {
+    display:inline-block;
+    float:none;
+    /* reset the text-align */
+    text-align:left;
+    /* inline-block space fix */
+    margin-right:-4px;
+}
+ul{
+    list-style-type:none;
+}
 
