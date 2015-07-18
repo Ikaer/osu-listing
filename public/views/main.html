@@ -5,62 +5,73 @@
     </a>
 </script>
 <div class="container-fluid">
-    <div class="row row-centered filter-row">
-        <div class="btn-group col-xs-12 col-sm-12 col-md-12 col-lg-12 ">
-            <div class="col-centered">
-                <div class="btn-group">
-                    <label ng-model="d.active" ng-change="draw()" btn-checkbox class="btn btn-default"
-                           ng-repeat="d in constants.difficulties">
-                        <img src="/img/mode/osu/{{constants.converter.difficulty[d.value]}}.png"
-                             style="vertical-align: top;width:20px;"/>
-                        {{d.name}}
-                    </label>
-                    <label ng-model="m.active" ng-change="draw()" btn-checkbox class="btn btn-default"
-                           ng-repeat="m in constants.modes">
-                        <img src="/img/mode/{{constants.converter.mode[m.value]}}/mode.png"
-                             style="vertical-align: top;width:20px;"/>
-                        {{m.name}}
-                    </label>
+    <div class="filters">
+        <div class="row row-centered filter-row">
+            <input
+                    type="text"
+                    placeholder="Search a creator / artist / title ..."
+                    typeahead-template-url="tagTemplate.html"
+                    typeahead-loading="loadingLocations"
+                    typeahead="x.value for x in getTags($viewValue)"
+                    ng-model="selectedTag"
+                    typeahead-on-select="addTag($item)"
+                    class="form-control col-centered" style="width:80%;"/>
+            <i ng-show="loadingLocations" class="glyphicon glyphicon-refresh"></i>
+        </div>
+        <div class="row row-centered filter-row">
+            <div class="btn-group col-xs-12 col-sm-12 col-md-12 col-lg-12 ">
+                <div class="col-centered">
+                    <div class="btn-group">
+                        <label ng-model="d.active" ng-change="draw()" btn-checkbox class="btn btn-default"
+                               ng-repeat="d in difficulties">
+                            <img src="/img/mode/osu/{{converter.difficulty[d.value]}}.png"
+                                 style="vertical-align: top;width:20px;"/>
+                            {{d.name}}
+                        </label>
+                        <label ng-model="m.active" ng-change="draw()" btn-checkbox class="btn btn-default"
+                               ng-repeat="m in modes">
+                            <img src="/img/mode/{{converter.mode[m.value]}}/mode.png"
+                                 style="vertical-align: top;width:20px;"/>
+                            {{m.name}}
+                        </label>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-
-    <div class="row row-centered filter-row">
-        <div class="btn-group col-xs-12 col-sm-12 col-md-12 col-lg-12">
-            <div class="col-centered">
-                <div class="btn-group">
-                    <button class="tag btn btn-default" ng-repeat="tag in tags" ng-click="removeTag(tag.tagId)">
-                        <img src="/img/{{tag.type}}.png" style="vertical-align: top;width:20px;"/>
-                        {{ tag.value }}
-                    </button>
-
+        <div class="row row-centered filter-row">
+            <div class="btn-group col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                <div class="col-centered">
+                    <div class="btn-group">
+                        <button class="tag btn btn-default" ng-repeat="tag in tags" ng-click="removeTag(tag.tagId)">
+                            <img src="/img/{{tag.type}}.png" style="vertical-align: top;width:20px;"/>
+                            {{ tag.value }}
+                        </button>
+                        <a type="button" class="btn btn-default" ng-if="tags.length > 0" target="_blank"
+                           download="pack.zip" href="{{downloadAllLink}}">
+                            <span class="glyphicon glyphicon-download"></span> Download all
+                        </a>
+                    </div>
                 </div>
             </div>
+
         </div>
-    </div>
-    <div class="row row-centered filter-row">
-        <input
-                type="text"
-                placeholder="Search a creator / artists / song ..."
-                typeahead-template-url="tagTemplate.html"
-                typeahead-loading="loadingLocations"
-                typeahead="x.value for x in getTags($viewValue)"
-                ng-model="selectedTag"
-                typeahead-on-select="addTag($item)"
-                class="form-control col-centered" style="width:80%;"/>
-        <i ng-show="loadingLocations" class="glyphicon glyphicon-refresh"></i>
-    </div>
-    <div class="row row-centered filter-row">
-        <div class="btn-group col-xs-12 col-sm-12 col-md-12 col-lg-12">
-            <div class="col-centered">
-                <a type="button" class="btn btn-default" ng-if="tags.length > 0" target="_blank" download="pack.zip" href="{{downloadAllLink}}"  >
-                    <span class="glyphicon glyphicon-download"></span> Download all
-                </a>
+        <div class="row row-centered filter-row">
+            <div class=" col-xs-6 col-sm-6 col-md-6 col-lg-6">
+                <img src="/img/listing1.png" style="width:32px;"/>
+                <label>
+                    <select class="form-control" ng-change="draw()" ng-model="pageSize"
+                            ng-options="pageSize as pageSize for pageSize in pageSizes"></select>
+                </label>
+            </div>
+            <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
+                <img src="/img/listing1.png" style="width:32px;"/>
+                <label>
+                    <select class="form-control" ng-change="draw()" ng-model="sorting"
+                            ng-options="sorting.value as sorting.name for sorting in sortings"></select>
+                </label>
             </div>
         </div>
     </div>
-
     <div class="row">
         <div ng-repeat-start="pack in packs" class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
             <div class="thumbnail beatmapset">
@@ -86,15 +97,15 @@
                 <div class="caption">
 
                     <ul>
-                        <li><h3><img src="/img/artist.png" style="width:20px;padding-right:5px;">{{pack.artist}}</h3>
+                        <li><h4><img src="/img/artist.png" style="width:20px;padding-right:5px;">{{pack.artist}}</h4>
                         </li>
-                        <li><h3><img src="/img/title.png" style="width:20px;padding-right:5px;">{{pack.title}}</h3>
+                        <li><h4><img src="/img/title.png" style="width:20px;padding-right:5px;">{{pack.title}}</h4>
                         </li>
                     </ul>
                     <div style="padding:2px;background-color:#f8fcf8">
                         <p style="text-align:right;padding:2px;">
                             <img ng-repeat="beatmap in pack.beatmaps"
-                                 src="/img/mode/{{constants.converter.mode[beatmap.mode]}}/{{constants.converter.difficulty[beatmap.difficulty]}}.png"
+                                 src="/img/mode/{{converter.mode[beatmap.mode]}}/{{converter.difficulty[beatmap.difficulty]}}.png"
                                  alt="created by {{beatmap.creator}}" title="created by {{beatmap.creator}}"
                                  style="width:20px;margin-left:2px;"/>
                         </p>
@@ -106,11 +117,5 @@
         <div ng-repeat-end=""></div>
     </div>
 </div>
-<audio id="player" src="http://b.ppy.sh/preview/149685.mp3" type="audio/mp3"></audio>
-<div class="cell">
-    <img src="/img/listing1.png" style="width:32px;"/>
-    <label>
-        <select ng-change="draw()" ng-model="pageSize"
-                ng-options="pageSize as pageSize for pageSize in constants.pageSizes"></select>
-    </label>
-</div>
+<audio id="player" src="" type="audio/mp3"></audio>
+

@@ -190,6 +190,7 @@ module.exports = function (app) {
                 name: {$first: "$title"},
                 title: {$first: "$title"},
                 artist: {$first: "$artist"},
+                creator:{$addToSet:"$creator"},
                 beatmapset_id: {$first: "$beatmapset_id"}
             }
         };
@@ -237,8 +238,27 @@ module.exports = function (app) {
 
 //        console.log(JSON.stringify(aggregatePipeline))
 
+        var sorting = {'approved_date': -1};
+        if(filters && filters.sorting){
+            switch(filters.sorting.name){
+                case 0:
+                    sorting = {'approved_date': filters.sorting.direction};
+                    break;
+                case 1:
+                    sorting = {'title': filters.sorting.direction};
+                    break;
+                case 2:
+                     sorting = {'artist': filters.sorting.direction};
+                    break;
+                case 3:
+                     sorting = {'creator': filters.sorting.direction};
+                    break;
+            }
+        }
+
+
         var query = Beatmap.aggregate(aggregatePipeline);
-        query.sort({'beatmapset_id': -1, 'name': 1});
+        query.sort(sorting);
         query.skip(req.pageSize * req.pageIndex);
         query.limit(req.pageSize);
 

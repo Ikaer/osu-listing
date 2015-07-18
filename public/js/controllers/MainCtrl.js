@@ -2,38 +2,9 @@
  * Created by Xavier on 01/07/2015.
  */
 
-// todo: 404 ou autre sur le fichier à télécharger, empécher le télchargement
+function ListingConstants($routeParams) {
+    var that = this;
 
-function ListingConstants() {
-    this.modes = [
-        {value: 0, name: 'Osu!', active: true},
-        {value: 1, name: 'Taiko', active: true},
-        {value: 2, name: 'Catch the beat', active: true},
-        {value: 3, name: 'Osu!Mania', active: true}
-    ]
-    this.difficulties = [
-        {value: 1, name: 'Easy', active: true},
-        {value: 2, name: 'Normal', active: true},
-        {value: 3, name: 'Hard', active: true},
-        {value: 4, name: 'Insane', active: true},
-        {value: 5, name: 'Expert', active: true}
-    ];
-    this.pageSizes = [10, 20, 50, 100, 200];
-    this.converter = {
-        difficulty: {
-            '1': 'easy',
-            '2': 'normal',
-            '3': 'hard',
-            '4': 'insane',
-            '5': 'expert'
-        },
-        mode: {
-            '0': 'osu',
-            '1': 'taiko',
-            '2': 'ctb',
-            '3': 'osumania'
-        }
-    };
 }
 
 function TagTools() {
@@ -55,15 +26,53 @@ TagTools.prototype.getTagsByType = function (tags, type) {
 }
 
 
-angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$scope', 'Beatmap', function ($scope, beatmapAPI) {
+angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$scope', '$location', '$routeParams', 'Beatmap', function ($scope, $location, $routeParams, beatmapAPI) {
 
     // todo: -trier comme la version de base du site.
     // todo: scanner un  folder local pour récupérer le listing des beatmaps du user et en faire une "playlist"
 
 
     var tagTools = new TagTools();
-    $scope.constants = new ListingConstants();
 
+    $scope.modes = [
+        {value: 0, name: 'Osu!', active:true },
+        {value: 1, name: 'Taiko', active: true},
+        { value: 2, name: 'Catch the beat',active: true },
+        {value: 3, name: 'Osu!Mania', active: true}
+    ]
+    $scope.difficulties = [
+        {value: 1, name: 'Easy', active: true},
+        {value: 2, name: 'Normal', active: true},
+        {value: 3, name: 'Hard', active: true},
+        {value: 4, name: 'Insane', active: true},
+        {value: 5, name: 'Expert', active: true}
+    ];
+
+
+    $scope.pageSizes = [10, 20, 50, 100, 200];
+    $scope.converter = {
+        difficulty: {
+            '1': 'easy',
+            '2': 'normal',
+            '3': 'hard',
+            '4': 'insane',
+            '5': 'expert'
+        },
+        mode: {
+            '0': 'osu',
+            '1': 'taiko',
+            '2': 'ctb',
+            '3': 'osumania'
+        }
+    };
+    $scope.sorting = 0;
+$scope.sortingDirection = -1;
+    $scope.sortings = [
+        {value:0, name:'last ranked'},
+        {value:1, name:'title'},
+        {value:2, name:'artist'},
+        {value:3, name:'creator'}
+    ]
 
     $scope.pageSize = 20;
     $scope.pageIndex = 0;
@@ -99,24 +108,24 @@ angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$s
         zik.play();
     };
 
-    $scope.checkModel = [{"active": true, "name": "left"}, {"active": false, "name": "right"}, {
-        "active": true,
-        "name": "center"
-    }]
+
     $scope.downloadAllLink = null;
     $scope.draw = function () {
-        console.log('calling draw')
         var filters = {
-            difficulties: _.map(_.where($scope.constants.difficulties, {active: true}), function (difficulty) {
+            difficulties: _.map(_.where($scope.difficulties, {active: true}), function (difficulty) {
                 return difficulty.value;
             }),
-            modes: _.map(_.where($scope.constants.modes, {active: true}), function (mode) {
+            modes: _.map(_.where($scope.modes, {active: true}), function (mode) {
                 return mode.value;
             }),
             tags: {
                 creator: tagTools.getTagsByType($scope.tags, 'creator'),
                 artist: tagTools.getTagsByType($scope.tags, 'artist'),
                 title: tagTools.getTagsByType($scope.tags, 'title')
+            },
+            sorting: {
+                name: $scope.sorting,
+                direction: $scope.sortingDirection
             }
         }
         beatmapAPI.get(function (errMessage) {
@@ -128,6 +137,7 @@ angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$s
             $scope.pageIndex,
             $scope.pageSize,
             filters);
+
     }
     $scope.draw();
 

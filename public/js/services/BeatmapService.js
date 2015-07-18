@@ -17,7 +17,6 @@ angular.module('BeatmapService', []).factory('Beatmap', ['$http', function ($htt
             if (filters) {
                 url += '?f=' + JSON.stringify(filters);
             }
-            console.log(url);
             $http.get(url).
                 success(function (data, status, headers, config) {
                     fnCallbackWithData(data)
