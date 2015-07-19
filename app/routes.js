@@ -45,12 +45,12 @@ function QueryTools() {
                     "playCount": 1,
                     "playSuccess": 1,
                     "favouritedCount": 1,
-                    "genre":1,
-                    "language":1,
-                    "negativeUserRating":1,
-                    "positiveUserRating":1,
-                    "tags":1,
-                    "submitted_date":1
+                    "genre": 1,
+                    "language": 1,
+                    "negativeUserRating": 1,
+                    "positiveUserRating": 1,
+                    "tags": 1,
+                    "submitted_date": 1
                 }
 
             }
@@ -179,6 +179,29 @@ DownloadTools.prototype.createToDownloadParams = function (beatmapSet, beatmaps)
         return b.beatmap_id
     }).join(','));
 }
+QueryTools.prototype.normalizeInteger = function (object, property) {
+    if (object.hasOwnProperty(property)) {
+        try {
+            if (object.hasOwnProperty(property)) {
+                object[property] = parseInt(object[property], 10)
+            }
+        }
+        catch (e) {
+            object[property] = 0;
+        }
+    }
+}
+QueryTools.prototype.normalizeData = function (beatmap) {
+    var that = this;
+    that.normalizeInteger(beatmap, 'playCount')
+    that.normalizeInteger(beatmap, 'playSuccess')
+    that.normalizeInteger(beatmap, 'favouritedCount')
+    that.normalizeInteger(beatmap, 'genre')
+    that.normalizeInteger(beatmap, 'language')
+    that.normalizeInteger(beatmap, 'negativeUserRating')
+    that.normalizeInteger(beatmap, 'positiveUserRating')
+}
+
 var downloadTools = new DownloadTools();
 
 module.exports = function (app) {
@@ -275,15 +298,15 @@ module.exports = function (app) {
                     hit_length: {$first: "$hit_length"},
                     source: {$first: "$source"},
                     total_length: {$first: "$total_length"},
-                    "playCount":{$sum: "$playCount"},
+                    "playCount": {$sum: "$playCount"},
                     "playSuccess": {$sum: "$playSuccess"},
-                    "favouritedCount":  {$first: "$favouritedCount"},
-                    "genre":{$first: "$genre"},
-                    "language":{$first: "$language"},
-                    "negativeUserRating":{$first: "$negativeUserRating"},
-                    "positiveUserRating":{$first: "$positiveUserRating"},
-                    "tags":{$first: "$tags"},
-                    "submitted_date":{$first: "$submitted_date"}
+                    "favouritedCount": {$first: "$favouritedCount"},
+                    "genre": {$first: "$genre"},
+                    "language": {$first: "$language"},
+                    "negativeUserRating": {$first: "$negativeUserRating"},
+                    "positiveUserRating": {$first: "$positiveUserRating"},
+                    "tags": {$first: "$tags"},
+                    "submitted_date": {$first: "$submitted_date"}
                 }
             };
             aggregatePipeline.push(groupPipe);
@@ -314,6 +337,7 @@ module.exports = function (app) {
                 response.packs = packs;
                 var downloadAllLink = [];
                 _.each(response.packs, function (pack) {
+                    queryTools.normalizeData(pack);
                     if (filters.displayMode === 0) {
                         pack.beatmapsIds = [pack.beatmap_id];
                         pack.beatmaps = [JSON.parse(JSON.stringify(pack))];
@@ -327,6 +351,8 @@ module.exports = function (app) {
                     pack.downloadLink = '/api/download/0/' + toDownloadParam;
                     pack.downloadName = fileName;
                     _.each(pack.beatmaps, function (beatmap) {
+
+
                         var replaceInvalidCharacters = beatmap.xFileName.replace(/[\/:*?"<>|.]/g, "");
                         var cleanExtenstion = S(replaceInvalidCharacters).left(replaceInvalidCharacters.length - 3).toString();
                         fileName = cleanExtenstion + '.osz';

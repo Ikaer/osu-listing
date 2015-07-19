@@ -82,7 +82,7 @@ angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$s
     $scope.sorting = null;
     $scope.sortingDirection = 1;
     $scope.sortings = {
-        approved_date: { value: 'approved_date', defaultDirection: -1},
+        approved: { value: 'approved_date', defaultDirection: -1},
         title: { value: 'title', defaultDirection: 1},
         artist: {value: 'artist', defaultDirection: 1},
         creator: {value: 'creator', defaultDirection: 1},
