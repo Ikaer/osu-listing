@@ -47,7 +47,15 @@ angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$s
         {value: 4, name: 'Insane', active: true},
         {value: 5, name: 'Expert', active: true}
     ];
-
+    $scope.approved = [
+        {value: 0, name: 'Pending', active: false},
+        {value: 1, name: 'Ranked', active: true},
+        {value: 2, name: 'Approved', active: true},
+        {value: 3, name: 'Qualified', active: false},
+        {value: -1, name: 'WIP', active: false},
+        {value: -2, name: 'Graveyard', active: false}
+    ];
+    $scope.displayMode = 0;
     $scope.converter = {
         difficulty: {
             '1': 'easy',
@@ -61,6 +69,14 @@ angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$s
             '1': 'taiko',
             '2': 'ctb',
             '3': 'osumania'
+        },
+        approved:{
+            '0':'pending',
+            '1':'ranked',
+            '2':'approved',
+            '3':'qualified',
+            '-1':'WIP',
+            '-2':'graveyard'
         }
     };
     $scope.sorting = null;
@@ -70,8 +86,19 @@ angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$s
         title: { value: 'title', defaultDirection: 1},
         artist: {value: 'artist', defaultDirection: 1},
         creator: {value: 'creator', defaultDirection: 1},
-        bpm: {value: 'bpm', defaultDirection: 1}
+        bpm: {value: 'bpm', defaultDirection: 1},
+        difficulty: {value: 'difficultyrating', defaultDirection: 1},
+        playCount: {value: 'playCount', defaultDirection: -1},
+        playSuccess: {value: 'playSuccess', defaultDirection: -1},
+        favouritedCount: {value: 'favouritedCount', defaultDirection: -1},
+        genre: {value: 'genre', defaultDirection: 1},
+        language: {value: 'language', defaultDirection: 1},
+        negativeUserRating: {value: 'negativeUserRating', defaultDirection: -1},
+        positiveUserRating: {value: 'positiveUserRating', defaultDirection: -1},
+        submitted_date: {value: 'submitted_date', defaultDirection: -1}
     };
+
+
     $scope.sort = function (sorting) {
         if ($scope.sorting === sorting.value) {
             $scope.sortingDirection = -$scope.sortingDirection;
@@ -151,11 +178,14 @@ angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$s
 
     $scope.draw = function () {
         var filters = {
-            difficulties: _.map(_.where($scope.difficulties, {active: true}), function (difficulty) {
-                return difficulty.value;
+            difficulties: _.map(_.where($scope.difficulties, {active: true}), function (x) {
+                return x.value;
             }),
-            modes: _.map(_.where($scope.modes, {active: true}), function (mode) {
-                return mode.value;
+            modes: _.map(_.where($scope.modes, {active: true}), function (x) {
+                return x.value;
+            }),
+            approved :_.map(_.where($scope.approved, {active: true}), function (x) {
+                return x.value;
             }),
             tags: {
                 creator: tagTools.getTagsByType($scope.tags, 'creator'),
@@ -165,7 +195,8 @@ angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$s
             sorting: {
                 name: $scope.sorting,
                 direction: $scope.sortingDirection
-            }
+            },
+            displayMode:$scope.displayMode
         }
         beatmapAPI.get(function (errMessage) {
             },
@@ -184,6 +215,12 @@ angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$s
     $scope.foo = function () {
         console.log('foo');
     }
+
+    $scope.$watch('displayMode',function(newValue, oldValue){
+        if(newValue !== oldValue){
+            $scope.draw();
+        }
+    })
 
 
 }])

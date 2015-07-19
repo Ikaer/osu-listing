@@ -26,6 +26,12 @@ ul{
 }
 .beatmapsetCell{
 }
+.beatmapsetTable thead td {
+    text-align:center;
+}
+.beatmapsetTable thead td img {
+    width:25px;
+}
 .beatmapsetTable thead .sorting-column {
     cursor:pointer;
 }

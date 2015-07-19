@@ -41,7 +41,16 @@ function QueryTools() {
                     "version": 1,
                     "mode": 1,
                     "difficulty": 1,
-                    "xFileName": 1
+                    "xFileName": 1,
+                    "playCount": 1,
+                    "playSuccess": 1,
+                    "favouritedCount": 1,
+                    "genre":1,
+                    "language":1,
+                    "negativeUserRating":1,
+                    "positiveUserRating":1,
+                    "tags":1,
+                    "submitted_date":1
                 }
 
             }
@@ -207,31 +216,11 @@ module.exports = function (app) {
     app.get('/api/beatmaps/:pageIndex/:pageSize', function (req, res) {
 
         var filters = req.query.f ? JSON.parse(req.query.f) : null;
-        var groupPipe = {
-            $group: {
-                _id: {
-                    "beatmapset_id": "$beatmapset_id"
-                },
-                beatmapsIds: {$push: "$$ROOT.beatmap_id"},
-                beatmaps: {$push: "$$ROOT"},
-                name: {$first: "$title"},
-                title: {$first: "$title"},
-                artist: {$first: "$artist"},
-                creator: {$addToSet: "$creator"},
-                bpm: {$first: "$bpm"},
-                beatmapset_id: {$first: "$beatmapset_id"}
-            }
-        };
+        var displayMode = filters.displayMode;
 
         var matchPipeline = {
             $match: {$and: []}
         };
-
-        if (filters && filters.groupBy) {
-            _.each(filters.groupBy, function (gb) {
-                groupPipe.$group._id[gb] = "$" + gb;
-            });
-        }
 
         if (filters && filters.tags) {
             _.each(filters.tags, function (v, k) {
@@ -249,7 +238,6 @@ module.exports = function (app) {
                 }
             });
         }
-
         if (filters && filters.modes) {
             matchPipeline.$match.$and.push({
                 mode: {
@@ -257,14 +245,50 @@ module.exports = function (app) {
                 }
             });
         }
-
+        if (filters && filters.approved) {
+            matchPipeline.$match.$and.push({
+                approved: {
+                    $in: filters.approved
+                }
+            });
+        }
         var aggregatePipeline = [];
         aggregatePipeline.push(matchPipeline);
         aggregatePipeline.push(queryTools.pipes.projects.cleanBeatmap);
-//        aggregatePipeline.push({$sort: {'difficultyrating': 1}});
-        aggregatePipeline.push(groupPipe);
+        if (displayMode === 1) {
+            var groupPipe = {
+                $group: {
+                    _id: {
+                        "beatmapset_id": "$beatmapset_id"
+                    },
+                    beatmapsIds: {$push: "$$ROOT.beatmap_id"},
+                    beatmaps: {$push: "$$ROOT"},
+                    name: {$first: "$title"},
+                    title: {$first: "$title"},
+                    artist: {$first: "$artist"},
+                    creator: {$addToSet: "$creator"},
+                    bpm: {$first: "$bpm"},
+                    beatmapset_id: {$first: "$beatmapset_id"},
+                    approved: {$first: "$approved"},
+                    approved_date: {$first: "$approved_date"},
+                    last_update: {$first: "$last_update"},
+                    hit_length: {$first: "$hit_length"},
+                    source: {$first: "$source"},
+                    total_length: {$first: "$total_length"},
+                    "playCount":{$sum: "$playCount"},
+                    "playSuccess": {$sum: "$playSuccess"},
+                    "favouritedCount":  {$first: "$favouritedCount"},
+                    "genre":{$first: "$genre"},
+                    "language":{$first: "$language"},
+                    "negativeUserRating":{$first: "$negativeUserRating"},
+                    "positiveUserRating":{$first: "$positiveUserRating"},
+                    "tags":{$first: "$tags"},
+                    "submitted_date":{$first: "$submitted_date"}
+                }
+            };
+            aggregatePipeline.push(groupPipe);
+        }
 
-//        console.log(JSON.stringify(aggregatePipeline))
 
         var sorting = {'approved_date': -1};
         if (filters && filters.sorting) {
@@ -290,6 +314,12 @@ module.exports = function (app) {
                 response.packs = packs;
                 var downloadAllLink = [];
                 _.each(response.packs, function (pack) {
+                    if (filters.displayMode === 0) {
+                        pack.beatmapsIds = [pack.beatmap_id];
+                        pack.beatmaps = [JSON.parse(JSON.stringify(pack))];
+                    }
+
+
                     var fileName = util.format('%s %s - %s.osz', pack.beatmaps[0].beatmapset_id, pack.beatmaps[0].artist, pack.beatmaps[0].title);
 
                     var toDownloadParam = downloadTools.createToDownloadParams(pack, pack.beatmaps)
