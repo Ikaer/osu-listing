@@ -1,7 +1,6 @@
 // todo: create rss feed about creator with download link
 
 var Beatmap = require('./models/beatmap');
-var BeatmapSet = require('./models/beatmapSet');
 
 
 var nconf = require('nconf');
@@ -163,11 +162,13 @@ QueryTools.prototype.mergeSortedTags = function (a, b, sortByCount, sortIsDesc) 
 }
 var queryTools = new QueryTools();
 
-var DownloadTools = function(){
+var DownloadTools = function () {
 
 }
-DownloadTools.prototype.createToDownloadParams = function(beatmapSet, beatmaps){
-    return util.format('%s|%s', beatmapSet.beatmapset_id, _.map(beatmaps,function(b){return b.beatmap_id}).join(','));
+DownloadTools.prototype.createToDownloadParams = function (beatmapSet, beatmaps) {
+    return util.format('%s|%s', beatmapSet.beatmapset_id, _.map(beatmaps, function (b) {
+        return b.beatmap_id
+    }).join(','));
 }
 var downloadTools = new DownloadTools();
 
@@ -317,7 +318,7 @@ module.exports = function (app) {
                 res.end();
             }
         }
-        res.on('error', function(err){
+        res.on('error', function (err) {
             errorOccurred('Something happend on response: ' + err.message, true);
         });
 
@@ -334,62 +335,52 @@ module.exports = function (app) {
         });
 
         _.each(req.toDownload, function (oszFile) {
-            BeatmapSet.findOne({'beatmapset_id': oszFile.beatmapSetId}, function (err, beatmapSet) {
+
+
+            Beatmap.find({'beatmapset_id': oszFile.beatmapSetId}, function (err, allBeatmaps) {
                 if (err) {
-                    errorOccurred(util.format('error while retrieving beatmapset %s from mongodb: %s', beatmapSet.beatmapset_id, err));
+                    errorOccurred(util.format('error while retrieving beatmaps for beatmapset %s from mongodb: %s', beatmapSet.beatmapset_id, err))
                 }
-                if (null === beatmapSet) {
-                    errorOccurred(util.format('beatmapset %s not found in mongodb', beatmapSet.beatmapset_id))
+                if (0 === allBeatmaps.length) {
+                    errorOccurred(util.format('no beatmaps found in mongodb for beatmapset %s', beatmapSet.beatmapset_id))
                 }
                 else {
-                    var fileName = util.format('%s %s - %s.osz', beatmapSet.beatmapset_id, beatmapSet.artist, beatmapSet.title);
-
-                    Beatmap.find({'beatmapset_id': oszFile.beatmapSetId}, function (err, allBeatmaps) {
+                    var fileName = util.format('%s %s - %s.osz', allBeatmaps[0].beatmapset_id, allBeatmaps[0].artist, allBeatmaps[0].title);
+                    var excludedBeatmaps = _.filter(allBeatmaps, function (beatmap) {
+                        return (undefined === _.find(oszFile.beatmapsIds, function (selectedId) {
+                            return beatmap.beatmap_id === selectedId;
+                        }));
+                    });
+                    var filePath = nconf.get('stuffPath') + oszFile.beatmapSetId + '/' + oszFile.beatmapSetId + '.osz';
+                    fs.readFile(filePath, function (err, data) {
                         if (err) {
-                            errorOccurred(util.format('error while retrieving beatmaps for beatmapset %s from mongodb: %s', beatmapSet.beatmapset_id, err))
-                        }
-                        if (0 === allBeatmaps.length) {
-                            errorOccurred(util.format('no beatmaps found in mongodb for beatmapset %s', beatmapSet.beatmapset_id))
+                            errorOccurred(util.format('error when reading %s', filePath));
                         }
                         else {
-
-                            var excludedBeatmaps = _.filter(allBeatmaps, function (beatmap) {
-                                return (undefined === _.find(oszFile.beatmapsIds, function (selectedId) {
-                                    return beatmap.beatmap_id === selectedId;
-                                }));
-                            });
-                            var filePath = nconf.get('stuffPath') + oszFile.beatmapSetId + '/' + oszFile.beatmapSetId + '.osz';
-                            fs.readFile(filePath, function (err, data) {
-                                if (err) {
-                                    errorOccurred(util.format('error when reading %s', filePath));
+                            try {
+                                var zip = new JSZip(data);
+                                _.each(excludedBeatmaps, function (excludedBeatmap) {
+                                    var replaceInvalidCharacters = excludedBeatmap.xFileName.replace(/[\/:*?"<>|.]/g, "");
+                                    var cleanExtenstion = S(replaceInvalidCharacters).left(replaceInvalidCharacters.length - 3).toString();
+                                    var addExtension = cleanExtenstion + '.osu';
+                                    zip.remove(addExtension);
+                                });
+                                var buffer = zip.generate({type: 'nodebuffer'});
+                                if (req.isMultiPack === false) {
+                                    res.write(buffer, 'binary');
                                 }
                                 else {
-                                    try {
-                                        var zip = new JSZip(data);
-                                        _.each(excludedBeatmaps, function (excludedBeatmap) {
-                                            var replaceInvalidCharacters = excludedBeatmap.xFileName.replace(/[\/:*?"<>|.]/g, "");
-                                            var cleanExtenstion = S(replaceInvalidCharacters).left(replaceInvalidCharacters.length - 3).toString();
-                                            var addExtension = cleanExtenstion + '.osu';
-                                            zip.remove(addExtension);
-                                        });
-                                        var buffer = zip.generate({type: 'nodebuffer'});
-                                        if (req.isMultiPack === false) {
-                                            res.write(buffer, 'binary');
-                                        }
-                                        else {
-                                            archive.append(buffer, {name: fileName});
-                                        }
-                                        oszFile.isReady.resolve();
-                                    }
-                                    catch (e) {
-                                        errorOccurred(e.message);
-                                    }
+                                    archive.append(buffer, {name: fileName});
                                 }
-                            });
+                                oszFile.isReady.resolve();
+                            }
+                            catch (e) {
+                                errorOccurred(e.message);
+                            }
                         }
                     });
                 }
-            })
+            });
         })
 
 
