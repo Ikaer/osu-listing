@@ -2,7 +2,7 @@
 
 Work in progress. This a front-end presenting the files from Osu! game in an alternative way, with the possibilty for the user to only download the files he's interested in and not a the whole set.
 
-Preview is available [here](http://www.ikaer.fr)
+Preview is available [here](http://www.altosu.org/)
 
 To get node modules and front libraries:
 ```
