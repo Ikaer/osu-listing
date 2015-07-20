@@ -314,7 +314,7 @@ module.exports = function (app) {
 
 
         var sorting = {'approved_date': -1};
-        if (filters && filters.sorting) {
+        if (filters && filters.sorting && filters.sorting.name !== null) {
             sorting = {};
             sorting[filters.sorting.name] = filters.sorting.direction;
         }
