@@ -324,7 +324,7 @@ module.exports = function (app) {
         query.sort(sorting);
         query.skip(req.pageSize * req.pageIndex);
         query.limit(req.pageSize);
-
+        query.options = { allowDiskUse: true };
         query.exec(function (err, packs) {
             var response = {
                 packs: [],
