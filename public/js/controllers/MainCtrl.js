@@ -154,13 +154,15 @@ angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$s
         }
         $scope.currentPopover = $('#popover-' + beatmap.beatmap_id);
 
-        var templateHtml = '<div style="">';
+        var templateHtml = '<div style="btn-group">';
 
-        templateHtml += "<a type=\"button\" class=\"btn btn-default\" target=\"_self\" href='" + beatmap.downloadLink + "'";
+        templateHtml += "<a type=\"button\" class=\"btn btn-primary\" target=\"_self\" href='" + beatmap.downloadLink + "'";
         templateHtml += ' download="' + beatmap.downloadName + '">';
         templateHtml += '<span class="glyphicon glyphicon-download" aria-hidden="true"></span>&nbsp;download this beatmap only';
         templateHtml += '</a>';
-
+        templateHtml += "<a type=\"button\" class=\"btn btn-default close-popover\">";
+        templateHtml += '<span class="glyphicon glyphicon-remove" aria-hidden="true"></span>&nbsp;close';
+        templateHtml += '</a>';
 
         templateHtml += '</div>';
 
@@ -172,7 +174,13 @@ angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$s
                 placement: 'top'
             }
         )
+
         $scope.currentPopover.popover('show')
+        $('.close-popover').on('click', function(){
+            if ($scope.currentPopover !== null) {
+                $scope.currentPopover.popover('destroy')
+            }
+        })
     }
 
 
