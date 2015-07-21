@@ -196,8 +196,6 @@ QueryTools.prototype.normalizeData = function (beatmap) {
     that.normalizeInteger(beatmap, 'playCount')
     that.normalizeInteger(beatmap, 'playSuccess')
     that.normalizeInteger(beatmap, 'favouritedCount')
-    that.normalizeInteger(beatmap, 'genre')
-    that.normalizeInteger(beatmap, 'language')
     that.normalizeInteger(beatmap, 'negativeUserRating')
     that.normalizeInteger(beatmap, 'positiveUserRating')
 }
