@@ -72,25 +72,66 @@
         </div>
     </div>
 </div>
+<!--<div class="flex-grid">-->
+<!--<div class="flex-cell flex-beatmap-card beatmap-card" ng-repeat="pack in packs"-->
+<!--style="background-image:url('/media/{{pack.beatmapset_id}}/{{pack.beatmapset_id}}l.jpg')">-->
+<!--<div class="flex-beatmap-image" style="height:180px;">-->
+<!--<div class="flex-beatmap-half">-->
+<!--<img id="popover-{{beatmap.beatmap_id}}"-->
+<!--ng-repeat="beatmap in pack.beatmaps | orderBy:'difficultyrating'"-->
+<!--ng-click="showBeatmap(beatmap)"-->
+<!--src="/img/mode/{{converter.mode[beatmap.mode]}}/{{converter.difficulty[beatmap.difficulty]}}.png"-->
+<!--style="width:20px;margin-left:2px;"/>-->
+<!--</div>-->
+<!--<div class="flex-beatmap-half">-->
+<!--<div class="beatmap-card-langue-and-genre">{{pack.genre}}</div>-->
+<!--<div class="beatmap-card-langue-and-genre">{{pack.language}}</div>-->
+<!--</div>-->
+<!--</div>-->
+<!--<div class="flex-beatmap-caption" >-->
+<!--<div class="flex-beatmap-caption-row">-->
+<!--<div class="flex-beatmap-label-header">-->
+<!--<img src="/img/artist.png">-->
+<!--</div>-->
+<!--<div class="flex-beatmap-label">-->
+
+<!--<span>{{pack.artist}}</span>-->
+<!--</div>-->
+<!--</div>-->
+<!--<div class="flex-beatmap-caption-row" >-->
+<!--<div class="flex-beatmap-label-header">-->
+<!--<img src="/img/title.png">-->
+<!--</div>-->
+<!--<div class="flex-beatmap-label" >-->
+<!--<span>{{pack.title}}</span>-->
+<!--</div>-->
+<!--</div>-->
+<!--</div>-->
+<!--<div class="flex-beatmap-footer" >-->
+<!--dsfdsf-->
+<!--</div>-->
+<!--</div>-->
+<!--</div>-->
+
 <table class="table table-striped row beatmapsetTable" ng-switch="displayMode===0">
     <thead>
-    <tr class="beatmapsetRow" >
+    <tr class="beatmapsetRow">
         <td class="column-image">
         </td>
-         <td class="column-artist sorting-column" ng-click="sort(sortings.artist)"  title="Artist" >
-            <img src="/img/artist.png" >
+        <td class="column-artist sorting-column" ng-click="sort(sortings.artist)" title="Artist">
+            <img src="/img/artist.png">
         </td>
         <td class="column-title sorting-column" ng-click="sort(sortings.title)" title="Title">
-            <img src="/img/title.png" >
+            <img src="/img/title.png">
         </td>
 
         <td class="column-difficulties" ng-switch-when="false" title="Difficulties">
             <img src="/img/fight1.png">
         </td>
-        <td class="column-difficulties sorting-column" ng-switch-when="true"  title="Difficulty"  ng-click="sort(sortings.difficulty)">
-            <img src="/img/fight1.png" >
+        <td class="column-difficulties sorting-column" ng-switch-when="true" title="Difficulty"
+            ng-click="sort(sortings.difficulty)">
+            <img src="/img/fight1.png">
         </td>
-
         <td class="column-bpm sorting-column" ng-click="sort(sortings.bpm)" title="BPM">
             <img src="/img/pulse3.png">
         </td>
@@ -103,7 +144,8 @@
         <td class="column-playSuccess sorting-column" ng-click="sort(sortings.playSuccess)" title="Played with success">
             <img src="/img/medals7.png">
         </td>
-        <td class="column-favouritedCount sorting-column" ng-click="sort(sortings.favouritedCount)" title="Favorited count">
+        <td class="column-favouritedCount sorting-column" ng-click="sort(sortings.favouritedCount)"
+            title="Favorited count">
             <img src="/img/approved/ranked.png">
         </td>
         <td class="column-genre sorting-column" ng-click="sort(sortings.genre)" title="Genre">
@@ -112,17 +154,16 @@
         <td class="column-language sorting-column" ng-click="sort(sortings.language)" title="Language">
             <img src="/img/record15.png">
         </td>
-        <td class="column-negativeUserRating sorting-column" ng-click="sort(sortings.negativeUserRating)" title="Negative user rating">
+        <td class="column-negativeUserRating sorting-column" ng-click="sort(sortings.negativeUserRating)"
+            title="Negative user rating">
             <img src="/img/sad39.png">
         </td>
-        <td class="column-positiveUserRating sorting-column" ng-click="sort(sortings.positiveUserRating)" title="Positive user rating">
+        <td class="column-positiveUserRating sorting-column" ng-click="sort(sortings.positiveUserRating)"
+            title="Positive user rating">
             <img src="/img/happy6.png">
         </td>
-        <td class="column-tags sorting-column" title="Tags" >
+        <td class="column-tags sorting-column" title="Tags">
             <img src="/img/tags21.png">
-        </td>
-        <td class="column-submitted_date sorting-column" ng-click="sort(sortings.submitted_date)" title="Submission date">
-            <img src="/img/upload33.png">
         </td>
         <td class="column-actions" width="160px">
 
@@ -145,7 +186,7 @@
         <td class="column-title">
             {{pack.title}}
         </td>
-        
+
         <td class="column-difficulties">
             <img id="popover-{{beatmap.beatmap_id}}"
                  ng-repeat="beatmap in pack.beatmaps | orderBy:'difficultyrating'"
@@ -153,7 +194,7 @@
                  src="/img/mode/{{converter.mode[beatmap.mode]}}/{{converter.difficulty[beatmap.difficulty]}}.png"
                  style="width:20px;margin-left:2px;"/>
         </td>
-        
+
         <td class="column-bpm">
             {{pack.bpm}}
         </td>
@@ -181,11 +222,8 @@
         <td class="column-positiveUserRating">
             {{pack.positiveUserRating}}
         </td>
-        <td class="column-tags" >
+        <td class="column-tags">
             {{pack.tags.join(', ')}}
-        </td>
-        <td class="column-submitted_date">
-            {{pack.submitted_date}}
         </td>
         <td class="column-actions">
             <div class="viewDetail">
@@ -204,6 +242,8 @@
         </td>
     </tr>
     </tbody>
+
+
 </table>
 
 <audio id="player" src="" type="audio/mp3"></audio>
