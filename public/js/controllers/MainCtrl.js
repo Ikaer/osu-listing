@@ -2,6 +2,19 @@
  * Created by Xavier on 01/07/2015.
  */
 
+/*
+todo: linker les liens des buttons
+todo: rajouter download all
+todo: about page
+todo: add icon when filtered on mode and difficulty
+
+second:
+todo: add detail on click
+todo: add popover on difficulties
+
+ */
+
+
 function ListingConstants($routeParams) {
     var that = this;
 
@@ -26,11 +39,10 @@ TagTools.prototype.getTagsByType = function (tags, type) {
 }
 
 
-angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$scope', '$location', '$state', 'Beatmap', function ($scope, $location,$state, beatmapAPI) {
+angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$scope', '$location', '$state', 'Beatmap', function ($scope, $location, $state, beatmapAPI) {
 
     // todo: -trier comme la version de base du site.
     // todo: scanner un  folder local pour récupérer le listing des beatmaps du user et en faire une "playlist"
-
 
 
     var tagTools = new TagTools();
@@ -56,7 +68,7 @@ angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$s
         {value: -1, name: 'WIP', active: false},
         {value: -2, name: 'Graveyard', active: false}
     ];
-    $scope.displayMode = 0;
+    $scope.displayMode = 1;
     $scope.converter = {
         difficulty: {
             '1': 'easy',
@@ -71,20 +83,20 @@ angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$s
             '2': 'ctb',
             '3': 'osumania'
         },
-        approved:{
-            '0':'pending',
-            '1':'ranked',
-            '2':'approved',
-            '3':'qualified',
-            '-1':'WIP',
-            '-2':'graveyard'
+        approved: {
+            '0': 'pending',
+            '1': 'ranked',
+            '2': 'approved',
+            '3': 'qualified',
+            '-1': 'WIP',
+            '-2': 'graveyard'
         }
     };
     $scope.sorting = null;
     $scope.sortingDirection = 1;
     $scope.sortings = {
-        approved: { value: 'approved_date', defaultDirection: -1},
-        title: { value: 'title', defaultDirection: 1},
+        approved: {value: 'approved_date', defaultDirection: -1},
+        title: {value: 'title', defaultDirection: 1},
         artist: {value: 'artist', defaultDirection: 1},
         creator: {value: 'creator', defaultDirection: 1},
         bpm: {value: 'bpm', defaultDirection: 1},
@@ -177,14 +189,14 @@ angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$s
         )
 
         $scope.currentPopover.popover('show')
-        $('.close-popover').on('click', function(){
+        $('.close-popover').on('click', function () {
             if ($scope.currentPopover !== null) {
                 $scope.currentPopover.popover('destroy')
             }
         })
     }
 
-    $scope.listStyle =0;
+    $scope.listStyle = 2;
 
 
     $scope.draw = function () {
@@ -195,7 +207,7 @@ angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$s
             modes: _.map(_.where($scope.modes, {active: true}), function (x) {
                 return x.value;
             }),
-            approved :_.map(_.where($scope.approved, {active: true}), function (x) {
+            approved: _.map(_.where($scope.approved, {active: true}), function (x) {
                 return x.value;
             }),
             tags: {
@@ -207,11 +219,18 @@ angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$s
                 name: $scope.sorting,
                 direction: $scope.sortingDirection
             },
-            displayMode:$scope.displayMode
+            displayMode: $scope.displayMode
         }
         beatmapAPI.get(function (errMessage) {
             },
             function (res) {
+                _.each(res.packs, function (p) {
+                    p.getPercentUserRating = function () {
+                        return p.positiveUserRating * 100 / (p.positiveUserRating + p.negativeUserRating);
+                    }
+                    p.creator = $.isArray(p.creator) ? p.creator.join(', ') : p.creator;
+                })
+
                 $scope.packs = res.packs;
                 $scope.downloadAllLink = res.downloadAllLink;
             },
@@ -227,30 +246,83 @@ angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$s
         console.log('foo');
     }
 
-    $scope.$watch('displayMode',function(newValue, oldValue){
-        if(newValue !== oldValue){
+    $scope.$watch('displayMode', function (newValue, oldValue) {
+        if (newValue !== oldValue) {
             $scope.draw();
         }
     })
-    $scope.defineView=function(){
+    $scope.defineView = function () {
         var viewState = ''
-        switch($scope.listStyle){
+        switch ($scope.listStyle) {
             case 0:
                 viewState = 'table';
                 break;
             case 1:
                 viewState = 'flex';
                 break;
+            case 2:
+                viewState = 'cards';
+                break;
         }
+        console.log($scope.listStyle)
+        console.log(viewState)
         $state.transitionTo('beatmaps.' + viewState);
     }
-    $scope.$watch('listStyle',function(newValue, oldValue){
-        if(newValue !== oldValue){
+    $scope.$watch('listStyle', function (newValue, oldValue) {
+        if (newValue !== oldValue) {
             $scope.defineView();
         }
     })
     $scope.defineView();
 
+    $('.ui.search')
+        .search({
+            apiSettings: {
+                url: '/api/tagsSemantic/{query}'
+            },
+            type: 'category',
+            onSelect: function (result, response) {
+                $scope.addTag(result.o);
+            }
+        });
+    $('#sidebars-filter').click(function () {
+        $('.ui.sidebar')
+            .sidebar('toggle')
+    })
+    $scope.changeDifficulty = function (dValue) {
+        var $control = $('#filter-difficulty-' + dValue);
+        var $button = $($control.find('button'));
+        var isEnabled = false;
+        if ($button.hasClass('active')) {
+            $button.removeClass('active')
+        }
+        else {
+            $button.addClass('active')
+            isEnabled = true;
+        }
+        var currentDifficilty = _.where($scope.difficulties, {value: dValue});
+        _.each(currentDifficilty, function (d) {
+            d.active = isEnabled;
+        });
+        $scope.draw();
+    }
+    $scope.changeMode = function (dValue) {
+        var $control = $('#filter-mode-' + dValue);
+        var $button = $($control.find('button'));
+        var isEnabled = false;
+        if ($button.hasClass('active')) {
+            $button.removeClass('active')
+        }
+        else {
+            $button.addClass('active')
+            isEnabled = true;
+        }
+        var currentMode = _.where($scope.modes, {value: dValue});
+        _.each(currentMode, function (d) {
+            d.active = isEnabled;
+        });
+        $scope.draw();
+    }
 
 }])
 ;

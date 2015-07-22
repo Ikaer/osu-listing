@@ -1,0 +1,71 @@
+<div class="ui">
+    <div class="tags ui grid centered " style="margin-bottom:40px;">
+        <a class="ui tag label" ng-repeat="tag in tags" ng-click="removeTag(tag.tagId)">{{ tag.value }}</a>
+        <!--<button class="tag btn btn-default" ng-click="removeTag(tag.tagId)">-->
+        <!--<img src="/img/{{tag.type}}.png" style="vertical-align: top;width:20px;"/>-->
+
+        <!--</button>-->
+    </div>
+    <div class="ui link cards grid centered">
+
+        <div ng-repeat="pack in packs" class="ui card" style="width:200px;text-align:left;">
+            <div class="image">
+                <img src="http://www.altosu.org/media/{{pack.beatmapset_id}}/{{pack.beatmapset_id}}l.jpg"
+                     ng-mouseover="pack.isDisplayed = true" ng-mouseleave="pack.isDisplayed=false">
+            </div>
+            <div class="content">
+                <div class="header">{{pack.title}}</div>
+                <div class="meta">
+                    <a>{{pack.artist}}</a>
+                </div>
+                <div class="meta">
+                    mapped by <a>{{pack.creator}}</a>
+                </div>
+                <div class="meta" ng-if="undefined !== pack.source && null !== pack.source && '' !== pack.source">
+                    source <a>{{pack.source}}</a>
+                </div>
+                <div class="meta">
+                    <a>{{pack.genre}}</a>, <a>{{pack.language}}</a>
+                </div>
+
+
+            </div>
+            <div class="extra content">
+                <img id="popover-{{beatmap.beatmap_id}}"
+                     ng-repeat="beatmap in pack.beatmaps | orderBy:'difficultyrating'"
+                     ng-click="showBeatmap(beatmap)"
+                     src="/img/mode/{{converter.mode[beatmap.mode]}}/{{converter.difficulty[beatmap.difficulty]}}.png"
+                     style="width:20px;margin-left:2px;opacity:0.8;"/>
+
+
+            </div>
+            <div class="extra content">
+            <span>
+                <i class="play outline icon"></i>
+               {{pack.playCount}}
+            </span>
+            <span class="right floated">
+              <i class="heart outline like icon"></i>
+              {{pack.favouritedCount}}
+            </span>
+            </div>
+            <div class="extra content">
+                <div class="ui three buttons">
+                    <button class="ui icon basic button">
+                        <i class="linkify icon"></i>
+                    </button>
+                    <button class="ui icon basic button">
+                        <i class="cloud download icon"></i>
+                    </button>
+                    <button class="ui icon basic button">
+                        <i class="sound icon"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="ui bottom attached green progress" data-percent="{{pack.getPercentUserRating()}}">
+                <div class="bar"
+                     style="transition-duration: 300ms; -webkit-transition-duration: 300ms;width:{{pack.getPercentUserRating()}}%"></div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -24,18 +24,20 @@
     <script src="libs/angular/angular.min.js"></script>
     <script src="libs/angular-ui-router/release/angular-ui-router.js"></script>
 
-    <script src="libs/angular-bootstrap/ui-bootstrap.min.js"></script>
-    <script src="libs/angular-bootstrap/ui-bootstrap-tpls.min.js"></script>
+    <!--<script src="libs/angular-bootstrap/ui-bootstrap.min.js"></script>-->
+    <!--<script src="libs/angular-bootstrap/ui-bootstrap-tpls.min.js"></script>-->
 
-    <script src="libs/bootstrap/js/tooltip.js"></script>
-    <script src="libs/bootstrap/js/popover.js"></script>
+    <!--<script src="libs/bootstrap/js/tooltip.js"></script>-->
+    <!--<script src="libs/bootstrap/js/popover.js"></script>-->
 
+    <link rel="stylesheet" type="text/css" href="libs/semantic-ui/dist/semantic.min.css">
+    <script src="libs/semantic-ui/dist/semantic.min.js"></script>
 
     <!-- ANGULAR CUSTOM -->
     <script src="js/controllers/MainCtrl.js"></script>
     <script src="js/services/BeatmapService.js"></script>
     <script>
-        var app = angular.module('sampleApp', [ 'BeatmapService', 'MainCtrl', 'ui.bootstrap', 'ui.router'])
+        var app = angular.module('sampleApp', [ 'BeatmapService', 'MainCtrl',  'ui.router'])
         app.config(function($stateProvider, $urlRouterProvider){
             $urlRouterProvider.otherwise("/beatmaps")
             $stateProvider
@@ -53,20 +55,19 @@
                         url: "/flex",
                         parent:"beatmaps",
                         templateUrl: "views/beatmapsFlex.html"
+                    })
+                    .state('beatmaps.cards', {
+                        url: "/cards",
+                        parent:"beatmaps",
+                        templateUrl: "views/beatmapsCard.html"
                     });
         });
 
     </script>
 </head>
 
-<body ng-app="sampleApp" ng-controller="MainController">
+<body ui-view ng-app="sampleApp" ng-controller="MainController">
 
-<div class="">
-
-    <div  style="padding:30px;" ui-view></div>
-    <div ng-view style="padding:30px;"></div>
-
-</div>
 <script>
     (function (i, s, o, g, r, a, m) {
         i['GoogleAnalyticsObject'] = r;

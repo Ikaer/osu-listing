@@ -169,6 +169,24 @@ QueryTools.prototype.mergeSortedTags = function (a, b, sortByCount, sortIsDesc) 
     }
     return answer;
 }
+QueryTools.prototype.addResultToTags = function (results, currentTags, name, categoryIndex) {
+    if (currentTags.length > 0) {
+        var slicedTags = currentTags.length > 5 ? currentTags.slice(0, 5) : currentTags;
+        var tagsResults = _.map(slicedTags, function (c) {
+            return {
+                title: c.value,
+                o: c
+            }
+        })
+        results.results['category' + categoryIndex] = {
+            name: name,
+            results: tagsResults
+        }
+        return 1
+    }
+    return 0;
+}
+
 var queryTools = new QueryTools();
 
 var DownloadTools = function () {
@@ -322,7 +340,7 @@ module.exports = function (app) {
         query.sort(sorting);
         query.skip(req.pageSize * req.pageIndex);
         query.limit(req.pageSize);
-        query.options = { allowDiskUse: true };
+        query.options = {allowDiskUse: true};
         query.exec(function (err, packs) {
             var response = {
                 packs: [],
@@ -498,6 +516,27 @@ module.exports = function (app) {
             res.json(creators);
         }, req.params.search, sortByCount, sortIsDesc);
     });
+    app.get('/api/tagsSemantic/:search', function (req, res) {
+        Q.all([
+            queryTools.searchCreators(req.params.search, true, true),
+            queryTools.searchArtists(req.params.search, true, true),
+            queryTools.searchSongs(req.params.search, true, true)
+        ]).spread(function (creators, artists, songs) {
+            var categoryIndex = 1;
+            var results = {
+                results: {}
+            }
+            categoryIndex += queryTools.addResultToTags(results, creators, 'Creators', categoryIndex);
+            categoryIndex += queryTools.addResultToTags(results, artists, 'Artists', categoryIndex);
+            categoryIndex += queryTools.addResultToTags(results, songs, 'Songs', categoryIndex);
+            res.json(results);
+        }, function (err) {
+            res.statusCode = '500';
+            res.json = err;
+        })
+
+    });
+
     app.get('*', function (req, res) {
         res.sendfile('./public/index.html'); // load the single view file (angular will handle the page changes on the front-end)
     });
