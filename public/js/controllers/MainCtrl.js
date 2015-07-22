@@ -26,10 +26,11 @@ TagTools.prototype.getTagsByType = function (tags, type) {
 }
 
 
-angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$scope', '$location', '$routeParams', 'Beatmap', function ($scope, $location, $routeParams, beatmapAPI) {
+angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$scope', '$location', '$state', 'Beatmap', function ($scope, $location,$state, beatmapAPI) {
 
     // todo: -trier comme la version de base du site.
     // todo: scanner un  folder local pour récupérer le listing des beatmaps du user et en faire une "playlist"
+
 
 
     var tagTools = new TagTools();
@@ -183,6 +184,8 @@ angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$s
         })
     }
 
+    $scope.listStyle =0;
+
 
     $scope.draw = function () {
         var filters = {
@@ -229,6 +232,24 @@ angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$s
             $scope.draw();
         }
     })
+    $scope.defineView=function(){
+        var viewState = ''
+        switch($scope.listStyle){
+            case 0:
+                viewState = 'table';
+                break;
+            case 1:
+                viewState = 'flex';
+                break;
+        }
+        $state.transitionTo('beatmaps.' + viewState);
+    }
+    $scope.$watch('listStyle',function(newValue, oldValue){
+        if(newValue !== oldValue){
+            $scope.defineView();
+        }
+    })
+    $scope.defineView();
 
 
 }])
