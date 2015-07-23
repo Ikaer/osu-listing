@@ -2,18 +2,21 @@
  * Created by Xavier on 01/07/2015.
  */
 
-/*
 
+/*
+first:
+todo: handle "&" in filters
 todo: loader on listing and creating packs / download
+todo: clean bootstrap code and files.
+
+second
+todo: check if filters cannot be a menu instead of sidebar to kept sidebar for other purpose.
 todo: use popup module on click on card.
 todo: add icon when filtered on mode and difficulty
 
-second:
-todo: check if filters cannot be a menu instead of sidebar to kept sidebar for other purpose.
-todo: handle "&" in filters
+third:
 todo: about page
 todo: play button add stop + icon change.
-todo: add detail on click
 todo: add popover on difficulties
 todo: clear autocomplete when value is selected
  */
