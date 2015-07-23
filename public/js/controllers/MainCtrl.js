@@ -4,23 +4,23 @@
 
 
 /*
-first:
-todo: handle "&" in filters
-todo: loader on listing and creating packs / download
-todo: clean bootstrap code and files.
+ first:
+ todo: handle "&" in filters
+ todo: loader on listing and creating packs / download
+ todo: clean bootstrap code and files.
 
-second
-todo: check if filters cannot be a menu instead of sidebar to kept sidebar for other purpose.
-todo: use popup module on click on card.
-todo: add icon when filtered on mode and difficulty
-todo: -trier comme la version de base du site.
-odo: scanner un  folder local pour récupérer le listing des beatmaps du user et en faire une "playlist"
+ second
+ todo: check if filters cannot be a menu instead of sidebar to kept sidebar for other purpose.
+ todo: use popup module on click on card.
+ todo: add icon when filtered on mode and difficulty
+ todo: -trier comme la version de base du site.
+ odo: scanner un  folder local pour récupérer le listing des beatmaps du user et en faire une "playlist"
 
-third:
-todo: about page
-todo: play button add stop + icon change.
-todo: add popover on difficulties
-todo: clear autocomplete when value is selected
+ third:
+ todo: about page
+ todo: play button add stop + icon change.
+ todo: add popover on difficulties
+ todo: clear autocomplete when value is selected
  */
 
 
@@ -51,8 +51,9 @@ TagTools.prototype.getTagsByType = function (tags, type) {
 angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$scope', '$location', '$state', 'Beatmap', function ($scope, $location, $state, beatmapAPI) {
 
 
-
-
+    $scope.loading = true;
+    $scope.notLoading = false;
+    showLoading();
     var tagTools = new TagTools();
 
     $scope.modes = [
@@ -206,8 +207,16 @@ angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$s
 
     $scope.listStyle = 2;
 
+    function showLoading() {
+        $('.ao-loader').addClass('active');
+    }
+
+    function hideLoading() {
+        $('.ao-loader').removeClass('active');
+    }
 
     $scope.draw = function () {
+        showLoading();
         var filters = {
             difficulties: _.map(_.where($scope.difficulties, {active: true}), function (x) {
                 return x.value;
@@ -241,6 +250,7 @@ angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$s
 
                 $scope.packs = res.packs;
                 $scope.downloadAllLink = res.downloadAllLink;
+                hideLoading();
             },
             $scope.pageIndex,
             $scope.pageSize,
