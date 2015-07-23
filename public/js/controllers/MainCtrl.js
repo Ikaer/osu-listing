@@ -101,35 +101,32 @@ angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$s
             '-2': 'graveyard'
         }
     };
-    $scope.sorting = null;
-    $scope.sortingDirection = 1;
+
     $scope.sortings = {
-        approved: {value: 'approved_date', defaultDirection: -1},
-        title: {value: 'title', defaultDirection: 1},
-        artist: {value: 'artist', defaultDirection: 1},
-        creator: {value: 'creator', defaultDirection: 1},
-        bpm: {value: 'bpm', defaultDirection: 1},
-        difficulty: {value: 'difficultyrating', defaultDirection: 1},
-        playCount: {value: 'playCount', defaultDirection: -1},
-        playSuccess: {value: 'playSuccess', defaultDirection: -1},
-        favouritedCount: {value: 'favouritedCount', defaultDirection: -1},
-        genre: {value: 'genre', defaultDirection: 1},
-        language: {value: 'language', defaultDirection: 1},
-        negativeUserRating: {value: 'negativeUserRating', defaultDirection: -1},
-        positiveUserRating: {value: 'positiveUserRating', defaultDirection: -1},
-        submitted_date: {value: 'submitted_date', defaultDirection: -1}
+        approved: {label: 'Approved date', value: 'approved_date', direction: -1},
+        title: {label: 'Title', value: 'title', direction: 1},
+        artist: {label: 'Artist', value: 'artist', direction: 1},
+        creator: {label: 'Creator', value: 'creator', direction: 1},
+        bpm: {label: 'BPM', value: 'bpm', direction: 1},
+        difficulty: {label: 'Difficulty', value: 'difficultyrating', direction: 1, single: true},
+        playCount: {label: 'Plays', value: 'playCount', direction: -1},
+        playSuccess: {label: 'Plays failed', value: 'playSuccess', direction: -1},
+        favouritedCount: {label: 'Favourites', value: 'favouritedCount', direction: -1},
+        negativeUserRating: {label: 'Negative user ratings', value: 'negativeUserRating', direction: -1},
+        positiveUserRating: {label: 'Positive user ratings', value: 'positiveUserRating', direction: -1},
+        submitted_date: {label: 'Submitted date', value: 'submitted_date', direction: -1}
     };
-
-
-    $scope.sort = function (sorting) {
-        if ($scope.sorting === sorting.value) {
-            $scope.sortingDirection = -$scope.sortingDirection;
-        }
-        else {
-            $scope.sorting = sorting.value;
-            $scope.sortingDirection = sorting.defaultDirection;
-        }
+    $scope.sorting = $scope.sortings.approved;
+    $scope.changeSortingDirection = function () {
+        $scope.sorting.direction = -$scope.sorting.direction;
         $scope.draw();
+    }
+    $scope.sort = function (sorting) {
+        if ($scope.sorting.value !== sorting.value) {
+            $scope.sorting = sorting;
+            $scope.sortingDirection = $scope.sorting.direction;
+            $scope.draw();
+        }
     }
 
     $scope.pageSize = 20;
@@ -233,8 +230,8 @@ angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$s
                 title: tagTools.getTagsByType($scope.tags, 'title')
             },
             sorting: {
-                name: $scope.sorting,
-                direction: $scope.sortingDirection
+                name: $scope.sorting.value,
+                direction: $scope.sorting.direction
             },
             displayMode: $scope.displayMode
         }
@@ -250,6 +247,7 @@ angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$s
 
                 $scope.packs = res.packs;
                 $scope.downloadAllLink = res.downloadAllLink;
+
                 hideLoading();
             },
             $scope.pageIndex,
@@ -325,6 +323,15 @@ angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$s
             d.active = !d.active;
         });
         $scope.draw();
+    }
+    $scope.bindCardsEvents = function(){
+        $('.ao-beatmap-image-container').dimmer({
+            on: 'hover'
+        });
+        $("img").error(function () {
+            $(this).hide();
+            // or $(this).css({visibility:"hidden"});
+        });
     }
 }])
 ;

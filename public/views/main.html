@@ -17,7 +17,37 @@
                 AltOsu
             </div>
             <a href="/" class="item">Home</a>
-            <a class="ui dropdown item  right ">
+
+            <!--$scope.sortings = {-->
+            <!--approved: {value: 'approved_date', defaultDirection: -1},-->
+            <!--title: {value: 'title', defaultDirection: 1},-->
+            <!--artist: {value: 'artist', defaultDirection: 1},-->
+            <!--creator: {value: 'creator', defaultDirection: 1},-->
+            <!--bpm: {value: 'bpm', defaultDirection: 1},-->
+            <!--difficulty: {value: 'difficultyrating', defaultDirection: 1},-->
+            <!--playCount: {value: 'playCount', defaultDirection: -1},-->
+            <!--playSuccess: {value: 'playSuccess', defaultDirection: -1},-->
+            <!--favouritedCount: {value: 'favouritedCount', defaultDirection: -1},-->
+            <!--genre: {value: 'genre', defaultDirection: 1},-->
+            <!--language: {value: 'language', defaultDirection: 1},-->
+            <!--negativeUserRating: {value: 'negativeUserRating', defaultDirection: -1},-->
+            <!--positiveUserRating: {value: 'positiveUserRating', defaultDirection: -1},-->
+            <!--submitted_date: {value: 'submitted_date', defaultDirection: -1}-->
+            <!--};-->
+
+
+            <div class="ui  dropdown item ao-sorting right">
+                <input type="hidden" name="gender">
+                <div class="default text">{{sorting.label}}</div>
+                <i class="dropdown icon"></i>
+                <div class="menu">
+                    <div class="item" ng-if="(displayMode === 0 && s.single === true) || s.single !== true" ng-repeat="s in sortings" data-value="{{s.value}}" ng-click="sort(s)" >
+                        {{s.label}}
+                    </div>
+                </div>
+            </div>
+            <a  class="item"> <i class="sort content icon" ng-click="changeSortingDirection()" ng-class="sorting.direction === 1 ? 'ascending' : 'descending'"></i></a>
+            <a class="ui dropdown item aligned ao-filters">
                 Mode
                 <i class="dropdown icon"></i>
                 <div class="menu">
@@ -29,7 +59,7 @@
                     </div>
                 </div>
             </a>
-            <a class="ui dropdown item  aligned">
+            <a class="ui dropdown item aligned ao-filters">
                 Difficulty
                 <i class="dropdown icon"></i>
                 <div class="menu">
@@ -41,7 +71,7 @@
                     </div>
                 </div>
             </a>
-            <a class="ui dropdown item  aligned">
+            <a class="ui dropdown item aligned ao-filters">
                 Status
                 <i class="dropdown icon"></i>
                 <div class="menu">
@@ -53,7 +83,7 @@
                     </div>
                 </div>
             </a>
-            <div class="ui category search item  aligned" style="width:400px;">
+            <div class="ui category search item  aligned" style="width:300px;">
                 <div class="ui icon input">
                     <input class="prompt" type="text" placeholder="Search creators / titles / artits ...">
                     <i class="search icon"></i>
@@ -65,12 +95,15 @@
 </div>
 <div ui-view style="margin-top:100px;"></div>
 <script>
-    $('.dropdown').dropdown({
+
+    $('.dropdown.ao-sorting').dropdown();
+    $('.dropdown.ao-filters').dropdown({
         action: function(){
             /*hack do nothing*/
         }
     });
     $('.ui.checkbox').checkbox();
+
 </script>
 <audio id="player" src="" type="audio/mp3"></audio>
 

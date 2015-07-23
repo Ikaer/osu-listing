@@ -1,16 +1,37 @@
 <div class="ui">
     <div class="tags ui grid centered " style="margin-bottom:40px;">
         <a class="ui tag label" ng-repeat="tag in tags" ng-click="removeTag(tag.tagId)">{{ tag.value }}</a>
-        <a  class="ui label" ng-if="tags.length > 0" target="_blank"  download="pack.zip" href="{{downloadAllLink}}">
-             <i class="cloud download icon"></i> Download all
+        <a class="ui label" ng-if="tags.length > 0" target="_blank" download="pack.zip" href="{{downloadAllLink}}">
+            <i class="cloud download icon"></i> Download all
         </a>
     </div>
     <div class="ui link cards grid centered">
-
-        <div ng-repeat="pack in packs" class="ui card" style="width:200px;text-align:left;">
-            <div class="image">
-                <img src="/media/{{pack.beatmapset_id}}/{{pack.beatmapset_id}}l.jpg"
-                     ng-mouseover="pack.isDisplayed = true" ng-mouseleave="pack.isDisplayed=false">
+        <!--<div class="ui active dimmer" style="margin-top:50px" >-->
+        <!--<div class="ui large text loader">Loading</div>-->
+        <!--</div>-->
+        <div ng-repeat="pack in packs" class="ui card" style="width:200px;text-align:left;"
+             ng-init="$last ? bindCardsEvents() : null">
+            <div class="image ao-beatmap-image-container"
+                 style="min-height:150px;background-image:url('/img/image.png');background-size:cover;">
+                <div class="ui dimmer">
+                    <div class="content">
+                            <div class="ui list">
+                                <div class="item">
+                                    <img class="ui image middle aligned" title="BPM" src="/img/bpm-inverted.png" style="width:20px;">
+                                    <span >
+                                        {{pack.bpm}}
+                                    </span>
+                                </div>
+                                <div class="item">
+                                    <img class="ui image middle aligned" title="Plays success" src="/img/medals7-inverted.png" style="width:20px;">
+                                    <span >
+                                        {{pack.playSuccess}}
+                                    </span>
+                                </div>
+                            </div>
+                    </div>
+                </div>
+                <img class="ao-beatmap-image" alt="" src="/media/{{pack.beatmapset_id}}/{{pack.beatmapset_id}}l.jpg" o>
             </div>
             <div class="content">
                 <div class="header">{{pack.title}}</div>
@@ -48,11 +69,11 @@
             </div>
             <div class="extra content">
                 <div class="ui three buttons">
-                    <a class="ui icon basic button" target="_blank"  href="https://osu.ppy.sh/s/{{pack.beatmapset_id}}" >
+                    <a class="ui icon basic button" target="_blank" href="https://osu.ppy.sh/s/{{pack.beatmapset_id}}">
                         <i class="linkify icon"></i>
                     </a>
                     <a class="ui icon basic button" target="_self" href="{{pack.downloadLink}}"
-                            download="{{pack.downloadName}}">
+                       download="{{pack.downloadName}}">
                         <i class="cloud download icon"></i>
                     </a>
                     <a class="ui icon basic button" ng-click="playBeatmap(pack.beatmapset_id)">

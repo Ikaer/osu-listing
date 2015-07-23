@@ -407,9 +407,9 @@ module.exports = function (app) {
         });
 
         _.each(req.toDownload, function (oszFile) {
+            var query = new Query({'beatmapset_id': oszFile.beatmapSetId}).lean();
 
-
-            Beatmap.find({'beatmapset_id': oszFile.beatmapSetId}, function (err, allBeatmaps) {
+            Beatmap.find(query, function (err, allBeatmaps) {
                 if (err) {
                     errorOccurred(util.format('error while retrieving beatmaps for beatmapset %s from mongodb: %s', beatmapSet.beatmapset_id, err))
                 }
