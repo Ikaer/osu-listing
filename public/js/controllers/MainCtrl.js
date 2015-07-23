@@ -4,10 +4,12 @@
 
 /*
 
-
+todo: loader on listing and creating packs / download
+todo: use popup module on click on card.
 todo: add icon when filtered on mode and difficulty
 
 second:
+todo: check if filters cannot be a menu instead of sidebar to kept sidebar for other purpose.
 todo: handle "&" in filters
 todo: about page
 todo: play button add stop + icon change.
@@ -292,8 +294,7 @@ angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$s
             .sidebar('toggle')
     })
     $scope.changeDifficulty = function (dValue) {
-        var $control = $('#filter-difficulty-' + dValue);
-        var $button = $($control.find('button'));
+        var $button = $('#filter-difficulty-' + dValue);
         var isEnabled = false;
         if ($button.hasClass('active')) {
             $button.removeClass('active')
@@ -309,8 +310,7 @@ angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$s
         $scope.draw();
     }
     $scope.changeMode = function (dValue) {
-        var $control = $('#filter-mode-' + dValue);
-        var $button = $($control.find('button'));
+        var $button = $('#filter-mode-' + dValue);
         var isEnabled = false;
         if ($button.hasClass('active')) {
             $button.removeClass('active')

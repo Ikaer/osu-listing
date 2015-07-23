@@ -1,63 +1,65 @@
-<div class="ui fixed inverted menu">
-    <div class="ui container">
-        <div href="#" class="header item">
-            <img class="logo" src="img/1437607408_osu.png">
-            &nbsp;&nbsp;Altosu
-        </div>
-        <a href="/" class="item">Home</a>
-        <a class="item" id="sidebars-filter">Filters</a>
-        <!--<a href="#" class="ui simple dropdown item">-->
+<div class="ui sidebar inverted vertical menu">
+    <a class="item">
+        Difficulty
+    </a>
+    <div class="ui vertical buttons item">
+        <button class="ui toggle button tiny" ng-class="d.active === true ? 'active':''"
+                id="filter-difficulty-{{d.value}}" ng-repeat="d in difficulties"
+                ng-click="changeDifficulty(d.value)">
+            {{d.name}}
+        </button>
+    </div>
+    <a class="item">
+        Mode
+    </a>
+    <div class="ui vertical buttons item">
+        <button class="ui toggle button tiny" ng-class="m.active === true ? 'active':''" id="filter-mode-{{m.value}}"
+                ng-repeat="m in modes" ng-click="changeMode(m.value)">
+            {{m.name}}
+        </button>
+    </div>
+</div>
+<div class="pusher">
+    <div class="ui fixed inverted menu">
+        <div class="ui container">
+            <div href="#" class="header item">
+                <img class="logo" src="img/1437607408_osu.png">
+                &nbsp;&nbsp;Altosu
+            </div>
+            <a href="/" class="item">Home</a>
+            <a class="item" id="sidebars-filter">Filters</a>
+            <!--<a href="#" class="ui simple dropdown item">-->
             <!--Dropdown <i class="dropdown icon"></i>-->
 
             <!--<div class="menu">-->
 
 
-                <!--<div class="item">Link Item</div>-->
-                <!--<div class="item">Link Item</div>-->
-                <!--<div class="divider"></div>-->
-                <!--<div class="header">Header Item</div>-->
-                <!--<div class="item">-->
-                    <!--<i class="dropdown icon"></i>-->
-                    <!--Sub Menu-->
-                    <!--<div class="menu">-->
-                        <!--<div class="item">Link Item</div>-->
-                        <!--<div class="item">Link Item</div>-->
-                    <!--</div>-->
-                <!--</div>-->
-                <!--<div class="item">Link Item</div>-->
+            <!--<div class="item">Link Item</div>-->
+            <!--<div class="item">Link Item</div>-->
+            <!--<div class="divider"></div>-->
+            <!--<div class="header">Header Item</div>-->
+            <!--<div class="item">-->
+            <!--<i class="dropdown icon"></i>-->
+            <!--Sub Menu-->
+            <!--<div class="menu">-->
+            <!--<div class="item">Link Item</div>-->
+            <!--<div class="item">Link Item</div>-->
             <!--</div>-->
-        <!--</a>-->
+            <!--</div>-->
+            <!--<div class="item">Link Item</div>-->
+            <!--</div>-->
+            <!--</a>-->
 
-        <div class="ui category search item right aligned" style="width:400px;">
-            <div class="ui icon input">
-                <input class="prompt" type="text" placeholder="Search creators / titles / artits ...">
-                <i class="search icon"></i>
+            <div class="ui category search item right aligned" style="width:400px;">
+                <div class="ui icon input">
+                    <input class="prompt" type="text" placeholder="Search creators / titles / artits ...">
+                    <i class="search icon"></i>
+                </div>
+                <div class="results"></div>
             </div>
-            <div class="results"></div>
         </div>
     </div>
-</div>
 
-
-
-<div class="ui sidebar inverted vertical menu">
-    <a class="item empty-button-sidebar">
-        <button class="ui toggle button">
-            Nothing
-        </button>
-    </a>
-    <a id="filter-difficulty-{{d.value}}" class="item" ng-repeat="d in difficulties" ng-click="changeDifficulty(d.value)" >
-        <button class="ui toggle button "  ng-class="d.active === true ? 'active':''" >
-            {{d.name}}
-        </button>
-    </a>
-    <a id="filter-mode-{{m.value}}" class="item" ng-repeat="m in modes" ng-click="changeMode(m.value)" >
-        <button class="ui toggle button "  ng-class="m.active === true ? 'active':''" >
-            {{m.name}}
-        </button>
-    </a>
-</div>
-<div class="pusher">
     <div ui-view class="" style="margin-top:100px;"></div>
 
 </div>
