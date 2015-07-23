@@ -432,9 +432,9 @@ module.exports = function (app) {
                             try {
                                 var zip = new JSZip(data);
                                 _.each(excludedBeatmaps, function (excludedBeatmap) {
-                                    var replaceInvalidCharacters = excludedBeatmap.xFileName.replace(/[\/:*?"<>|.]/g, "");
+                                    var replaceInvalidCharacters = excludedBeatmap.xFileName.replace(/[\/:*?"<>|]/g, "");
                                     var cleanExtenstion = S(replaceInvalidCharacters).left(replaceInvalidCharacters.length - 3).toString();
-                                    var addExtension = cleanExtenstion + '.osu';
+                                    var addExtension = cleanExtenstion + 'osu';
                                     zip.remove(addExtension);
                                 });
                                 var buffer = zip.generate({type: 'nodebuffer'});

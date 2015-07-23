@@ -3,15 +3,17 @@
  */
 
 /*
-todo: linker les liens des buttons
-todo: rajouter download all
-todo: about page
+
+
 todo: add icon when filtered on mode and difficulty
 
 second:
+todo: handle "&" in filters
+todo: about page
+todo: play button add stop + icon change.
 todo: add detail on click
 todo: add popover on difficulties
-
+todo: clear autocomplete when value is selected
  */
 
 

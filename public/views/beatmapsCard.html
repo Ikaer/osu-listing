@@ -1,16 +1,15 @@
 <div class="ui">
     <div class="tags ui grid centered " style="margin-bottom:40px;">
         <a class="ui tag label" ng-repeat="tag in tags" ng-click="removeTag(tag.tagId)">{{ tag.value }}</a>
-        <!--<button class="tag btn btn-default" ng-click="removeTag(tag.tagId)">-->
-        <!--<img src="/img/{{tag.type}}.png" style="vertical-align: top;width:20px;"/>-->
-
-        <!--</button>-->
+        <a  class="ui label" ng-if="tags.length > 0" target="_blank"  download="pack.zip" href="{{downloadAllLink}}">
+             <i class="cloud download icon"></i> Download all
+        </a>
     </div>
     <div class="ui link cards grid centered">
 
         <div ng-repeat="pack in packs" class="ui card" style="width:200px;text-align:left;">
             <div class="image">
-                <img src="http://www.altosu.org/media/{{pack.beatmapset_id}}/{{pack.beatmapset_id}}l.jpg"
+                <img src="/media/{{pack.beatmapset_id}}/{{pack.beatmapset_id}}l.jpg"
                      ng-mouseover="pack.isDisplayed = true" ng-mouseleave="pack.isDisplayed=false">
             </div>
             <div class="content">
@@ -51,15 +50,16 @@
             </div>
             <div class="extra content">
                 <div class="ui three buttons">
-                    <button class="ui icon basic button">
+                    <a class="ui icon basic button" target="_blank"  href="https://osu.ppy.sh/s/{{pack.beatmapset_id}}" >
                         <i class="linkify icon"></i>
-                    </button>
-                    <button class="ui icon basic button">
+                    </a>
+                    <a class="ui icon basic button" target="_self" href="{{pack.downloadLink}}"
+                            download="{{pack.downloadName}}">
                         <i class="cloud download icon"></i>
-                    </button>
-                    <button class="ui icon basic button">
+                    </a>
+                    <a class="ui icon basic button" ng-click="playBeatmap(pack.beatmapset_id)">
                         <i class="sound icon"></i>
-                    </button>
+                    </a>
                 </div>
             </div>
             <div class="ui bottom attached green progress" data-percent="{{pack.getPercentUserRating()}}">
