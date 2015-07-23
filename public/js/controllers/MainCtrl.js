@@ -4,23 +4,24 @@
 
 
 /*
- first:
  todo: handle "&" in filters
- todo: loader on listing and creating packs / download
+ todo: loader creating packs / download
  todo: clean bootstrap code and files.
-
- second
- todo: check if filters cannot be a menu instead of sidebar to kept sidebar for other purpose.
  todo: use popup module on click on card.
  todo: add icon when filtered on mode and difficulty
- todo: -trier comme la version de base du site.
- odo: scanner un  folder local pour récupérer le listing des beatmaps du user et en faire une "playlist"
-
- third:
+ todo: scanner un folder local pour récupérer le listing des beatmaps du user et en faire une "playlist"
  todo: about page
  todo: play button add stop + icon change.
  todo: add popover on difficulties
  todo: clear autocomplete when value is selected
+ todo: add source, tags, language, type in autocomplete + click in card to directly add tags
+ todo: for tags add a length ponderation (for exemple "on" is better than "one" when user type "on")
+ todo: put information in black vs title in card.
+ todo: (maybe limit to 16 cards, 1080 screen).
+ todo: add button to move next / previous (do a .limit(-/+1) to know if there is next beatmap or previous)
+ todo: disabled cursor:action on card until there is something.
+ todo: add settings in sidenav
+ todo: add beatmap or beatmapset in sidenav
  */
 
 
