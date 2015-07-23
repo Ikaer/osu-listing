@@ -13,6 +13,8 @@ second
 todo: check if filters cannot be a menu instead of sidebar to kept sidebar for other purpose.
 todo: use popup module on click on card.
 todo: add icon when filtered on mode and difficulty
+todo: -trier comme la version de base du site.
+odo: scanner un  folder local pour récupérer le listing des beatmaps du user et en faire une "playlist"
 
 third:
 todo: about page
@@ -48,8 +50,7 @@ TagTools.prototype.getTagsByType = function (tags, type) {
 
 angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$scope', '$location', '$state', 'Beatmap', function ($scope, $location, $state, beatmapAPI) {
 
-    // todo: -trier comme la version de base du site.
-    // todo: scanner un  folder local pour récupérer le listing des beatmaps du user et en faire une "playlist"
+
 
 
     var tagTools = new TagTools();
@@ -271,8 +272,6 @@ angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$s
                 viewState = 'cards';
                 break;
         }
-        console.log($scope.listStyle)
-        console.log(viewState)
         $state.transitionTo('beatmaps.' + viewState);
     }
     $scope.$watch('listStyle', function (newValue, oldValue) {
@@ -297,38 +296,26 @@ angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$s
             .sidebar('toggle')
     })
     $scope.changeDifficulty = function (dValue) {
-        var $button = $('#filter-difficulty-' + dValue);
-        var isEnabled = false;
-        if ($button.hasClass('active')) {
-            $button.removeClass('active')
-        }
-        else {
-            $button.addClass('active')
-            isEnabled = true;
-        }
         var currentDifficilty = _.where($scope.difficulties, {value: dValue});
         _.each(currentDifficilty, function (d) {
-            d.active = isEnabled;
+            d.active = !d.active;
         });
         $scope.draw();
     }
     $scope.changeMode = function (dValue) {
-        var $button = $('#filter-mode-' + dValue);
-        var isEnabled = false;
-        if ($button.hasClass('active')) {
-            $button.removeClass('active')
-        }
-        else {
-            $button.addClass('active')
-            isEnabled = true;
-        }
         var currentMode = _.where($scope.modes, {value: dValue});
         _.each(currentMode, function (d) {
-            d.active = isEnabled;
+            d.active = !d.active;
         });
         $scope.draw();
     }
-
+    $scope.changeApproved = function (dValue) {
+        var currentApproved = _.where($scope.approved, {value: dValue});
+        _.each(currentApproved, function (d) {
+            d.active = !d.active;
+        });
+        $scope.draw();
+    }
 }])
 ;
 

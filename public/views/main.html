@@ -2,55 +2,55 @@
     <a class="item">
         Difficulty
     </a>
-    <div class="ui vertical buttons item">
-        <button class="ui toggle button tiny" ng-class="d.active === true ? 'active':''"
-                id="filter-difficulty-{{d.value}}" ng-repeat="d in difficulties"
-                ng-click="changeDifficulty(d.value)">
-            {{d.name}}
-        </button>
-    </div>
     <a class="item">
         Mode
     </a>
-    <div class="ui vertical buttons item">
-        <button class="ui toggle button tiny" ng-class="m.active === true ? 'active':''" id="filter-mode-{{m.value}}"
-                ng-repeat="m in modes" ng-click="changeMode(m.value)">
-            {{m.name}}
-        </button>
-    </div>
 </div>
 <div class="pusher">
-    <div class="ui fixed inverted menu">
+    <div class="ui fixed inverted menu ao-menu">
         <div class="ui container">
             <div href="#" class="header item">
                 <img class="logo" src="img/1437607408_osu.png">
                 &nbsp;&nbsp;Altosu
             </div>
             <a href="/" class="item">Home</a>
-            <a class="item" id="sidebars-filter">Filters</a>
-            <!--<a href="#" class="ui simple dropdown item">-->
-            <!--Dropdown <i class="dropdown icon"></i>-->
-
-            <!--<div class="menu">-->
-
-
-            <!--<div class="item">Link Item</div>-->
-            <!--<div class="item">Link Item</div>-->
-            <!--<div class="divider"></div>-->
-            <!--<div class="header">Header Item</div>-->
-            <!--<div class="item">-->
-            <!--<i class="dropdown icon"></i>-->
-            <!--Sub Menu-->
-            <!--<div class="menu">-->
-            <!--<div class="item">Link Item</div>-->
-            <!--<div class="item">Link Item</div>-->
-            <!--</div>-->
-            <!--</div>-->
-            <!--<div class="item">Link Item</div>-->
-            <!--</div>-->
-            <!--</a>-->
-
-            <div class="ui category search item right aligned" style="width:400px;">
+            <a class="ui dropdown item  right ">
+                Mode
+                <i class="dropdown icon"></i>
+                <div class="menu">
+                    <div class="item" ng-repeat="m in modes" ng-click="changeMode(m.value)" style="width:180px;">
+                        <img class="ui image" ng-class="m.active === true ? '':'filter-faded-icon'"
+                             src="/img/mode/{{converter.mode[m.value]}}/mode.png"
+                             style="width:20px;"/>
+                        {{m.name}}
+                    </div>
+                </div>
+            </a>
+            <a class="ui dropdown item  aligned">
+                Difficulty
+                <i class="dropdown icon"></i>
+                <div class="menu">
+                    <div class="item" ng-repeat="d in difficulties" ng-click="changeDifficulty(d.value)" style="width:180px;">
+                        <img class="ui image" ng-class="d.active === true ? '':'filter-faded-icon'"
+                             src="/img/mode/osu/{{converter.difficulty[d.value]}}.png"
+                             style="width:20px;"/>
+                        {{d.name}}
+                    </div>
+                </div>
+            </a>
+            <a class="ui dropdown item  aligned">
+                Status
+                <i class="dropdown icon"></i>
+                <div class="menu">
+                    <div class="item" ng-repeat="d in approved" ng-click="changeApproved(d.value)" style="width:180px;">
+                        <img class="ui image" ng-class="d.active === true ? '':'filter-faded-icon'"
+                             src="/img/approved/{{converter.approved[d.value]}}.png"
+                             style="width:20px;"/>
+                        {{d.name}}
+                    </div>
+                </div>
+            </a>
+            <div class="ui category search item  aligned" style="width:400px;">
                 <div class="ui icon input">
                     <input class="prompt" type="text" placeholder="Search creators / titles / artits ...">
                     <i class="search icon"></i>
@@ -59,81 +59,18 @@
             </div>
         </div>
     </div>
-
-    <div ui-view class="" style="margin-top:100px;"></div>
-
 </div>
+<div ui-view style="margin-top:100px;"></div>
+<script>
+    $('.dropdown').dropdown({
+        action: function(){
+            /*hack do nothing*/
+        }
+    });
+    $('.ui.checkbox').checkbox();
+</script>
 <audio id="player" src="" type="audio/mp3"></audio>
 
-<!--<div class="container-fluid">-->
-<!--<div class="filters">-->
-
-<!--<div class="row row-centered filter-row">-->
-<!--<div class="btn-group col-xs-12 col-sm-12 col-md-12 col-lg-12 ">-->
-<!--<div class="col-centered">-->
-<!--<div class="btn-group">-->
-<!--<label ng-model="d.active" ng-change="draw()" btn-checkbox class="btn btn-default"-->
-<!--ng-repeat="d in difficulties">-->
-<!--<img src="/img/mode/osu/{{converter.difficulty[d.value]}}.png"-->
-<!--style="vertical-align: top;width:20px;"/>-->
-<!--{{d.name}}-->
-<!--</label>-->
-<!--<label ng-model="m.active" ng-change="draw()" btn-checkbox class="btn btn-default"-->
-<!--ng-repeat="m in modes">-->
-<!--<img src="/img/mode/{{converter.mode[m.value]}}/mode.png"-->
-<!--style="vertical-align: top;width:20px;"/>-->
-<!--{{m.name}}-->
-<!--</label>-->
-<!--</div>-->
-<!--<div>-->
-<!--<label ng-model="d.active" ng-change="draw()" btn-checkbox class="btn btn-default"-->
-<!--ng-repeat="d in approved">-->
-<!--<img src="/img/approved/{{converter.approved[d.value]}}.png"-->
-<!--style="vertical-align: top;width:20px;"/>-->
-<!--{{d.name}}-->
-<!--</label>-->
-<!--</div>-->
-
-<!--</div>-->
-<!--</div>-->
-<!--</div>-->
-<!--<div class="row row-centered filter-row">-->
-<!--<input-->
-<!--type="text"-->
-<!--placeholder="Search a creator / artist / title ..."-->
-<!--typeahead-template-url="tagTemplate.html"-->
-<!--typeahead-loading="loadingLocations"-->
-<!--typeahead="x.value for x in getTags($viewValue)"-->
-<!--ng-model="selectedTag"-->
-<!--typeahead-on-select="addTag($item)"-->
-<!--class="form-control col-centered" style="width:80%;"/>-->
-<!--<i ng-show="loadingLocations" class="glyphicon glyphicon-refresh"></i>-->
-<!--</div>-->
-<!--<div class="row row-centered filter-row">-->
-<!--<div class="btn-group col-xs-12 col-sm-12 col-md-12 col-lg-12">-->
-<!--<div class="col-centered">-->
-<!--<div class="btn-group">-->
-
-
-<!--</div>-->
-<!--</div>-->
-<!--</div>-->
-<!--</div>-->
-<!--<div class="row row-centered filter-row">-->
-<!--<div class="btn-group">-->
-<!--<label class="btn btn-success" ng-model="displayMode" btn-radio="0" uncheckable>Beatmap</label>-->
-<!--<label class="btn btn-success" ng-model="displayMode" btn-radio="1" uncheckable>Beatmap set</label>-->
-<!--</div>-->
-<!--</div>-->
-<!--<div class="row row-centered filter-row">-->
-<!--<div class="btn-group">-->
-<!--<label class="btn btn-success" ng-model="listStyle" btn-radio="0">table</label>-->
-<!--<label class="btn btn-success" ng-model="listStyle" btn-radio="1">flex</label>-->
-<!--<label class="btn btn-success" ng-model="listStyle" btn-radio="2">cards</label>-->
-<!--</div>-->
-<!--</div>-->
-<!--</div>-->
-<!--</div>-->
 
 
 
