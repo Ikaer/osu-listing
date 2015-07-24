@@ -53,6 +53,13 @@ function QueryTools() {
                     "submitted_date": 1
                 }
 
+            },
+            cleanBeatmapFirst: {
+                $project: {
+                    _id: 0,
+                    "approved_date": 1
+                }
+
             }
         }
     };
@@ -253,10 +260,7 @@ module.exports = function (app) {
         next();
     })
     app.get('/api/beatmaps/:pageIndex/:pageSize', function (req, res) {
-
         var filters = req.query.f ? JSON.parse(req.query.f) : null;
-        var displayMode = filters.displayMode;
-
         var matchPipeline = {
             $match: {$and: []}
         };
@@ -284,7 +288,7 @@ module.exports = function (app) {
                 }
             });
         }
-        if (filters && filters.approved ) {
+        if (filters && filters.approved) {
             matchPipeline.$match.$and.push({
                 approved: {
                     $in: filters.approved
@@ -293,55 +297,32 @@ module.exports = function (app) {
         }
         var aggregatePipeline = [];
         aggregatePipeline.push(matchPipeline);
-        aggregatePipeline.push(queryTools.pipes.projects.cleanBeatmap);
-        if (displayMode === 1) {
-            var groupPipe = {
-                $group: {
-                    _id: {
-                        "beatmapset_id": "$beatmapset_id"
-                    },
-                    beatmapsIds: {$push: "$$ROOT.beatmap_id"},
-                    beatmaps: {$push: "$$ROOT"},
-                    name: {$first: "$title"},
-                    title: {$first: "$title"},
-                    artist: {$first: "$artist"},
-                    creator: {$addToSet: "$creator"},
-                    bpm: {$first: "$bpm"},
-                    beatmapset_id: {$first: "$beatmapset_id"},
-                    approved: {$first: "$approved"},
-                    approved_date: {$first: "$approved_date"},
-                    last_update: {$first: "$last_update"},
-                    hit_length: {$first: "$hit_length"},
-                    source: {$first: "$source"},
-                    total_length: {$first: "$total_length"},
-                    "playCount": {$sum: "$playCount"},
-                    "playSuccess": {$sum: "$playSuccess"},
-                    "favouritedCount": {$first: "$favouritedCount"},
-                    "genre": {$first: "$genre"},
-                    "language": {$first: "$language"},
-                    "negativeUserRating": {$first: "$negativeUserRating"},
-                    "positiveUserRating": {$first: "$positiveUserRating"},
-                    "tags": {$first: "$tags"},
-                    "submitted_date": {$first: "$submitted_date"}
-                }
-            };
-            aggregatePipeline.push(groupPipe);
-        }
 
+        var groupPipe = {
+            $group: {
+                _id: {
+                    "beatmapset_id": "$beatmapset_id"
+                },
+                beatmapsIds: {$push: "$$ROOT.beatmap_id"}
+
+            }
+        };
 
         var sorting = {'approved_date': -1};
         if (filters && filters.sorting && filters.sorting.name !== null) {
             sorting = {};
             sorting[filters.sorting.name] = filters.sorting.direction;
+            groupPipe.$group[filters.sorting.name] = {$first: "$" + filters.sorting.name}
+
         }
+        aggregatePipeline.push(groupPipe);
 
-
-        var query = Beatmap.aggregate(aggregatePipeline);
-        query.sort(sorting);
-        query.skip(req.pageSize * req.pageIndex);
-        query.limit(req.pageSize);
-        query.options = {allowDiskUse: true};
-        query.exec(function (err, packs) {
+        var queryToGetdIds = Beatmap.aggregate(aggregatePipeline);
+        queryToGetdIds.sort(sorting);
+        queryToGetdIds.skip(req.pageSize * req.pageIndex);
+        queryToGetdIds.limit(req.pageSize);
+        queryToGetdIds.options = {allowDiskUse: true};
+        queryToGetdIds.exec(function (err, packs) {
             var response = {
                 packs: [],
                 downloadAllLink: null
@@ -350,36 +331,119 @@ module.exports = function (app) {
                 res.send(response);
             }
             else {
-                response.packs = packs;
-                var downloadAllLink = [];
-                _.each(response.packs, function (pack) {
-                    queryTools.normalizeData(pack);
-                    if (filters.displayMode === 0) {
-                        pack.beatmapsIds = [pack.beatmap_id];
-                        pack.beatmaps = [JSON.parse(JSON.stringify(pack))];
+                if (packs.length > 0) {
+
+                    var matchPipeline = {
+                        $match: {
+                            $and: [
+                                {
+                                    beatmap_id: {
+                                        $in: []
+                                    }
+                                }
+                            ]
+                        }
+                    };
+                    _.each(packs, function (p) {
+                        _.each(p.beatmapsIds, function (bId) {
+                            matchPipeline.$match.$and[0].beatmap_id.$in.push(bId);
+                        })
+                    })
+
+
+                    var aggregatePipeline = [];
+                    aggregatePipeline.push(matchPipeline);
+                    aggregatePipeline.push(queryTools.pipes.projects.cleanBeatmap);
+
+                    var groupPipe = {
+                        $group: {
+                            _id: {
+                                "beatmapset_id": "$beatmapset_id"
+                            },
+                            beatmapsIds: {$push: "$$ROOT.beatmap_id"},
+                            beatmaps: {$push: "$$ROOT"},
+                            name: {$first: "$title"},
+                            title: {$first: "$title"},
+                            artist: {$first: "$artist"},
+                            creator: {$addToSet: "$creator"},
+                            bpm: {$first: "$bpm"},
+                            beatmapset_id: {$first: "$beatmapset_id"},
+                            approved: {$first: "$approved"},
+                            approved_date: {$first: "$approved_date"},
+                            last_update: {$first: "$last_update"},
+                            hit_length: {$first: "$hit_length"},
+                            source: {$first: "$source"},
+                            total_length: {$first: "$total_length"},
+                            "playCount": {$sum: "$playCount"},
+                            "playSuccess": {$sum: "$playSuccess"},
+                            "favouritedCount": {$first: "$favouritedCount"},
+                            "genre": {$first: "$genre"},
+                            "language": {$first: "$language"},
+                            "negativeUserRating": {$first: "$negativeUserRating"},
+                            "positiveUserRating": {$first: "$positiveUserRating"},
+                            "tags": {$first: "$tags"},
+                            "submitted_date": {$first: "$submitted_date"}
+                        }
+                    };
+                    aggregatePipeline.push(groupPipe);
+
+
+                    var sorting = {'approved_date': -1};
+                    if (filters && filters.sorting && filters.sorting.name !== null) {
+                        sorting = {};
+                        sorting[filters.sorting.name] = filters.sorting.direction;
                     }
 
 
-                    var fileName = util.format('%s %s - %s.osz', pack.beatmaps[0].beatmapset_id, pack.beatmaps[0].artist, pack.beatmaps[0].title);
+                    var queryToGetData = Beatmap.aggregate(aggregatePipeline);
+                    queryToGetData.sort(sorting);
+                    queryToGetData.options = {allowDiskUse: true};
+                    queryToGetData.exec(function (err, packs) {
+                        var response = {
+                            packs: [],
+                            downloadAllLink: null
+                        }
+                        if (err) {
+                            res.send(response);
+                        }
+                        else {
+                            response.packs = packs;
+                            var downloadAllLink = [];
+                            _.each(response.packs, function (pack) {
+                                queryTools.normalizeData(pack);
+                                if (filters.displayMode === 0) {
+                                    pack.beatmapsIds = [pack.beatmap_id];
+                                    pack.beatmaps = [JSON.parse(JSON.stringify(pack))];
+                                }
 
-                    var toDownloadParam = downloadTools.createToDownloadParams(pack, pack.beatmaps)
-                    downloadAllLink.push(toDownloadParam);
-                    pack.downloadLink = '/api/download/0/' + toDownloadParam;
-                    pack.downloadName = fileName;
-                    _.each(pack.beatmaps, function (beatmap) {
+
+                                var fileName = util.format('%s %s - %s.osz', pack.beatmaps[0].beatmapset_id, pack.beatmaps[0].artist, pack.beatmaps[0].title);
+
+                                var toDownloadParam = downloadTools.createToDownloadParams(pack, pack.beatmaps)
+                                downloadAllLink.push(toDownloadParam);
+                                pack.downloadLink = '/api/download/0/' + toDownloadParam;
+                                pack.downloadName = fileName;
+                                _.each(pack.beatmaps, function (beatmap) {
 
 
-                        var replaceInvalidCharacters = beatmap.xFileName.replace(/[\/:*?"<>|.]/g, "");
-                        var cleanExtenstion = S(replaceInvalidCharacters).left(replaceInvalidCharacters.length - 3).toString();
-                        fileName = cleanExtenstion + '.osz';
-                        beatmap.downloadLink = '/api/download/0/' + downloadTools.createToDownloadParams(pack, [beatmap]);
-                        beatmap.downloadName = fileName;
-                    })
-                });
-                response.downloadAllLink = '/api/download/1/' + downloadAllLink.join(';');
-                res.json(response);
+                                    var replaceInvalidCharacters = beatmap.xFileName.replace(/[\/:*?"<>|.]/g, "");
+                                    var cleanExtenstion = S(replaceInvalidCharacters).left(replaceInvalidCharacters.length - 3).toString();
+                                    fileName = cleanExtenstion + '.osz';
+                                    beatmap.downloadLink = '/api/download/0/' + downloadTools.createToDownloadParams(pack, [beatmap]);
+                                    beatmap.downloadName = fileName;
+                                })
+                            });
+                            response.downloadAllLink = '/api/download/1/' + downloadAllLink.join(';');
+                            res.json(response);
+                        }
+                    });
+                }
+                else {
+                    res.json(response);
+                }
             }
-        })
+        });
+
     });
     app.get('/api/download/:isMultiPack/:toDownload', function (req, res) {
 
@@ -407,9 +471,7 @@ module.exports = function (app) {
         });
 
         _.each(req.toDownload, function (oszFile) {
-            var query = new Query({'beatmapset_id': oszFile.beatmapSetId}).lean();
-
-            Beatmap.find(query, function (err, allBeatmaps) {
+            Beatmap.find({'beatmapset_id': oszFile.beatmapSetId}, function (err, allBeatmaps) {
                 if (err) {
                     errorOccurred(util.format('error while retrieving beatmaps for beatmapset %s from mongodb: %s', beatmapSet.beatmapset_id, err))
                 }
