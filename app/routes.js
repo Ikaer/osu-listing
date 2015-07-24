@@ -270,21 +270,21 @@ module.exports = function (app) {
                 }
             });
         }
-        if (filters && filters.difficulties) {
+        if (filters && filters.difficulties && filters.difficulties.length < 5) {
             matchPipeline.$match.$and.push({
                 difficulty: {
                     $in: filters.difficulties
                 }
             });
         }
-        if (filters && filters.modes) {
+        if (filters && filters.modes && filters.modes.length < 4) {
             matchPipeline.$match.$and.push({
                 mode: {
                     $in: filters.modes
                 }
             });
         }
-        if (filters && filters.approved) {
+        if (filters && filters.approved ) {
             matchPipeline.$match.$and.push({
                 approved: {
                     $in: filters.approved
