@@ -10,27 +10,34 @@
     <div class="ui fixed inverted menu ao-menu">
         <div class="ui container">
             <a href="/" class="item">
-                <div class="ui small loader ao-loader"  ></div>
+                <div class="ui small loader ao-loader"></div>
             </a>
+
             <div href="#" class="header item">
-                <img class="logo ao-logo" src="img/1437607408_osu.png" >&nbsp;&nbsp;
+                <img class="logo ao-logo" src="img/1437607408_osu.png">&nbsp;&nbsp;
                 AltOsu
             </div>
             <a href="/" class="item">Home</a>
-            <div class="ui  dropdown item ao-sorting right">
+
+            <div class="ui dropdown item ao-sorting right">
                 <input type="hidden" name="gender">
+
                 <div class="default text">{{sorting.label}}</div>
                 <i class="dropdown icon"></i>
+
                 <div class="menu">
-                    <div class="item" ng-if="(displayMode === 0 && s.single === true) || s.single !== true" ng-repeat="s in sortings" data-value="{{s.value}}" ng-click="sort(s)" >
+                    <div class="item" ng-if="(displayMode === 0 && s.single === true) || s.single !== true"
+                         ng-repeat="s in sortings" data-value="{{s.value}}" ng-click="sort(s)">
                         {{s.label}}
                     </div>
                 </div>
             </div>
-            <a  class="item"> <i class="sort content icon" ng-click="changeSortingDirection()" ng-class="sorting.direction === 1 ? 'ascending' : 'descending'"></i></a>
+            <a class="item"> <i class="sort content icon" ng-click="changeSortingDirection()"
+                                ng-class="sorting.direction === 1 ? 'ascending' : 'descending'"></i></a>
             <a class="ui dropdown item aligned ao-filters">
                 Mode
                 <i class="dropdown icon"></i>
+
                 <div class="menu">
                     <div class="item" ng-repeat="m in modes" ng-click="changeMode(m.value)" style="width:180px;">
                         <img class="ui image" ng-class="m.active === true ? '':'filter-faded-icon'"
@@ -43,8 +50,10 @@
             <a class="ui dropdown item aligned ao-filters">
                 Difficulty
                 <i class="dropdown icon"></i>
+
                 <div class="menu">
-                    <div class="item" ng-repeat="d in difficulties" ng-click="changeDifficulty(d.value)" style="width:180px;">
+                    <div class="item" ng-repeat="d in difficulties" ng-click="changeDifficulty(d.value)"
+                         style="width:180px;">
                         <img class="ui image" ng-class="d.active === true ? '':'filter-faded-icon'"
                              src="/img/mode/osu/{{converter.difficulty[d.value]}}.png"
                              style="width:20px;"/>
@@ -55,6 +64,7 @@
             <a class="ui dropdown item aligned ao-filters">
                 Status
                 <i class="dropdown icon"></i>
+
                 <div class="menu">
                     <div class="item" ng-repeat="d in approved" ng-click="changeApproved(d.value)" style="width:180px;">
                         <img class="ui image" ng-class="d.active === true ? '':'filter-faded-icon'"
@@ -64,12 +74,67 @@
                     </div>
                 </div>
             </a>
+
             <div class="ui category search item  aligned" style="width:300px;">
                 <div class="ui icon input">
                     <input class="prompt" type="text" placeholder="Search creators / titles / artits ...">
                     <i class="search icon"></i>
                 </div>
                 <div class="results"></div>
+            </div>
+
+
+            <!--<a class="item ao-user">-->
+                <!--<i class="user icon"></i>-->
+            <!--</a>-->
+
+            <div class="ui flowing popup top left transition hidden ao-user-popup" style="width:500px;">
+                <div class="ui two column middle aligned very relaxed stackable grid">
+                    <div class="column">
+                        <div class="ui form">
+                            <div class="field">
+                                <label>Username</label>
+
+                                <div class="ui left icon input">
+                                    <input type="text" placeholder="Username">
+                                    <i class="user icon"></i>
+                                </div>
+                            </div>
+                            <div class="field">
+                                <label>Password</label>
+
+                                <div class="ui left icon input">
+                                    <input type="password" autocomplete="off"
+                                           style="cursor: auto; background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGP6zwAAAgcBApocMXEAAAAASUVORK5CYII=);">
+                                    <i class="lock icon"></i>
+                                </div>
+                            </div>
+                            <div class="ui blue submit button">Login</div>
+                        </div>
+                    </div>
+                    <div class="ui vertical divider">
+                        Or
+                    </div>
+                    <div class="ui aligned column vertical buttons">
+                        <div class="ui green button log-signup">
+                            <i class="signup icon"></i>
+                            Sign Up
+                        </div>
+                        <div class="ui facebook button log-signup">
+                            <i class="facebook icon"></i>
+                            Facebook
+                        </div>
+                        <div class="ui twitter button log-signup">
+                            <i class="twitter icon"></i>
+                            Twitter
+                        </div>
+                        <div class="ui google plus button log-signup">
+                            <i class="google plus icon"></i>
+                            Google Plus
+                        </div>
+
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -79,12 +144,17 @@
 
     $('.dropdown.ao-sorting').dropdown();
     $('.dropdown.ao-filters').dropdown({
-        action: function(){
+        action: function () {
             /*hack do nothing*/
         }
     });
     $('.ui.checkbox').checkbox();
-
+    $('.ao-user').popup({
+        on:'click',
+        popup: '.ao-user-popup',
+        position: 'bottom right',
+        closable:false
+    });
 </script>
 <audio id="player" src="" type="audio/mp3"></audio>
 
