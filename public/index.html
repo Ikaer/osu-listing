@@ -13,10 +13,8 @@
     <title>AltOsu</title>
 
     <!-- CSS -->
-    <link rel="stylesheet" href="libs/bootstrap/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="libs/angular-bootstrap/ui-bootstrap-csp.css">
-    <link rel="stylesheet" href="style/style.css">
 
+    <link rel="stylesheet" href="style/style.css">
 
     <!-- JS -->
     <script src="libs/underscore/underscore-min.js"></script>
@@ -25,12 +23,6 @@
 
     <script src="libs/angular/angular.min.js"></script>
     <script src="libs/angular-ui-router/release/angular-ui-router.js"></script>
-
-    <!--<script src="libs/angular-bootstrap/ui-bootstrap.min.js"></script>-->
-    <!--<script src="libs/angular-bootstrap/ui-bootstrap-tpls.min.js"></script>-->
-
-    <!--<script src="libs/bootstrap/js/tooltip.js"></script>-->
-    <!--<script src="libs/bootstrap/js/popover.js"></script>-->
 
     <link rel="stylesheet" type="text/css" href="libs/semantic-ui/dist/semantic.min.css">
     <script src="libs/semantic-ui/dist/semantic.min.js"></script>
@@ -48,15 +40,12 @@
                         templateUrl: "views/main.html",
                         controller: 'MainController'
                     })
-                    .state('beatmaps.table', {
-                        url: "/table",
-                        parent:"beatmaps",
-                        templateUrl: "views/beatmapsTable.html"
-                    })
-                    .state('beatmaps.flex', {
-                        url: "/flex",
-                        parent:"beatmaps",
-                        templateUrl: "views/beatmapsFlex.html"
+                    .state('beatmaps.anon', {
+                        abstract:true,
+
+                        url: "/beatmaps",
+                        templateUrl: "views/main.html",
+                        controller: 'MainController'
                     })
                     .state('beatmaps.cards', {
                         url: "/cards",
