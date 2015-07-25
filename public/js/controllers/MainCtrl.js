@@ -115,7 +115,8 @@ angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$s
         favouritedCount: {label: 'Favourites', value: 'favouritedCount', direction: -1},
         negativeUserRating: {label: 'Negative user ratings', value: 'negativeUserRating', direction: -1},
         positiveUserRating: {label: 'Positive user ratings', value: 'positiveUserRating', direction: -1},
-        submitted_date: {label: 'Submitted date', value: 'submitted_date', direction: -1}
+        submitted_date: {label: 'Submitted date', value: 'submitted_date', direction: -1},
+        last_update: {label: 'Last update', value: 'last_update', direction: -1}
     };
     $scope.sorting = $scope.sortings.approved;
     $scope.changeSortingDirection = function () {
@@ -290,8 +291,7 @@ angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$s
     })
     $scope.defineView();
 
-    $('.ui.search')
-        .search({
+    $('.ui.search').search({
             apiSettings: {
                 url: '/api/tagsSemantic/{query}'
             },
@@ -323,6 +323,18 @@ angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$s
         _.each(currentApproved, function (d) {
             d.active = !d.active;
         });
+        var currentApprovedChecked = _.where($scope.approved, {active: true});
+        if((
+            currentApprovedChecked.length === 2
+            && (currentApprovedChecked[0].value === -1 && currentApprovedChecked[1].value === -2)
+            )
+            ||
+            (currentApprovedChecked.length === 1
+                && (currentApprovedChecked[0].value === -1 || currentApprovedChecked[0].value === -2)
+            )
+        ){
+            $scope.sort($scope.sortings.last_update);
+        }
         $scope.draw();
     }
     $scope.bindCardsEvents = function(){
