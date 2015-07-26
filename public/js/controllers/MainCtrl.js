@@ -49,9 +49,15 @@ TagTools.prototype.getTagsByType = function (tags, type) {
 }
 
 
-angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$scope', '$location', '$state', 'Beatmap', function ($scope, $location, $state, beatmapAPI) {
+angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainController', ['$rootScope', '$scope', '$location', '$state', 'beatmapApi', 'AuthenticationService', function ($rootScope, $scope, $location, $state, beatmapApi, authService) {
 
-
+    $scope.isLogged = $rootScope.globals && $rootScope.globals.currentUser;
+    $scope.user = $scope.isLogged ? $rootScope.globals.currentUser.username : null;
+    $('.ao-user').popup({
+        on: 'click',
+        popup: $scope.isLogged ? '.ao-user-options': '.ao-user-popup',
+        position: 'bottom right'
+    });
     $scope.loading = true;
     $scope.notLoading = false;
     showLoading();
@@ -156,7 +162,7 @@ angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$s
 
     $scope.selectedTag = null
     $scope.getTags = function (search) {
-        return beatmapAPI.getTags(search);
+        return beatmapApi.getTags(search);
     }
 
     $scope.playBeatmap = function (beatmapId) {
@@ -237,7 +243,7 @@ angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$s
             },
             displayMode: $scope.displayMode
         }
-        beatmapAPI.get(function (errMessage) {
+        beatmapApi.get(function (errMessage) {
             },
             function (res) {
                 _.each(res.packs, function (p) {
@@ -284,22 +290,41 @@ angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$s
         }
         $state.transitionTo('beatmaps.' + viewState);
     }
-    $scope.$watch('listStyle', function (newValue, oldValue) {
-        if (newValue !== oldValue) {
-            $scope.defineView();
-        }
-    })
-    $scope.defineView();
+    //$scope.$watch('listStyle', function (newValue, oldValue) {
+    //    if (newValue !== oldValue) {
+    //        $scope.defineView();
+    //    }
+    //})
+    // $scope.defineView();
+    $scope.goToSignup = function () {
+        $state.transitionTo('home.signup');
+    }
+    $scope.openSignup = function () {
+        $('.signup.modal').modal('show');
+    }
+
+
+    $scope.createAccount = function () {
+        var pseudo = $('.signup .pseudo').val();
+        var password1 = $('.signup .password1').val();
+        var password2 = $('.signup .password2').val();
+        var mail = $('.signup .mail').val();
+        beatmapApi.createUser(pseudo, password1, mail, function () {
+            console.log('created');
+        }, function (result) {
+            console.log(result.reason);
+        });
+    }
 
     $('.ui.search').search({
-            apiSettings: {
-                url: '/api/tagsSemantic/{query}'
-            },
-            type: 'category',
-            onSelect: function (result, response) {
-                $scope.addTag(result.o);
-            }
-        });
+        apiSettings: {
+            url: '/api/tagsSemantic/{query}'
+        },
+        type: 'category',
+        onSelect: function (result, response) {
+            $scope.addTag(result.o);
+        }
+    });
     $('#sidebars-filter').click(function () {
         $('.ui.sidebar')
             .sidebar('toggle')
@@ -324,20 +349,20 @@ angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$s
             d.active = !d.active;
         });
         var currentApprovedChecked = _.where($scope.approved, {active: true});
-        if((
-            currentApprovedChecked.length === 2
-            && (currentApprovedChecked[0].value === -1 && currentApprovedChecked[1].value === -2)
+        if ((
+                currentApprovedChecked.length === 2
+                && (currentApprovedChecked[0].value === -1 && currentApprovedChecked[1].value === -2)
             )
             ||
             (currentApprovedChecked.length === 1
                 && (currentApprovedChecked[0].value === -1 || currentApprovedChecked[0].value === -2)
             )
-        ){
+        ) {
             $scope.sort($scope.sortings.last_update);
         }
         $scope.draw();
     }
-    $scope.bindCardsEvents = function(){
+    $scope.bindCardsEvents = function () {
         $('.ao-beatmap-image-container').dimmer({
             on: 'hover'
         });
@@ -345,6 +370,26 @@ angular.module('MainCtrl', ['BeatmapService']).controller('MainController', ['$s
             $(this).hide();
             // or $(this).css({visibility:"hidden"});
         });
+    }
+
+    $scope.username = null;
+    $scope.password = null;
+    $scope.loginError = null;
+    $scope.login = function () {
+        authService.Login($scope.username, $scope.password, function (response) {
+            if (response.passwordOk) {
+                authService.SetCredentials(response.name, $scope.password);
+                window.location.href = '/'
+            } else {
+                $scope.loginError = response.reason;
+            }
+        }, function (ko) {
+            // window.location.href = '/'
+        });
+    }
+    $scope.logout = function () {
+        authService.ClearCredentials();
+        window.location.href = '/'
     }
 }])
 ;

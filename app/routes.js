@@ -1,7 +1,7 @@
 // todo: create rss feed about creator with download link
 
 var Beatmap = require('./models/beatmap');
-
+var User = require('./models/user');
 
 var nconf = require('nconf');
 nconf.file({file: 'config.json'});
@@ -14,6 +14,88 @@ var S = require('string');
 var util = require('util');
 var Q = require('q');
 var archiver = require('archiver');
+
+function AuthTools() {
+    this.keyStr = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
+}
+AuthTools.prototype.encode = function (input) {
+    var that = this;
+    var output = "";
+    var chr1, chr2, chr3 = "";
+    var enc1, enc2, enc3, enc4 = "";
+    var i = 0;
+
+    do {
+        chr1 = input.charCodeAt(i++);
+        chr2 = input.charCodeAt(i++);
+        chr3 = input.charCodeAt(i++);
+
+        enc1 = chr1 >> 2;
+        enc2 = ((chr1 & 3) << 4) | (chr2 >> 4);
+        enc3 = ((chr2 & 15) << 2) | (chr3 >> 6);
+        enc4 = chr3 & 63;
+
+        if (isNaN(chr2)) {
+            enc3 = enc4 = 64;
+        } else if (isNaN(chr3)) {
+            enc4 = 64;
+        }
+
+        output = output +
+            that.keyStr.charAt(enc1) +
+            that.keyStr.charAt(enc2) +
+            that.keyStr.charAt(enc3) +
+            that.keyStr.charAt(enc4);
+        chr1 = chr2 = chr3 = "";
+        enc1 = enc2 = enc3 = enc4 = "";
+    } while (i < input.length);
+
+    return output;
+};
+AuthTools.prototype.decode = function (input) {
+    var that = this;
+    var output = "";
+    var chr1, chr2, chr3 = "";
+    var enc1, enc2, enc3, enc4 = "";
+    var i = 0;
+
+    // remove all characters that are not A-Z, a-z, 0-9, +, /, or =
+    var base64test = /[^A-Za-z0-9\+\/\=]/g;
+    if (base64test.exec(input)) {
+        window.alert("There were invalid base64 characters in the input text.\n" +
+            "Valid base64 characters are A-Z, a-z, 0-9, '+', '/',and '='\n" +
+            "Expect errors in decoding.");
+    }
+    input = input.replace(/[^A-Za-z0-9\+\/\=]/g, "");
+
+    do {
+        enc1 = that.keyStr.indexOf(input.charAt(i++));
+        enc2 = that.keyStr.indexOf(input.charAt(i++));
+        enc3 = that.keyStr.indexOf(input.charAt(i++));
+        enc4 = that.keyStr.indexOf(input.charAt(i++));
+
+        chr1 = (enc1 << 2) | (enc2 >> 4);
+        chr2 = ((enc2 & 15) << 4) | (enc3 >> 2);
+        chr3 = ((enc3 & 3) << 6) | enc4;
+
+        output = output + String.fromCharCode(chr1);
+
+        if (enc3 != 64) {
+            output = output + String.fromCharCode(chr2);
+        }
+        if (enc4 != 64) {
+            output = output + String.fromCharCode(chr3);
+        }
+
+        chr1 = chr2 = chr3 = "";
+        enc1 = enc2 = enc3 = enc4 = "";
+
+    } while (i < input.length);
+
+    return output;
+}
+
+var authTools = new AuthTools();
 
 function QueryTools() {
     this.pipes = {
@@ -261,6 +343,30 @@ module.exports = function (app) {
     })
     app.get('/api/beatmaps/:pageIndex/:pageSize', function (req, res) {
         var filters = req.query.f ? JSON.parse(req.query.f) : null;
+
+
+        var getUserDataIsDone = Q.defer();
+        if (req.headers.authorization !== undefined) {
+            try {
+                var decodedData = authTools.decode(req.headers.authorization.replace('Basic ', ''));
+                var userData = decodedData.split(':');
+                User.findOne({name: userData[0]}, function (err, user) {
+                    if (user !== null && user.isValidPassword(userData[1])) {
+                        getUserDataIsDone.resolve(user);
+                    }
+                    else {
+                        getUserDataIsDone.resolve(null);
+                    }
+                });
+            }
+            catch (e) {
+                getUserDataIsDone.resolve(null);
+            }
+        }
+        else {
+            getUserDataIsDone.resolve(null);
+        }
+
         var matchPipeline = {
             $match: {$and: []}
         };
@@ -434,7 +540,15 @@ module.exports = function (app) {
                                 })
                             });
                             response.downloadAllLink = '/api/download/1/' + downloadAllLink.join(';');
-                            res.json(response);
+                            Q.when(getUserDataIsDone.promise).then(function (user) {
+                                if (user != null) {
+                                    console.log('user is ' + user.name)
+                                }
+                                else{
+                                    console.log('anonymous user');
+                                }
+                                res.json(response);
+                            });
                         }
                     });
                 }
@@ -598,7 +712,81 @@ module.exports = function (app) {
         })
 
     });
+    app.post('/api/user', function (req, res) {
+        User.findOne({name: req.body.pseudo}, function (err, dbUser) {
+            var that = this;
+            var result = {
+                created: false,
+                reason: null
+            }
+            if (dbUser === null) {
+                var user = new User({
+                    name: req.body.pseudo,
+                    email: req.body.mail
+                });
+                user.setPassword(req.body.password);
 
+                user.save(function (err, result) {
+                    if (err) {
+                        res.json({
+                            created: false,
+                            reason: err
+                        });
+                    }
+                    else {
+                        res.json({
+                            created: true,
+                            reason: null
+                        });
+                    }
+                });
+            }
+            else {
+                result.reason = 'already exist';
+                res.json(result);
+            }
+        });
+    });
+    app.get('/api/user/authenticate/:pseudoOrMail/:password', function (req, res) {
+        User.findOne({name: req.params.pseudoOrMail}, function (err, user) {
+            var result = {
+                userFound: false,
+                passwordOk: false,
+                name: null,
+                error: null
+            }
+            if (err) {
+                result.error = err;
+                res.json(result);
+            }
+            else {
+                if (null === user) {
+                    User.findOne({email: req.params.pseudoOrMail}, function (err, user) {
+                        var result = {
+                            userFound: false,
+                            passwordOk: false,
+                            error: null
+                        }
+                        if (err) result.error = err;
+                        else {
+                            if (null !== user) {
+                                result.name = user.name;
+                                result.userFound = true;
+                                result.passwordOk = user.isValidPassword(req.params.password)
+                            }
+                        }
+                        res.json(result);
+                    });
+                }
+                else {
+                    result.userFound = true;
+                    result.name = user.name;
+                    result.passwordOk = user.isValidPassword(req.params.password)
+                    res.json(result);
+                }
+            }
+        });
+    })
     app.get('*', function (req, res) {
         res.sendfile('./public/index.html'); // load the single view file (angular will handle the page changes on the front-end)
     });

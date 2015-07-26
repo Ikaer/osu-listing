@@ -9,6 +9,7 @@
   "dependencies": {
     "archiver": "^0.14.4",
     "body-parser": "~1.4.2",
+    "crypto": "0.0.3",
     "express": "~4.5.1",
     "http": "0.0.0",
     "jszip": "^2.5.0",
@@ -16,7 +17,9 @@
     "mongoose": "~3.8.0",
     "morgan": "^1.6.1",
     "nconf": "^0.7.1",
+    "node-uuid": "^1.4.3",
     "npm-flatten": "0.0.1",
+    "passport": "^0.2.2",
     "q": "^1.4.1",
     "string": "^3.3.0",
     "underscore": "^1.8.3"

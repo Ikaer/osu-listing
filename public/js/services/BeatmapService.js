@@ -1,11 +1,4 @@
-/**
- * Created by Xavier on 01/07/2015.
- */
-
-
-
-
-angular.module('BeatmapService', []).factory('Beatmap', ['$http', function ($http, $q) {
+angular.module('BeatmapAPI', []).factory('beatmapApi', ['$http', function ($http, $q) {
 
     return {
         // call to get all nerds
@@ -25,16 +18,32 @@ angular.module('BeatmapService', []).factory('Beatmap', ['$http', function ($htt
                     err("cannot get beatmaps");
                 })
         },
-        getCreators: function (search) {
-            var url = search === '' ? '/api/authors' : '/api/authors/' + search;
-            return $http.get(url).then(function (response) {
-                return response.data;
-            });
-        },
         getTags: function (search) {
             var url = '/api/tags/' + search;
             return $http.get(url).then(function (response) {
                 return response.data;
+            });
+        },
+        createUser: function (pseudo, password, mail, fnOk, fnErr) {
+            var url = '/api/user'
+            $http.post(url, {pseudo: pseudo, password: password, mail: mail}).then(function (response) {
+                if (response.created === true) {
+                    fnOk(response);
+                }
+                else {
+                    fnErr(response);
+                }
+            })
+        },
+        authenticateUser:function(pseudoOrMail, password, fnOk, fnKo){
+            var url = '/api/user/authenticate/'+pseudoOrMail+'/' + password;
+            $http.get(url).success(function(data){
+                if(true === data.passwordOk){
+                    fnOk(data)
+                }
+                else{
+                    fnKo(data);
+                }
             });
         }
     }
