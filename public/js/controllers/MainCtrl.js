@@ -245,7 +245,8 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
                 title: tagTools.getTagsByType($scope.tags, 'title'),
                 source: tagTools.getTagsByType($scope.tags, 'source'),
                 genre: tagTools.getTagsByType($scope.tags, 'genre'),
-                language: tagTools.getTagsByType($scope.tags, 'language')
+                language: tagTools.getTagsByType($scope.tags, 'language'),
+                tags:tagTools.getTagsByType($scope.tags, 'tags')
             },
             sorting: {
                 name: $scope.sorting.value,
