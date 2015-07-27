@@ -5,24 +5,18 @@ angular.module('BeatmapAPI', []).factory('beatmapApi', ['$http', function ($http
         get: function (err, fnCallbackWithData, pageIndex, pageSize, filters) {
 
 
-            var url = '/api/beatmaps/' + pageIndex + '/' + pageSize + '/';
+            var myUrl = '/api/beatmaps/' + pageIndex + '/' + pageSize + '/';
 
             if (filters) {
-                url += '?f=' + JSON.stringify(filters);
+                myUrl += '?f=' + encodeURIComponent( JSON.stringify(filters));
             }
-            $http.get(url).
+            $http.get(myUrl).
                 success(function (data, status, headers, config) {
                     fnCallbackWithData(data)
                 }).
                 error(function (data, status, headers, config) {
                     err("cannot get beatmaps");
                 })
-        },
-        getTags: function (search) {
-            var url = '/api/tags/' + search;
-            return $http.get(url).then(function (response) {
-                return response.data;
-            });
         },
         createUser: function (pseudo, password, mail, fnOk, fnErr) {
             var url = '/api/user'

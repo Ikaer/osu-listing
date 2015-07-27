@@ -55,7 +55,7 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
     $scope.user = $scope.isLogged ? $rootScope.globals.currentUser.username : null;
     $('.ao-user').popup({
         on: 'click',
-        popup: $scope.isLogged ? '.ao-user-options': '.ao-user-popup',
+        popup: $scope.isLogged ? '.ao-user-options' : '.ao-user-popup',
         position: 'bottom right'
     });
     $scope.loading = true;
@@ -144,12 +144,21 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
     })
 
 
+    $scope.addTagByUI = function (type, value) {
+        var tag = {
+            type: type,
+            value: value
+        }
+        $scope.addTag(tag);
+    }
+
     $scope.addTag = function (tag) {
-        var newTag = tagTools.createTag(tag);
-        $scope.selectedTag = null;
-        $scope.tags.push(newTag);
-        console.log(JSON.stringify($scope.tags))
-        $scope.draw();
+        if (_.where($scope.tags, {type: tag.type, value: tag.value}).length === 0) {
+            var newTag = tagTools.createTag(tag);
+            $scope.selectedTag = null;
+            $scope.tags.push(newTag);
+            $scope.draw();
+        }
     }
 
     $scope.removeTag = function (tagId) {
@@ -161,9 +170,7 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
 
 
     $scope.selectedTag = null
-    $scope.getTags = function (search) {
-        return beatmapApi.getTags(search);
-    }
+
 
     $scope.playBeatmap = function (beatmapId) {
         var zik = document.getElementById('player')
@@ -235,7 +242,10 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
             tags: {
                 creator: tagTools.getTagsByType($scope.tags, 'creator'),
                 artist: tagTools.getTagsByType($scope.tags, 'artist'),
-                title: tagTools.getTagsByType($scope.tags, 'title')
+                title: tagTools.getTagsByType($scope.tags, 'title'),
+                source: tagTools.getTagsByType($scope.tags, 'source'),
+                genre: tagTools.getTagsByType($scope.tags, 'genre'),
+                language: tagTools.getTagsByType($scope.tags, 'language')
             },
             sorting: {
                 name: $scope.sorting.value,

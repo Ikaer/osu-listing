@@ -149,51 +149,93 @@ function QueryTools() {
 
 QueryTools.prototype.searchGeneric = function (search, field, sortByCount, sortIsDesc) {
     var d = Q.defer();
-    var sortFilter = {};
-    var pipeline = [];
 
-    // filter beatmaps table
-    if (search && search !== '') {
-        var regex = new RegExp(search, 'i');
-        var $match = {};
-        $match[field] = regex;
-        pipeline.push({
-            $match: $match
+    if (field === 'tags') {
+        var o = {};
+        if (search && search !== '') {
+            var regex = new RegExp(search, 'i');
+            var $match = {};
+            $match[field] = regex;
+            o.query = {
+                tags: regex
+            }
+            o.scope = {
+                regex: regex
+            }
+        }
+        o.map = function () {
+            this.tags.forEach(function (t) {
+                if (t.match(regex)) {
+                    emit(t, 1)
+                }
+            })
+        }
+        o.reduce = function (k, vals) {
+            return vals.length
+        }
+        Beatmap.mapReduce(o, function (err, results) {
+            if (err) d.resolve([])
+            else {
+                var foundTags = _.map(results, function (r) {
+                    return {
+                        value: r._id,
+                        type: 'tags',
+                        count: r.value
+                    }
+                })
+                d.resolve(foundTags);
+            }
         })
+
+    }
+    else {
+        var sortFilter = {};
+        var pipeline = [];
+
+        // filter beatmaps table
+        if (search && search !== '') {
+            var regex = new RegExp(search, 'i');
+            var $match = {};
+            $match[field] = regex;
+            pipeline.push({
+                $match: $match
+            })
+        }
+        // group by a field with count
+        var $group = {
+            _id: {},
+            count: {$sum: 1}
+        };
+        $group._id[field] = '$' + field;
+        $group.value = {$first: '$' + field};
+        pipeline.push({
+            $group: $group
+        });
+
+        // result to get
+        pipeline.push({
+            $project: {
+                _id: 0,
+                value: 1,
+                type: {$literal: field},
+                count: 1
+            }
+        });
+
+        // sort to apply (value or count)
+        var sortField = true === sortByCount ? 'count' : 'value';
+        sortFilter[sortField] = true === sortIsDesc ? -1 : 1;
+
+        // exec.
+        Beatmap.aggregate(pipeline)
+            .sort(sortFilter)
+            .limit(3)
+            .exec(function (err, docs) {
+                if (err) d.reject(err)
+                else d.resolve(docs);
+            });
     }
 
-    // group by a field with count
-    var $group = {
-        _id: {},
-        count: {$sum: 1}
-    };
-    $group._id[field] = '$' + field;
-    $group.value = {$first: '$' + field};
-    pipeline.push({
-        $group: $group
-    });
-
-    // result to get
-    pipeline.push({
-        $project: {
-            _id: 0,
-            value: 1,
-            type: {$literal: field},
-            count: 1
-        }
-    });
-
-    // sort to apply (value or count)
-    var sortField = true === sortByCount ? 'count' : 'value';
-    sortFilter[sortField] = true === sortIsDesc ? -1 : 1;
-
-    // exec.
-    Beatmap.aggregate(pipeline)
-        .sort(sortFilter)
-        .exec(function (err, doc) {
-            if (err) d.reject(err)
-            else d.resolve(doc);
-        });
     return d.promise;
 }
 QueryTools.prototype.searchCreators = function (search, sortByCount, sortIsDesc) {
@@ -205,6 +247,19 @@ QueryTools.prototype.searchSongs = function (search, sortByCount, sortIsDesc) {
 QueryTools.prototype.searchArtists = function (search, sortByCount, sortIsDesc) {
     return this.searchGeneric(search, 'artist', sortByCount, sortIsDesc);
 }
+QueryTools.prototype.searchSources = function (search, sortByCount, sortIsDesc) {
+    return this.searchGeneric(search, 'source', sortByCount, sortIsDesc);
+}
+QueryTools.prototype.searchGenres = function (search, sortByCount, sortIsDesc) {
+    return this.searchGeneric(search, 'genre', sortByCount, sortIsDesc);
+}
+QueryTools.prototype.searchLanguages = function (search, sortByCount, sortIsDesc) {
+    return this.searchGeneric(search, 'language', sortByCount, sortIsDesc);
+}
+QueryTools.prototype.searchTags = function (search, sortByCount, sortIsDesc) {
+    return this.searchGeneric(search, 'tags', sortByCount, sortIsDesc);
+}
+
 QueryTools.prototype.mergeSortedTags = function (a, b, sortByCount, sortIsDesc) {
     var sortComparison = null;
     if (true === sortByCount) {
@@ -544,7 +599,7 @@ module.exports = function (app) {
                                 if (user != null) {
                                     console.log('user is ' + user.name)
                                 }
-                                else{
+                                else {
                                     console.log('anonymous user');
                                 }
                                 res.json(response);
@@ -669,35 +724,14 @@ module.exports = function (app) {
             res.json = err;
         });
     });
-    app.get('/api/tags/:search', function (req, res) {
-        var sortByCount = true;
-        var sortIsDesc = true;
-        Q.all([
-            queryTools.searchCreators(req.params.search, true, true),
-            queryTools.searchArtists(req.params.search, true, true),
-            queryTools.searchSongs(req.params.search, true, true)
-        ]).spread(function (creators, artists, songs) {
-            var finalArrays = queryTools.mergeSortedTags(creators, artists, sortByCount, sortIsDesc);
-            finalArrays = queryTools.mergeSortedTags(finalArrays, songs, sortByCount, sortIsDesc);
-            if (finalArrays.length > 20) {
-                finalArrays = finalArrays.slice(0, 19);
-            }
-            res.json(finalArrays);
-        }, function (err) {
-            res.statusCode = '500';
-            res.json = err;
-        })
-
-        queryTools.searchCreators(function (error, creators) {
-            res.json(creators);
-        }, req.params.search, sortByCount, sortIsDesc);
-    });
     app.get('/api/tagsSemantic/:search', function (req, res) {
         Q.all([
             queryTools.searchCreators(req.params.search, true, true),
             queryTools.searchArtists(req.params.search, true, true),
-            queryTools.searchSongs(req.params.search, true, true)
-        ]).spread(function (creators, artists, songs) {
+            queryTools.searchSongs(req.params.search, true, true),
+            queryTools.searchSources(req.params.search, true, true),
+            queryTools.searchTags(req.params.search, true, true)
+        ]).spread(function (creators, artists, songs, sources, tags) {
             var categoryIndex = 1;
             var results = {
                 results: {}
@@ -705,6 +739,8 @@ module.exports = function (app) {
             categoryIndex += queryTools.addResultToTags(results, creators, 'Creators', categoryIndex);
             categoryIndex += queryTools.addResultToTags(results, artists, 'Artists', categoryIndex);
             categoryIndex += queryTools.addResultToTags(results, songs, 'Songs', categoryIndex);
+            categoryIndex += queryTools.addResultToTags(results, sources, 'Sources', categoryIndex);
+            categoryIndex += queryTools.addResultToTags(results, tags, 'Tags', categoryIndex);
             res.json(results);
         }, function (err) {
             res.statusCode = '500';

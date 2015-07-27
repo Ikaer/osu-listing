@@ -34,18 +34,18 @@
                 <img class="ao-beatmap-image" alt="" src="/media/{{pack.beatmapset_id}}/{{pack.beatmapset_id}}l.jpg" o>
             </div>
             <div class="content">
-                <div class="header">{{pack.title}}</div>
+                <div class="header"><a style="color:black" ng-click="addTagByUI('title', pack.title)">{{pack.title}}</a></div>
                 <div class="meta">
-                    <a>{{pack.artist}}</a>
+                    <a ng-click="addTagByUI('artist', pack.artist)">{{pack.artist}}</a>
                 </div>
                 <div class="meta">
-                    mapped by <a>{{pack.creator}}</a>
+                    mapped by <a ng-click="addTagByUI('creator', pack.creator)" >{{pack.creator}}</a>
                 </div>
                 <div class="meta" ng-if="undefined !== pack.source && null !== pack.source && '' !== pack.source">
-                    source <a>{{pack.source}}</a>
+                    source <a ng-click="addTagByUI('source', pack.source)" >{{pack.source}}</a>
                 </div>
                 <div class="meta">
-                    <a>{{pack.genre}}</a>, <a>{{pack.language}}</a>
+                    <a ng-click="addTagByUI('genre', pack.genre)" >{{pack.genre}}</a>, <a ng-click="addTagByUI('language', pack.language)">{{pack.language}}</a>
                 </div>
             </div>
             <div class="extra content">
