@@ -649,6 +649,7 @@ module.exports = function (app) {
                 }
                 else {
                     var fileName = util.format('%s %s - %s.osz', allBeatmaps[0].beatmapset_id, allBeatmaps[0].artist, allBeatmaps[0].title);
+                    res.setHeader('Content-Type', 'application/octet-stream')
                     res.setHeader('Content-Disposition', contentDisposition(fileName))
                     var excludedBeatmaps = _.filter(allBeatmaps, function (beatmap) {
                         return (undefined === _.find(oszFile.beatmapsIds, function (selectedId) {

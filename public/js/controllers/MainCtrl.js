@@ -321,31 +321,43 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
         });
     }
 
-    $('.ui.search').search({
-        apiSettings: {
-            url: '/api/tagsSemantic/{query}'
-        },
-        type: 'category',
-        onSelect: function (result, response) {
-            $scope.addTag(result.o);
-        }
-    });
-    $('#sidebars-filter').click(function () {
-        $('.ui.sidebar')
-            .sidebar('toggle')
-    })
+
     $scope.changeDifficulty = function (dValue) {
-        var currentDifficilty = _.where($scope.difficulties, {value: dValue});
-        _.each(currentDifficilty, function (d) {
-            d.active = !d.active;
-        });
+        var arr = $scope.difficulties;
+        var actives = _.where(arr, {active:true});
+        var isInversed = actives.length === arr.length;
+        if(isInversed){
+            _.each(arr, function(d){
+                if(d.value !== dValue){
+                    d.active = !d.active;
+                }
+            })
+        }
+        else{
+            var currentDifficilty = _.where(arr, {value: dValue});
+            _.each(currentDifficilty, function (d) {
+                d.active = !d.active;
+            });
+        }
         $scope.draw();
     }
     $scope.changeMode = function (dValue) {
-        var currentMode = _.where($scope.modes, {value: dValue});
-        _.each(currentMode, function (d) {
-            d.active = !d.active;
-        });
+        var arr = $scope.modes;
+        var actives = _.where(arr, {active:true});
+        var isInversed = actives.length === arr.length;
+        if(isInversed){
+            _.each(arr, function(d){
+                if(d.value !== dValue){
+                    d.active = !d.active;
+                }
+            })
+        }
+        else{
+            var currentDifficilty = _.where(arr, {value: dValue});
+            _.each(currentDifficilty, function (d) {
+                d.active = !d.active;
+            });
+        }
         $scope.draw();
     }
     $scope.changeApproved = function (dValue) {
@@ -375,6 +387,19 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
             $(this).hide();
             // or $(this).css({visibility:"hidden"});
         });
+        $('.beatmap-card').hover( function(){
+
+            $('.beatmap-main-button', this).addClass('pink')
+        }, function(){
+            $('.beatmap-main-button', this).removeClass('pink')
+        })
+        $('.beatmap-tooltip').popup({
+            inline:true,
+            delay: {
+                show: 500,
+                hide: 0
+            }
+        });
     }
 
     $scope.username = null;
@@ -396,6 +421,23 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
         authService.ClearCredentials();
         window.location.href = '/'
     }
+
+
+    $('.ui.search').search({
+        apiSettings: {
+            url: '/api/tagsSemantic/{query}'
+        },
+        type: 'category',
+        onSelect: function (result, response) {
+            $scope.addTag(result.o);
+        }
+    });
+    $('#sidebars-filter').click(function () {
+        $('.ui.sidebar')
+            .sidebar('toggle')
+    })
+$('.beatmap-tooltip').popup()
+
 }])
 ;
 
