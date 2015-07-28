@@ -301,12 +301,6 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
         }
         $state.transitionTo('beatmaps.' + viewState);
     }
-    //$scope.$watch('listStyle', function (newValue, oldValue) {
-    //    if (newValue !== oldValue) {
-    //        $scope.defineView();
-    //    }
-    //})
-    // $scope.defineView();
     $scope.goToSignup = function () {
         $state.transitionTo('home.signup');
     }
