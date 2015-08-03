@@ -481,12 +481,13 @@ module.exports = function (app) {
         var queryToGetdIds = Beatmap.aggregate(aggregatePipeline);
         queryToGetdIds.sort(sorting);
         queryToGetdIds.skip(req.pageSize * req.pageIndex);
-        queryToGetdIds.limit(req.pageSize);
+        queryToGetdIds.limit(req.pageSize + 1);
         queryToGetdIds.options = {allowDiskUse: true};
         queryToGetdIds.exec(function (err, packs) {
             var response = {
                 packs: [],
-                downloadAllLink: null
+                downloadAllLink: null,
+                hasNextPage:false
             }
             if (err) {
                 res.send(response);
@@ -562,13 +563,19 @@ module.exports = function (app) {
                     queryToGetData.exec(function (err, packs) {
                         var response = {
                             packs: [],
-                            downloadAllLink: null
+                            downloadAllLink: null,
+                            hasNextPage:false
                         }
                         if (err) {
                             res.send(response);
                         }
                         else {
+                            if(packs.length === req.pageSize + 1){
+                                packs.pop();
+                                response.hasNextPage = true;
+                            }
                             response.packs = packs;
+
                             var downloadAllLink = [];
                             _.each(response.packs, function (pack) {
                                 queryTools.normalizeData(pack);

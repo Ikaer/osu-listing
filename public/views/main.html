@@ -1,39 +1,39 @@
 <div class="ui sidebar inverted vertical menu">
 
     <!--<a class="item">-->
-        <!--Language-->
-        <!--<div class="menu">-->
-            <!--<div class="item">-->
-                <!--<div class="ui search selection dropdown ao-filter-language">-->
-                    <!--<input type="hidden" name="country">-->
+    <!--Language-->
+    <!--<div class="menu">-->
+    <!--<div class="item">-->
+    <!--<div class="ui search selection dropdown ao-filter-language">-->
+    <!--<input type="hidden" name="country">-->
 
-                    <!--<div class="default text">Select language</div>-->
-                    <!--<i class="dropdown icon"></i>-->
+    <!--<div class="default text">Select language</div>-->
+    <!--<i class="dropdown icon"></i>-->
 
-                    <!--<div class="menu horizontal">-->
-                        <!--"0" : "Japanese",-->
-                        <!--"1" : "Instrumental",-->
-                        <!--"2" : "English",-->
-                        <!--"3" : null,-->
-                        <!--"4" : "Other",-->
-                        <!--"5" : "Spanish",-->
-                        <!--"6" : "Korean",-->
-                        <!--"7" : "Chinese",-->
-                        <!--"8" : "German",-->
-                        <!--"9" : "French",-->
-                        <!--"10" : "Italian",-->
-                        <!--"11" : "Swedish",-->
-                        <!--"12" : "Any"-->
+    <!--<div class="menu horizontal">-->
+    <!--"0" : "Japanese",-->
+    <!--"1" : "Instrumental",-->
+    <!--"2" : "English",-->
+    <!--"3" : null,-->
+    <!--"4" : "Other",-->
+    <!--"5" : "Spanish",-->
+    <!--"6" : "Korean",-->
+    <!--"7" : "Chinese",-->
+    <!--"8" : "German",-->
+    <!--"9" : "French",-->
+    <!--"10" : "Italian",-->
+    <!--"11" : "Swedish",-->
+    <!--"12" : "Any"-->
 
-                        <!--<div class="item" data-value="Japanese">Japanese</div>-->
-                        <!--<div class="item" data-value="ax"><i class="ax flag"></i>Aland Islands</div>-->
-                    <!--</div>-->
-                <!--</div>-->
-            <!--</div>-->
-        <!--</div>-->
+    <!--<div class="item" data-value="Japanese">Japanese</div>-->
+    <!--<div class="item" data-value="ax"><i class="ax flag"></i>Aland Islands</div>-->
+    <!--</div>-->
+    <!--</div>-->
+    <!--</div>-->
+    <!--</div>-->
     <!--</a>-->
     <!--<a class="item">-->
-        <!--Mode-->
+    <!--Mode-->
     <!--</a>-->
 </div>
 <div class="pusher">
@@ -104,7 +104,7 @@
                 </div>
             </a>
             <!--<a class="item" id="sidebars-filter">-->
-                <!--<i class="filter icon"></i>-->
+            <!--<i class="filter icon"></i>-->
             <!--</a>-->
 
             <div class="ui category search item  aligned" style="width:300px;">
@@ -184,9 +184,18 @@
             </div>
         </div>
     </div>
-    <div style="margin-top:100px;"></div>
-
-    <div ui-view></div>
+    <!--<div style="margin-top:100px;"></div>-->
+    <div style="position:fixed;top:52px;bottom:40px;right:0;left:0;overflow-y:auto;overflow-x:hidden;">
+        <div ui-view></div>
+    </div>
+    <div class="ui  menu inverted ao-bottom-menu" style="position:fixed;bottom:0;left:0;right:0;" >
+        <div class="ui container">
+        <a class="item" ng-show="isNotFirstPage" ng-click="goPreviousPage()" >previous page</a>
+        <div class="right menu">
+            <a class="item"  ng-show="hasNextPage" ng-click="goNextPage()" >next page</a>
+        </div>
+        </div>
+    </div>
     <div class="ui modal signup">
         <!--<i class="close icon"></i>-->
         <div class="header">
@@ -237,7 +246,9 @@
     });
 
     $('.ui.checkbox').checkbox();
-
+//    $('#bottom-menu').sticky({
+//        context: '.sticky-context'
+//    })
 </script>
 <audio id="player" src="" type="audio/mp3"></audio>
 

@@ -1,5 +1,5 @@
 <div class="ui">
-    <div class="tags ui grid centered " style="margin-bottom:40px;">
+    <div class="tags ui grid centered " style="margin-top:20px;">
         <a class="ui tag label" ng-repeat="tag in tags" ng-click="removeTag(tag.tagId)">{{ tag.value }}</a>
         <a class="ui label" ng-if="tags.length > 0" target="_blank" download="pack.zip" href="{{downloadAllLink}}">
             <i class="cloud download icon"></i> Download all

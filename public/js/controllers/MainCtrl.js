@@ -139,6 +139,20 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
 
     $scope.pageSize = 20;
     $scope.pageIndex = 0;
+    $scope.isNotFirstPage = false;
+    $scope.hasNextPage = false;
+    $scope.goNextPage = function(){
+        $scope.pageIndex++;
+        $scope.isNotFirstPage = true;
+        $scope.draw();
+    }
+    $scope.goPreviousPage = function(){
+        $scope.pageIndex--;
+        if($scope.pageIndex === 0){
+            $scope.isNotFirstPage = false;
+        }
+        $scope.draw();
+    }
     $scope.tags = _.map(tagTools.difficulties, function (d) {
         return tagTools.createTag(d, 'difficulty', d.name, d.classes);
     })
@@ -266,7 +280,7 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
 
                 $scope.packs = res.packs;
                 $scope.downloadAllLink = res.downloadAllLink;
-
+                $scope.hasNextPage = res.hasNextPage;
                 hideLoading();
             },
             $scope.pageIndex,
