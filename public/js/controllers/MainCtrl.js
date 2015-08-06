@@ -50,14 +50,6 @@ TagTools.prototype.getTagsByType = function (tags, type) {
 
 
 angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainController', ['$rootScope', '$scope', '$location', '$state', 'beatmapApi', 'AuthenticationService', function ($rootScope, $scope, $location, $state, beatmapApi, authService) {
-
-    $scope.isLogged = $rootScope.globals && $rootScope.globals.currentUser;
-    $scope.user = $scope.isLogged ? $rootScope.globals.currentUser.username : null;
-    $('.ao-user').popup({
-        on: 'click',
-        popup: $scope.isLogged ? '.ao-user-options' : '.ao-user-popup',
-        position: 'bottom right'
-    });
     var $signupForm = $('.signup-form');
     $signupForm.form({
         fields: {
@@ -109,7 +101,84 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
         on: 'blur',
         inline: 'true'
     })
+    $signupForm.on('submit', function(){
+        if ($signupForm.form('is valid')) {
+            $('.signup').find('.dimmer').addClass('active')
+            var pseudo = $signupForm.find('#pseudo').val();
+            var password1 = $signupForm.find('#password1').val();
+            var mail = $signupForm.find('#mail').val();
+            var user_id = $signupForm.find('#user_id').val();
+            beatmapApi.createUser(pseudo, password1, mail, user_id, function () {
+                $('.signup').find('.dimmer').removeClass('active')
+                $('.signup-result-ok').modal('show')
+            }, function (result) {
+                $('.signup').find('.dimmer').removeClass('active')
+                $('.signup-result-ko .signup-result-ko-reason').html(result.reason)
+                $('.signup-result-ko').modal('show')
+            });
+        }
+    })
+
+
     var $signingForm = $('.signin-form')
+    $signingForm.form({})
+    $scope.username = null;
+    $scope.password = null;
+    $signingForm.on('click', '.send-another-email', function(){
+        console.log('here')
+        beatmapApi.resendEmail($scope.username, function (response) {
+            if (response.ok === true) {
+                $('.mail-sent').modal('show');
+            }
+            else {
+                $('.mail-sent-fail-reason').html(response.message);
+                $('.mail-sent-fail').modal('show');
+            }
+        });
+    })
+    $signingForm.on('submit', function () {
+        if ($signingForm.form('is valid')) {
+            authService.Login($scope.username, $scope.password, function (response) {
+                var errors = []
+                if (response.error !== null) {
+                    errors.push(response.error);
+                }
+                else if (response.userFound === false) {
+                    errors.push('This user or email does not exist.');
+                }
+                else if (response.mailVerified === false) {
+                    errors.push('That account has been created, but you have not yet clicked the verification link in your e-mail. <a class="send-another-email" >Send another email</a>');
+                }
+                else if (response.passwordOk === false) {
+                    errors.push(' Password is wrong.');
+                }
+                if (errors.length > 0) {
+                    $signingForm.form('add errors', errors);
+                    $signingForm.removeClass('success').addClass('error');
+                }
+                else {
+                    authService.SetCredentials(response.name, $scope.password);
+                    window.location.href = '/'
+                }
+            });
+        }
+    })
+
+
+    $scope.isLogged = $rootScope.globals && $rootScope.globals.currentUser;
+    $scope.user = $scope.isLogged ? $rootScope.globals.currentUser.username : null;
+    $('.ao-user').popup({
+        on: 'click',
+        popup: $scope.isLogged ? '.ao-user-options' : '.ao-user-popup',
+        position: 'bottom right',
+        onShow: function () {
+            $signingForm.removeClass('error')
+        },
+        onVisible: function () {
+            $signingForm.find('.login-pseudo').focus();
+        }
+    });
+
 
     $scope.loading = true;
     $scope.notLoading = false;
@@ -460,83 +529,51 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
         resetForm();
         $('.signup.modal').modal('show');
     }
-    $scope.signupIsLoading = false;
-    $scope.createAccount = function () {
-
-        if ($signupForm.form('is valid')) {
-            $('.signup').find('.dimmer').addClass('active')
-            console.log('valid')
-            var pseudo = $signupForm.find('#pseudo').val();
-            var password1 = $signupForm.find('#password1').val();
-            var mail = $signupForm.find('#mail').val();
-            var user_id = $signupForm.find('#user_id').val();
-            beatmapApi.createUser(pseudo, password1, mail, user_id, function () {
-                $('.signup').find('.dimmer').removeClass('active')
-                $('.signup-result-ok').modal('show')
-            }, function (result) {
-                console.log(result)
-                $('.signup').find('.dimmer').removeClass('active')
-                $('.signup-result-ko .signup-result-ko-reason').html(result.reason)
-                $('.signup-result-ko').modal('show')
-            });
-        }
-        else {
-            console.log('not valid')
-        }
-    }
 
     // SIGNIN
-    $scope.username = null;
-    $scope.password = null;
-    $scope.loginError = null;
-    $scope.login = function () {
-        $signingForm.removeClass('error');
-        $('.signin-error-message').hide();
-        authService.Login($scope.username, $scope.password, function (response) {
-            var showError = response.userFound === false
-                || response.passwordOk === false
-                || response.mailVerified === false
-                || response.error !== null;
 
-            if (response.error !== null) {
-                $('#signin-mongo-error').html(response.error).show();
-            }
-            else if (response.userFound === false) {
-                $("#signin-invalid-user").show();
-            }
-            else if (response.mailVerified === false) {
-                $("#signin-validate-email").show();
-            }
-            else if (response.passwordOk === false) {
-                $("#signin-wrong-password").show();
-            }
-            if (showError) $signingForm.addClass('error');
-            else {
-                authService.SetCredentials(response.name, $scope.password);
-                window.location.href = '/'
-            }
-        }, function (ko) {
-            // window.location.href = '/'
-        });
-    }
+
     $scope.logout = function () {
         authService.ClearCredentials();
         window.location.href = '/'
     }
-    $scope.sendAnotherEmail = function(){
-        beatmapApi.resendEmail($scope.username, function(response){
-            console.log(response);
-            if(response.ok === true){
-                $('.mail-sent').modal('show');
-            }
-            else{
-                $('.mail-sent-fail-reason').html(response.message);
-                $('.mail-sent-fail').modal('show');
-            }
-        });
-    }
-    $scope.forgotYourPassword = function(){
+
+    $scope.forgotYourPassword = function () {
         $('.forgot-password-modal').modal('show');
+    }
+
+    var $resetPwdForm = $('.forgot-password');
+    $resetPwdForm.form({
+        fields: {
+            email: {
+                identifier: 'forgot-password-email',
+                rules: [{
+                    type: 'empty',
+                    prompt: 'Please enter your e-mail'
+                }, {
+                    type: 'email',
+                    prompt: 'Please provide a valid e-mail'
+                }]
+            }
+        },
+        on: 'blur',
+        inline: 'true'
+    })
+
+    $scope.sendResetMail = function () {
+        if ($resetPwdForm.form('is valid')) {
+            var mail = $('#forgot-password-email').val();
+            beatmapApi.resetPassword(mail, function (response) {
+                console.log(response);
+                if (response.ok === true) {
+                    $('.mail-sent').modal('show');
+                }
+                else {
+                    $('.mail-sent-fail-reason').html(response.message);
+                    $('.mail-sent-fail').modal('show');
+                }
+            })
+        }
     }
 
     $('.ui.search').search({
@@ -554,6 +591,5 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
     })
     $('.beatmap-tooltip').popup()
 
-}])
-;
+}]);
 

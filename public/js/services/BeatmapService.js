@@ -46,6 +46,12 @@ angular.module('BeatmapAPI', []).factory('beatmapApi', ['$http', function ($http
             $http.get(url).success(function (data) {
                 fnOk(data)
             });
+        },
+        resetPassword: function(mail, fnOk){
+            var url = '/api/user/sendResetPasswordLink/' + mail;
+            $http.get(url).success(function (data) {
+                fnOk(data)
+            });
         }
     }
 }]);

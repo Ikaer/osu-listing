@@ -2,44 +2,48 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title></title>
+    <title>Altosu</title>
     <script src="libs/jquery/dist/jquery.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="libs/semantic-ui/dist/semantic.min.css">
+    <script src="libs/semantic-ui/dist/semantic.min.js"></script>
 </head>
 <body>
-<span id="message">Validation in progress</span>
-    <script>
-        var getUrlParameter = function getUrlParameter(sParam) {
-            var sPageURL = decodeURIComponent(window.location.search.substring(1)),
-                    sURLVariables = sPageURL.split('&'),
-                    sParameterName,
-                    i;
+<div class="ui container one column  middle aligned  ">
+    <div id="message" style="margin-top:100px;">Validation in progress</div>
+</div>
+<script>
+    var getUrlParameter = function getUrlParameter(sParam) {
+        var sPageURL = decodeURIComponent(window.location.search.substring(1)),
+                sURLVariables = sPageURL.split('&'),
+                sParameterName,
+                i;
 
-            for (i = 0; i < sURLVariables.length; i++) {
-                sParameterName = sURLVariables[i].split('=');
+        for (i = 0; i < sURLVariables.length; i++) {
+            sParameterName = sURLVariables[i].split('=');
 
-                if (sParameterName[0] === sParam) {
-                    return sParameterName[1] === undefined ? true : sParameterName[1];
-                }
+            if (sParameterName[0] === sParam) {
+                return sParameterName[1] === undefined ? true : sParameterName[1];
             }
-        };
+        }
+    };
 
-        var verifyCode = getUrlParameter('id');
-        $.ajax({
-            url:'/api/user/validateEmail/' + verifyCode,
-            dataType:'json',
-            success:function(response){
-                console.log(response);
-                var message = '';
-                if(response.validationOk === true){
-                    message = 'Your account has been confirmed. You can now login.'
-                }
-                else{
-                    message = response.reason;
-                }
-                $('#message').html(message);
+    var verifyCode = getUrlParameter('id');
+    $.ajax({
+        url: '/api/user/validateEmail/' + verifyCode,
+        dataType: 'json',
+        success: function (response) {
+            console.log(response);
+            var message = '';
+            if (response.ok === true) {
+                message = 'Your account has been confirmed. You can now login.'
             }
-        })
+            else {
+                message = response.message;
+            }
+            $('#message').html(message);
+        }
+    })
 
-    </script>
+</script>
 </body>
 </html>

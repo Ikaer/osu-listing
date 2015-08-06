@@ -385,6 +385,20 @@ QueryTools.prototype.normalizeData = function (beatmap) {
 
 var downloadTools = new DownloadTools();
 
+var sendSimpleResponse = function (res, ok, message) {
+    res.json({
+        ok:ok,
+        message: message
+    })
+    res.end();
+}
+var sendError = function(res, message){
+    sendSimpleResponse(res, false, message);
+}
+var sendOk = function(res){
+    sendSimpleResponse(res, true, null);
+}
+
 module.exports = function (app) {
     app.param('pageIndex', function (req, res, next, pageIndex) {
         req.pageIndex = parseInt(pageIndex, 10);
@@ -796,7 +810,7 @@ module.exports = function (app) {
                 });
                 user.setPassword(req.body.password);
 
-                user.save(function (err, result) {
+                user.save(function (err) {
                     if (err) {
                         res.json({
                             created: false,
@@ -804,8 +818,7 @@ module.exports = function (app) {
                         });
                     }
                     else {
-
-                        var link = "http://www.altosu.org/validation.html?id=" + randEmailVerification;
+                        var link = "http://www.altosu.org/validation.html?id=" + user.mailVerification;
                         var mailOptions = {
                             from: 'altosu.org<altosu.org@gmail.com>', // sender address
                             to: req.body.mail,
@@ -834,20 +847,21 @@ module.exports = function (app) {
         });
     });
     app.get('/api/user/validateEmail/:verifyCode', function (req, res) {
-        var result = {
-            validationOk: false,
-            reason: null
-        }
         User.findOne({mailVerification: req.params.verifyCode}, function (err, user) {
             if (err) {
-                result.reason = 'This code does not exist';
+                sendError(res, err.message);
             }
             else {
-                result.validationOk = true;
                 user.mailHasBeenVerified = true;
-                user.save();
+                user.save(function(err){
+                    if(err){
+                        sendError(res, err.message)
+                    }
+                    else{
+                        sendOk(res);
+                    }
+                });
             }
-            res.json(result);
         })
     })
     app.get('/api/user/sendVerificationEmail/:pseudoOrMail', function (req, res) {
@@ -883,47 +897,64 @@ module.exports = function (app) {
     })
     app.get('/api/user/sendResetPasswordLink/:mail', function (req, res) {
         User.findOne({email: req.params.mail}, function (err, user) {
-            var result = {
-                ok: false,
-                message: null
-            }
             if (err) {
-                result.message = err.message
-                res.json(result);
+                sendSimpleResponse(res, false, err.message);
             }
             else {
                 if (user !== null) {
-
                     user.resetPasswordHash = randomStringAsBase64Url(30)
-                    user.save();
-                    var link = "http://www.altosu.org/resetPassword.html?id=" + user.resetPasswordHash;
-                    var mailOptions = {
-                        from: 'altosu.org<altosu.org@gmail.com>', // sender address
-                        to: user.email,
-                        subject: "Password reset",
-                        html: "Hello,<br> Please Click on the link to enter a new password.<br><a href=" + link + ">Click here to enter a new password</a>"
-                    }
-                    transporter.sendMail(mailOptions, function (error, info) {
-                        if (error) {
-                            result.message = error.message;
-                            console.log(error);
-                        } else {
-                            result.ok = true;
-                            console.log('Message sent: ' + info.response);
+                    user.save(function(err){
+                        if(err){
+                         sendSimpleResponse(res, false, err.message);
                         }
-                        res.json(result);
+                        else{
+                            var link = "http://www.altosu.org/resetPassword.html?id=" + user.resetPasswordHash;
+                            var mailOptions = {
+                                from: 'altosu.org<altosu.org@gmail.com>', // sender address
+                                to: user.email,
+                                subject: "Password reset",
+                                html: "Hello,<br> Please Click on the link to enter a new password.<br><a href=" + link + ">Click here to enter a new password</a>"
+                            }
+                            transporter.sendMail(mailOptions, function (error, info) {
+                                if (error) {
+                                    sendSimpleResponse(res, false, error.message);
+                                } else {
+                                    sendSimpleResponse(res, true, null);
+                                }
+                            });
+                        }
                     });
                 }
                 else {
-                    //todo
+                    sendSimpleResponse(res, false, 'Cannot found an account with this email.');
                 }
             }
         });
     })
     app.get('/api/user/newPassword/:verifyCode/:newPassword', function (req, res) {
         User.findOne({resetPasswordHash: req.params.verifyCode}, function (err, user) {
-            user.setPassword(req.body.password);
-            user.save();
+            if (err) {
+                sendSimpleResponse(res, false, err.message);
+                result.message = err.message;
+            }
+            else {
+                if (user !== null) {
+                    user.setPassword(req.params.newPassword);
+                    user.save(function (err) {
+                        if (err) {
+                            sendSimpleResponse(res, false, err.message);
+                        }
+                        else{
+                            user.resetPasswordHash = randomStringAsBase64Url(30);
+                            user.save();
+                            sendSimpleResponse(res, true, null);
+                        }
+                    });
+                }
+                else {
+                    sendSimpleResponse(res, false, 'Cannot found an account with this procedure of reset.');
+                }
+            }
         });
     })
     app.get('/api/user/authenticate/:pseudoOrMail/:password', function (req, res) {

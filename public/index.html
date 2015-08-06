@@ -50,12 +50,6 @@
                         parent:"home",
                         templateUrl: "views/beatmapsCard.html"
                     })
-                    .state('home.signup', {
-                        url: "/signup",
-                        parent:"home",
-                        templateUrl: "views/signup.html",
-                        controller: 'MainController'
-                    })
 
         }).run(['$rootScope', '$cookieStore', '$http', function($rootScope, $cookieStore, $http){
             $rootScope.globals = $cookieStore.get('globals') || {};
@@ -65,7 +59,7 @@
         }]);
     </script>
 </head>
-<body ui-view ng-app="sampleApp" ng-controller="MainController">
+<body ui-view ng-app="sampleApp" >
 
 <script>
 //    (function (i, s, o, g, r, a, m) {
