@@ -58,6 +58,59 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
         popup: $scope.isLogged ? '.ao-user-options' : '.ao-user-popup',
         position: 'bottom right'
     });
+    var $signupForm = $('.signup-form');
+    $signupForm.form({
+        fields: {
+            pseudo: {
+                identifier: 'pseudo',
+                rules: [{
+                    type: 'empty',
+                    prompt: 'Please enter your pseudo'
+                }]
+            },
+            email: {
+                identifier: 'mail',
+                rules: [{
+                    type: 'empty',
+                    prompt: 'Please enter your e-mail'
+                }, {
+                    type: 'email',
+                    prompt: 'Please provide a valid e-mail'
+                }]
+            },
+            user_id: {
+                identifier: 'user_id',
+                rules: [{
+                    type: 'integer',
+                    prompt: 'Please enter an integer value'
+                }]
+            },
+            password1: {
+                identifier: 'password1',
+                rules: [{
+                    type: 'empty',
+                    prompt: 'Please enter your password'
+                }, {
+                    type: 'minLength[5]',
+                    prompt: 'Length of password must be at least 5 characters'
+                }]
+            },
+            password2: {
+                identifier: 'password2',
+                rules: [{
+                    type: 'empty',
+                    prompt: 'Please confirm your password'
+                }, {
+                    type: 'match[password1]',
+                    prompt: 'You must enter the same password'
+                }]
+            }
+        },
+        on: 'blur',
+        inline: 'true'
+    })
+    var $signingForm = $('.signin-form')
+
     $scope.loading = true;
     $scope.notLoading = false;
     showLoading();
@@ -141,14 +194,14 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
     $scope.pageIndex = 0;
     $scope.isNotFirstPage = false;
     $scope.hasNextPage = false;
-    $scope.goNextPage = function(){
+    $scope.goNextPage = function () {
         $scope.pageIndex++;
         $scope.isNotFirstPage = true;
         $scope.draw();
     }
-    $scope.goPreviousPage = function(){
+    $scope.goPreviousPage = function () {
         $scope.pageIndex--;
-        if($scope.pageIndex === 0){
+        if ($scope.pageIndex === 0) {
             $scope.isNotFirstPage = false;
         }
         $scope.draw();
@@ -260,7 +313,7 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
                 source: tagTools.getTagsByType($scope.tags, 'source'),
                 genre: tagTools.getTagsByType($scope.tags, 'genre'),
                 language: tagTools.getTagsByType($scope.tags, 'language'),
-                tags:tagTools.getTagsByType($scope.tags, 'tags')
+                tags: tagTools.getTagsByType($scope.tags, 'tags')
             },
             sorting: {
                 name: $scope.sorting.value,
@@ -315,39 +368,18 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
         }
         $state.transitionTo('beatmaps.' + viewState);
     }
-    $scope.goToSignup = function () {
-        $state.transitionTo('home.signup');
-    }
-    $scope.openSignup = function () {
-        $('.signup.modal').modal('show');
-    }
-
-
-    $scope.createAccount = function () {
-        var pseudo = $('.signup .pseudo').val();
-        var password1 = $('.signup .password1').val();
-        var password2 = $('.signup .password2').val();
-        var mail = $('.signup .mail').val();
-        beatmapApi.createUser(pseudo, password1, mail, function () {
-            console.log('created');
-        }, function (result) {
-            console.log(result.reason);
-        });
-    }
-
-
     $scope.changeDifficulty = function (dValue) {
         var arr = $scope.difficulties;
-        var actives = _.where(arr, {active:true});
+        var actives = _.where(arr, {active: true});
         var isInversed = actives.length === arr.length;
-        if(isInversed){
-            _.each(arr, function(d){
-                if(d.value !== dValue){
+        if (isInversed) {
+            _.each(arr, function (d) {
+                if (d.value !== dValue) {
                     d.active = !d.active;
                 }
             })
         }
-        else{
+        else {
             var currentDifficilty = _.where(arr, {value: dValue});
             _.each(currentDifficilty, function (d) {
                 d.active = !d.active;
@@ -357,16 +389,16 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
     }
     $scope.changeMode = function (dValue) {
         var arr = $scope.modes;
-        var actives = _.where(arr, {active:true});
+        var actives = _.where(arr, {active: true});
         var isInversed = actives.length === arr.length;
-        if(isInversed){
-            _.each(arr, function(d){
-                if(d.value !== dValue){
+        if (isInversed) {
+            _.each(arr, function (d) {
+                if (d.value !== dValue) {
                     d.active = !d.active;
                 }
             })
         }
-        else{
+        else {
             var currentDifficilty = _.where(arr, {value: dValue});
             _.each(currentDifficilty, function (d) {
                 d.active = !d.active;
@@ -401,14 +433,14 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
             $(this).hide();
             // or $(this).css({visibility:"hidden"});
         });
-        $('.beatmap-card').hover( function(){
+        $('.beatmap-card').hover(function () {
 
             $('.beatmap-main-button', this).addClass('pink')
-        }, function(){
+        }, function () {
             $('.beatmap-main-button', this).removeClass('pink')
         })
         $('.beatmap-tooltip').popup({
-            inline:true,
+            inline: true,
             delay: {
                 show: 500,
                 hide: 0
@@ -416,16 +448,72 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
         });
     }
 
+
+    // SIGNUP
+    $scope.goToSignup = function () {
+        $state.transitionTo('home.signup');
+    }
+    var resetForm = function () {
+        $signupForm.form('clear')
+    }
+    $scope.openSignup = function () {
+        resetForm();
+        $('.signup.modal').modal('show');
+    }
+    $scope.signupIsLoading = false;
+    $scope.createAccount = function () {
+
+        if ($signupForm.form('is valid')) {
+            $('.signup').find('.dimmer').addClass('active')
+            console.log('valid')
+            var pseudo = $signupForm.find('#pseudo').val();
+            var password1 = $signupForm.find('#password1').val();
+            var mail = $signupForm.find('#mail').val();
+            var user_id = $signupForm.find('#user_id').val();
+            beatmapApi.createUser(pseudo, password1, mail, user_id, function () {
+                $('.signup').find('.dimmer').removeClass('active')
+                $('.signup-result-ok').modal('show')
+            }, function (result) {
+                console.log(result)
+                $('.signup').find('.dimmer').removeClass('active')
+                $('.signup-result-ko .signup-result-ko-reason').html(result.reason)
+                $('.signup-result-ko').modal('show')
+            });
+        }
+        else {
+            console.log('not valid')
+        }
+    }
+
+    // SIGNIN
     $scope.username = null;
     $scope.password = null;
     $scope.loginError = null;
     $scope.login = function () {
+        $signingForm.removeClass('error');
+        $('.signin-error-message').hide();
         authService.Login($scope.username, $scope.password, function (response) {
-            if (response.passwordOk) {
+            var showError = response.userFound === false
+                || response.passwordOk === false
+                || response.mailVerified === false
+                || response.error !== null;
+
+            if (response.error !== null) {
+                $('#signin-mongo-error').html(response.error).show();
+            }
+            else if (response.userFound === false) {
+                $("#signin-invalid-user").show();
+            }
+            else if (response.mailVerified === false) {
+                $("#signin-validate-email").show();
+            }
+            else if (response.passwordOk === false) {
+                $("#signin-wrong-password").show();
+            }
+            if (showError) $signingForm.addClass('error');
+            else {
                 authService.SetCredentials(response.name, $scope.password);
                 window.location.href = '/'
-            } else {
-                $scope.loginError = response.reason;
             }
         }, function (ko) {
             // window.location.href = '/'
@@ -435,7 +523,21 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
         authService.ClearCredentials();
         window.location.href = '/'
     }
-
+    $scope.sendAnotherEmail = function(){
+        beatmapApi.resendEmail($scope.username, function(response){
+            console.log(response);
+            if(response.ok === true){
+                $('.mail-sent').modal('show');
+            }
+            else{
+                $('.mail-sent-fail-reason').html(response.message);
+                $('.mail-sent-fail').modal('show');
+            }
+        });
+    }
+    $scope.forgotYourPassword = function(){
+        $('.forgot-password-modal').modal('show');
+    }
 
     $('.ui.search').search({
         apiSettings: {
@@ -450,7 +552,7 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
         $('.ui.sidebar')
             .sidebar('toggle')
     })
-$('.beatmap-tooltip').popup()
+    $('.beatmap-tooltip').popup()
 
 }])
 ;

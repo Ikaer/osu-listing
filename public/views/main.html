@@ -103,9 +103,6 @@
                     </div>
                 </div>
             </a>
-            <!--<a class="item" id="sidebars-filter">-->
-            <!--<i class="filter icon"></i>-->
-            <!--</a>-->
 
             <div class="ui category search item  aligned" style="width:300px;">
                 <div class="ui icon input">
@@ -117,10 +114,10 @@
 
 
             <!--<a class="item ao-user">-->
-            <!--<i class="user icon"></i>-->
+                <!--<i class="user icon"></i>-->
             <!--</a>-->
             <!--<a class="item ao-user-welcome" ng-show="isLogged">-->
-            <!--Welcome {{user}}-->
+                <!--Welcome {{user}}-->
             <!--</a>-->
 
             <div class="ui flowing popup top left transition hidden ao-user-options">
@@ -133,10 +130,9 @@
             <div class="ui flowing popup top left transition hidden ao-user-popup" style="width:500px;">
                 <div class="ui two column middle aligned very relaxed stackable grid">
                     <div class="column">
-                        <div class="ui form">
+                        <div class="ui form signin-form">
                             <div class="field">
                                 <label>Username</label>
-
                                 <div class="ui left icon input">
                                     <input type="text" placeholder="Pseudo or mail" class="login-pseudo"
                                            ng-model="username">
@@ -145,12 +141,18 @@
                             </div>
                             <div class="field">
                                 <label>Password</label>
-
                                 <div class="ui left icon input">
-                                    <input type="password" autocomplete="off" class="login-password" ng-model="password"
+                                    <input type="password" placeholder="Password" autocomplete="off" class="login-password" ng-model="password"
                                            style="cursor: auto; background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGP6zwAAAgcBApocMXEAAAAASUVORK5CYII=);">
                                     <i class="lock icon"></i>
                                 </div>
+                                <p style="text-align:right;"><a href ng-click="forgotYourPassword()">Forgot you password ?</a></p>
+                            </div>
+                            <div class="ui error message">
+                                <p id="signin-validate-email" class="signin-error-message">That account has been created, but you have not yet clicked the verification link in your e-mail. <a href ng-click="sendAnotherEmail()" >Send another email</a></p>
+                                <p id="signin-wrong-password" class="signin-error-message">Password is wrong.</p>
+                                <p id="signin-invalid-user" class="signin-error-message">This user or email does not exist.</p>
+                                <p id="signin-mongo-error" class="signin-error-message"></p>
                             </div>
                             <div class="field">{{loginError}}</div>
                             <div class="ui blue submit button" ng-click="login()">Login</div>
@@ -167,56 +169,52 @@
                     </div>
                 </div>
             </div>
-
-            <div class="ui  popup top left transition hidden ao-extra-filters-popup" style="width:500px;">
-
-                <div class="ui item search selection dropdown ao-filter-language">
-                    <input type="hidden" name="country">
-
-                    <div class="default text">Select language</div>
-                    <i class="dropdown icon"></i>
-
-                    <div class="menu">
-                        <div class="item" data-value="af"><i class="af flag"></i>Afghanistan</div>
-                        <div class="item" data-value="ax"><i class="ax flag"></i>Aland Islands</div>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
     <!--<div style="margin-top:100px;"></div>-->
     <div style="position:fixed;top:52px;bottom:40px;right:0;left:0;overflow-y:auto;overflow-x:hidden;">
         <div ui-view></div>
     </div>
-    <div class="ui  menu inverted ao-bottom-menu" style="position:fixed;bottom:0;left:0;right:0;" >
+    <div class="ui  menu inverted ao-bottom-menu" style="position:fixed;bottom:0;left:0;right:0;">
         <div class="ui container">
-        <a class="item" ng-show="isNotFirstPage" ng-click="goPreviousPage()" >previous page</a>
-        <div class="right menu">
-            <a class="item"  ng-show="hasNextPage" ng-click="goNextPage()" >next page</a>
-        </div>
+            <a class="item" ng-show="isNotFirstPage" ng-click="goPreviousPage()">previous page</a>
+
+            <div class="right menu">
+                <a class="item" ng-show="hasNextPage" ng-click="goNextPage()">next page</a>
+            </div>
         </div>
     </div>
+
     <div class="ui modal signup">
         <!--<i class="close icon"></i>-->
+        <div class="ui inverted dimmer">
+            <div class="ui text loader">Registering you now :)</div>
+        </div>
         <div class="header">
             Create account
         </div>
-        <div class="ui form content">
-            <div class="field">
+        <div class="ui form content signup-form">
+
+            <div class="field pseudo-field">
                 <label>Pseudo</label>
-                <input type="text" class="pseudo" placeholder="JohnDoe457">
+                <input type="text" class="pseudo" id="pseudo" placeholder="JohnDoe457">
             </div>
-            <div class="field">
+            <div class="field mail-field">
                 <label>E-mail</label>
-                <input type="text" class="mail" placeholder="john.doe@wonderland.com">
+                <input type="text" class="mail" id="mail" placeholder="john.doe@wonderland.com">
             </div>
             <div class="field">
+                <label>Osu! user ID</label>
+                <input type="text" class="user_id" id="user_id"
+                       placeholder="Your user id can be found in url of your Osu! profile page.">
+            </div>
+            <div class="field password1-field">
                 <label>Password</label>
-                <input type="password" class="password1" placeholder="Enter your password">
+                <input type="password" class="password1" id="password1" placeholder="Enter your password">
             </div>
-            <div class="field">
+            <div class="field password2-field">
                 <label>Repeat password</label>
-                <input type="password" class="password2" placeholder="Confirm your password">
+                <input type="password" class="password2" id="password2" placeholder="Confirm your password">
             </div>
         </div>
         <div class="actions">
@@ -224,12 +222,100 @@
             <div class="ui button signup_createAccount" ng-click="createAccount()">Create account</div>
         </div>
     </div>
+    <div class="ui modal signup-result-ok">
+        <div class="header">
+            Account has been created
+        </div>
+        <div class="content">
+            Your account has been created. After visiting the url send to you by email, you will be able to login !
+        </div>
+        <div class="actions">
+            <div class="ui button signup-result-ok_cancel">close</div>
+        </div>
+    </div>
+    <div class="ui modal signup-result-ko">
+        <div class="header">
+            Cannot create account
+        </div>
+        <div class="content">
+            Your account cannot be created because <span class="signup-result-ko-reason"></span>
+        </div>
+        <div class="actions">
+            <div class="ui button signup-result-ko_cancel">close</div>
+        </div>
+    </div>
+    <div class="ui modal mail-sent">
+        <div class="header">
+            Mail sent
+        </div>
+        <div class="content">
+            A verification mail has been sent.
+        </div>
+        <div class="actions">
+            <div class="ui button mail-sent_cancel">close</div>
+        </div>
+    </div>
+    <div class="ui modal mail-sent-fail">
+        <div class="header">
+            Cannot sent verification e-mail
+        </div>
+        <div class="content">
+            We were unable to send you a verification e-mail: <span class="mail-sent-fail-reason"></span>
+        </div>
+        <div class="actions">
+            <div class="ui button close">close</div>
+        </div>
+    </div>
+    <div class="ui modal forgot-password-modal">
+        <div class="header">
+            Password reset
+        </div>
+        <div class="content">
+            <div class="ui form forgot-password">
+                <div class="field">
+                    <label>E-mail</label>
+                    <input type="text" class="user_id" id="forgot-password-email"
+                           placeholder="Enter your e-mail">
+                </div>
+                <p>
+                    A email will be sent to you with a link to enter a new password.
+                </p>
+            </div>
+        </div>
+        <div class="actions">
+            <div class="ui button close">close</div>
+        </div>
+    </div>
 </div>
 
 <script>
-    $('.signup.modal').modal()
+    $('.signup.modal').modal({
+        allowMultiple: false
+    })
+    $('.signup-result-ok').modal()
+    $('.signup-result-ko').modal()
     $('.signup.modal .signup_cancel').click(function () {
         $('.signup.modal').modal('hide')
+    })
+    $('.signup-result-ok .signup-result-ok_cancel').click(function () {
+        $('.signup-result-ok').modal('hide')
+    })
+    $('.signup-result-ko .signup-result-ko_cancel').click(function () {
+        $('.signup-result-ko').modal('hide')
+    })
+
+    $('.mail-sent').modal();
+    $('.mail-sent .mail-sent_cancel').click(function(){
+        $('.mail-sent').modal('hide')
+    })
+    $('.mail-sent-fail').modal();
+    $('.mail-sent-fail .close').click(function(){
+        $('.mail-sent-fail').modal('hide')
+    })
+
+    $('.forgot-password-modal').modal();
+    $('.forgot-password-modal .close').click(function(){
+        $('.mail-sent-fail').modal('hide')
     })
 
     $('.dropdown.ao-sorting').dropdown();
@@ -246,9 +332,6 @@
     });
 
     $('.ui.checkbox').checkbox();
-//    $('#bottom-menu').sticky({
-//        context: '.sticky-context'
-//    })
 </script>
 <audio id="player" src="" type="audio/mp3"></audio>
 

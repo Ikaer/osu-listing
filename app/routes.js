@@ -5,6 +5,7 @@ var User = require('./models/user');
 
 var nconf = require('nconf');
 nconf.file({file: 'config.json'});
+nconf.file({file: 'private.json'});
 
 var _ = require('underscore');
 var http = require('http');
@@ -15,6 +16,26 @@ var util = require('util');
 var Q = require('q');
 var archiver = require('archiver');
 var contentDisposition = require('content-disposition')
+var nodemailer = require('nodemailer');
+
+var crypto = require('crypto');
+var base64url = require('base64url');
+
+/** Sync */
+function randomStringAsBase64Url(size) {
+    return base64url(crypto.randomBytes(size));
+}
+
+// create reusable transporter object using SMTP transport
+var transporter = nodemailer.createTransport({
+    service: 'Gmail',
+    auth: {
+        user: nconf.get('gmailAccount'),
+        pass: nconf.get('gmailPassword')
+    }
+});
+
+
 function AuthTools() {
     this.keyStr = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
 }
@@ -487,7 +508,7 @@ module.exports = function (app) {
             var response = {
                 packs: [],
                 downloadAllLink: null,
-                hasNextPage:false
+                hasNextPage: false
             }
             if (err) {
                 res.send(response);
@@ -564,13 +585,13 @@ module.exports = function (app) {
                         var response = {
                             packs: [],
                             downloadAllLink: null,
-                            hasNextPage:false
+                            hasNextPage: false
                         }
                         if (err) {
                             res.send(response);
                         }
                         else {
-                            if(packs.length === req.pageSize + 1){
+                            if (packs.length === req.pageSize + 1) {
                                 packs.pop();
                                 response.hasNextPage = true;
                             }
@@ -767,7 +788,11 @@ module.exports = function (app) {
             if (dbUser === null) {
                 var user = new User({
                     name: req.body.pseudo,
-                    email: req.body.mail
+                    email: req.body.mail,
+                    user_id: req.body.user_id,
+                    resetPasswordHash: randomStringAsBase64Url(30),
+                    mailVerification: randomStringAsBase64Url(27),
+                    mailHasBeenVerified: false
                 });
                 user.setPassword(req.body.password);
 
@@ -779,6 +804,22 @@ module.exports = function (app) {
                         });
                     }
                     else {
+
+                        var link = "http://www.altosu.org/validation.html?id=" + randEmailVerification;
+                        var mailOptions = {
+                            from: 'altosu.org<altosu.org@gmail.com>', // sender address
+                            to: req.body.mail,
+                            subject: "Please confirm your Email account",
+                            html: "Hello,<br> Please Click on the link to verify your email.<br><a href=" + link + ">Click here to verify</a>"
+                        }
+                        transporter.sendMail(mailOptions, function (error, info) {
+                            if (error) {
+                                console.log(error);
+                            } else {
+                                console.log('Message sent: ' + info.response);
+                            }
+                        });
+
                         res.json({
                             created: true,
                             reason: null
@@ -787,49 +828,125 @@ module.exports = function (app) {
                 });
             }
             else {
-                result.reason = 'already exist';
+                result.reason = 'it already exist';
                 res.json(result);
             }
         });
     });
-    app.get('/api/user/authenticate/:pseudoOrMail/:password', function (req, res) {
-        User.findOne({name: req.params.pseudoOrMail}, function (err, user) {
+    app.get('/api/user/validateEmail/:verifyCode', function (req, res) {
+        var result = {
+            validationOk: false,
+            reason: null
+        }
+        User.findOne({mailVerification: req.params.verifyCode}, function (err, user) {
+            if (err) {
+                result.reason = 'This code does not exist';
+            }
+            else {
+                result.validationOk = true;
+                user.mailHasBeenVerified = true;
+                user.save();
+            }
+            res.json(result);
+        })
+    })
+    app.get('/api/user/sendVerificationEmail/:pseudoOrMail', function (req, res) {
+        User.findOne({$or: [{name: req.params.pseudoOrMail}, {email: req.params.pseudoOrMail}]}, function (err, user) {
             var result = {
-                userFound: false,
-                passwordOk: false,
-                name: null,
-                error: null
+                ok: false,
+                message: null
             }
             if (err) {
-                result.error = err;
+                result.message = err.message
                 res.json(result);
             }
             else {
-                if (null === user) {
-                    User.findOne({email: req.params.pseudoOrMail}, function (err, user) {
-                        var result = {
-                            userFound: false,
-                            passwordOk: false,
-                            error: null
-                        }
-                        if (err) result.error = err;
-                        else {
-                            if (null !== user) {
-                                result.name = user.name;
-                                result.userFound = true;
-                                result.passwordOk = user.isValidPassword(req.params.password)
-                            }
+                var link = "http://www.altosu.org/validation.html?id=" + user.mailVerification;
+                var mailOptions = {
+                    from: 'altosu.org<altosu.org@gmail.com>', // sender address
+                    to: user.email,
+                    subject: "Please confirm your Email account",
+                    html: "Hello,<br> Please Click on the link to verify your email.<br><a href=" + link + ">Click here to verify</a>"
+                }
+                transporter.sendMail(mailOptions, function (error, info) {
+                    if (error) {
+                        result.message = error.message;
+                        console.log(error);
+                    } else {
+                        result.ok = true;
+                        console.log('Message sent: ' + info.response);
+                    }
+                    res.json(result);
+                });
+            }
+        });
+    })
+    app.get('/api/user/sendResetPasswordLink/:mail', function (req, res) {
+        User.findOne({email: req.params.mail}, function (err, user) {
+            var result = {
+                ok: false,
+                message: null
+            }
+            if (err) {
+                result.message = err.message
+                res.json(result);
+            }
+            else {
+                if (user !== null) {
+
+                    user.resetPasswordHash = randomStringAsBase64Url(30)
+                    user.save();
+                    var link = "http://www.altosu.org/resetPassword.html?id=" + user.resetPasswordHash;
+                    var mailOptions = {
+                        from: 'altosu.org<altosu.org@gmail.com>', // sender address
+                        to: user.email,
+                        subject: "Password reset",
+                        html: "Hello,<br> Please Click on the link to enter a new password.<br><a href=" + link + ">Click here to enter a new password</a>"
+                    }
+                    transporter.sendMail(mailOptions, function (error, info) {
+                        if (error) {
+                            result.message = error.message;
+                            console.log(error);
+                        } else {
+                            result.ok = true;
+                            console.log('Message sent: ' + info.response);
                         }
                         res.json(result);
                     });
                 }
                 else {
+                    //todo
+                }
+            }
+        });
+    })
+    app.get('/api/user/newPassword/:verifyCode/:newPassword', function (req, res) {
+        User.findOne({resetPasswordHash: req.params.verifyCode}, function (err, user) {
+            user.setPassword(req.body.password);
+            user.save();
+        });
+    })
+    app.get('/api/user/authenticate/:pseudoOrMail/:password', function (req, res) {
+        User.findOne({$or: [{name: req.params.pseudoOrMail}, {email: req.params.pseudoOrMail}]}, function (err, user) {
+            var result = {
+                userFound: false,
+                passwordOk: false,
+                mailVerified: false,
+                name: null,
+                error: null
+            }
+            if (err) {
+                result.error = err;
+            }
+            else {
+                if (user !== null) {
                     result.userFound = true;
                     result.name = user.name;
                     result.passwordOk = user.isValidPassword(req.params.password)
-                    res.json(result);
+                    result.mailVerified = user.mailHasBeenVerified;
                 }
             }
+            res.json(result);
         });
     })
     app.get('*', function (req, res) {

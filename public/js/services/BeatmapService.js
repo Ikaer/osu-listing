@@ -8,7 +8,7 @@ angular.module('BeatmapAPI', []).factory('beatmapApi', ['$http', function ($http
             var myUrl = '/api/beatmaps/' + pageIndex + '/' + pageSize + '/';
 
             if (filters) {
-                myUrl += '?f=' + encodeURIComponent( JSON.stringify(filters));
+                myUrl += '?f=' + encodeURIComponent(JSON.stringify(filters));
             }
             $http.get(myUrl).
                 success(function (data, status, headers, config) {
@@ -18,26 +18,33 @@ angular.module('BeatmapAPI', []).factory('beatmapApi', ['$http', function ($http
                     err("cannot get beatmaps");
                 })
         },
-        createUser: function (pseudo, password, mail, fnOk, fnErr) {
+        createUser: function (pseudo, password, mail, user_id, fnOk, fnErr) {
             var url = '/api/user'
-            $http.post(url, {pseudo: pseudo, password: password, mail: mail}).then(function (response) {
-                if (response.created === true) {
-                    fnOk(response);
+            $http.post(url, {
+                pseudo: pseudo,
+                password: password,
+                mail: mail,
+                user_id: user_id
+            }).then(function (response) {
+                if (response.data.created === true) {
+                    fnOk(response.data);
                 }
                 else {
-                    fnErr(response);
+                    fnErr(response.data);
                 }
             })
         },
-        authenticateUser:function(pseudoOrMail, password, fnOk, fnKo){
-            var url = '/api/user/authenticate/'+pseudoOrMail+'/' + password;
-            $http.get(url).success(function(data){
-                if(true === data.passwordOk){
-                    fnOk(data)
-                }
-                else{
-                    fnKo(data);
-                }
+        authenticateUser: function (pseudoOrMail, password, fnOk, fnKo) {
+            var url = '/api/user/authenticate/' + pseudoOrMail + '/' + password;
+            $http.get(url).success(function (data) {
+                fnOk(data)
+
+            });
+        },
+        resendEmail: function (pseudoOrMail, fnOk) {
+            var url = '/api/user/sendVerificationEmail/' + pseudoOrMail;
+            $http.get(url).success(function (data) {
+                fnOk(data)
             });
         }
     }
