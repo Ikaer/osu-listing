@@ -19,7 +19,9 @@ var userSchema = new Schema({
     resetPasswordHash:String,
     scores:[UserScore.schema],
     recents:[UserRecent.schema],
-    beatmaps : [Number]
+    beatmaps : [Number],
+    difficulties :[Number],
+    mode:[Number]
 });
 
 var hash = function (passwd, salt) {

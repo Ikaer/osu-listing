@@ -4,31 +4,18 @@
 
 
 /*
- todo: handle "&" in filters
  todo: loader creating packs / download
- todo: clean bootstrap code and files.
  todo: use popup module on click on card.
  todo: add icon when filtered on mode and difficulty
- todo: scanner un folder local pour récupérer le listing des beatmaps du user et en faire une "playlist"
  todo: about page
  todo: play button add stop + icon change.
  todo: add popover on difficulties
  todo: clear autocomplete when value is selected
- todo: add source, tags, language, type in autocomplete + click in card to directly add tags
  todo: for tags add a length ponderation (for exemple "on" is better than "one" when user type "on")
- todo: put information in black vs title in card.
  todo: (maybe limit to 16 cards, 1080 screen).
- todo: add button to move next / previous (do a .limit(-/+1) to know if there is next beatmap or previous)
- todo: disabled cursor:action on card until there is something.
  todo: add settings in sidenav
  todo: add beatmap or beatmapset in sidenav
  */
-
-
-function ListingConstants($routeParams) {
-    var that = this;
-
-}
 
 function TagTools() {
     this.tagId = 0;
@@ -50,134 +37,6 @@ TagTools.prototype.getTagsByType = function (tags, type) {
 
 
 angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainController', ['$rootScope', '$scope', '$location', '$state', 'beatmapApi', 'AuthenticationService', function ($rootScope, $scope, $location, $state, beatmapApi, authService) {
-    var $signupForm = $('.signup-form');
-    $signupForm.form({
-        fields: {
-            pseudo: {
-                identifier: 'pseudo',
-                rules: [{
-                    type: 'empty',
-                    prompt: 'Please enter your pseudo'
-                }]
-            },
-            email: {
-                identifier: 'mail',
-                rules: [{
-                    type: 'empty',
-                    prompt: 'Please enter your e-mail'
-                }, {
-                    type: 'email',
-                    prompt: 'Please provide a valid e-mail'
-                }]
-            },
-            user_id: {
-                identifier: 'user_id',
-                rules: [{
-                    type: 'integer',
-                    prompt: 'Please enter an integer value'
-                }]
-            },
-            password1: {
-                identifier: 'password1',
-                rules: [{
-                    type: 'empty',
-                    prompt: 'Please enter your password'
-                }, {
-                    type: 'minLength[5]',
-                    prompt: 'Length of password must be at least 5 characters'
-                }]
-            },
-            password2: {
-                identifier: 'password2',
-                rules: [{
-                    type: 'empty',
-                    prompt: 'Please confirm your password'
-                }, {
-                    type: 'match[password1]',
-                    prompt: 'You must enter the same password'
-                }]
-            }
-        },
-        on: 'blur',
-        inline: 'true'
-    })
-    $signupForm.on('submit', function(){
-        if ($signupForm.form('is valid')) {
-            $('.signup').find('.dimmer').addClass('active')
-            var pseudo = $signupForm.find('#pseudo').val();
-            var password1 = $signupForm.find('#password1').val();
-            var mail = $signupForm.find('#mail').val();
-            var user_id = $signupForm.find('#user_id').val();
-            beatmapApi.createUser(pseudo, password1, mail, user_id, function () {
-                $('.signup').find('.dimmer').removeClass('active')
-                $('.signup-result-ok').modal('show')
-            }, function (result) {
-                $('.signup').find('.dimmer').removeClass('active')
-                $('.signup-result-ko .signup-result-ko-reason').html(result.reason)
-                $('.signup-result-ko').modal('show')
-            });
-        }
-    })
-
-
-    var $signingForm = $('.signin-form')
-    $signingForm.form({})
-    $scope.username = null;
-    $scope.password = null;
-    $signingForm.on('click', '.send-another-email', function(){
-        console.log('here')
-        beatmapApi.resendEmail($scope.username, function (response) {
-            if (response.ok === true) {
-                $('.mail-sent').modal('show');
-            }
-            else {
-                $('.mail-sent-fail-reason').html(response.message);
-                $('.mail-sent-fail').modal('show');
-            }
-        });
-    })
-    $signingForm.on('submit', function () {
-        if ($signingForm.form('is valid')) {
-            authService.Login($scope.username, $scope.password, function (response) {
-                var errors = []
-                if (response.error !== null) {
-                    errors.push(response.error);
-                }
-                else if (response.userFound === false) {
-                    errors.push('This user or email does not exist.');
-                }
-                else if (response.mailVerified === false) {
-                    errors.push('That account has been created, but you have not yet clicked the verification link in your e-mail. <a class="send-another-email" >Send another email</a>');
-                }
-                else if (response.passwordOk === false) {
-                    errors.push(' Password is wrong.');
-                }
-                if (errors.length > 0) {
-                    $signingForm.form('add errors', errors);
-                    $signingForm.removeClass('success').addClass('error');
-                }
-                else {
-                    authService.SetCredentials(response.name, $scope.password);
-                    window.location.href = '/'
-                }
-            });
-        }
-    })
-
-
-    $scope.isLogged = $rootScope.globals && $rootScope.globals.currentUser;
-    $scope.user = $scope.isLogged ? $rootScope.globals.currentUser.username : null;
-    $('.ao-user').popup({
-        on: 'click',
-        popup: $scope.isLogged ? '.ao-user-options' : '.ao-user-popup',
-        position: 'bottom right',
-        onShow: function () {
-            $signingForm.removeClass('error')
-        },
-        onVisible: function () {
-            $signingForm.find('.login-pseudo').focus();
-        }
-    });
 
 
     $scope.loading = true;
@@ -517,6 +376,23 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
         });
     }
 
+    $('.ui.search').search({
+        apiSettings: {
+            url: '/api/tagsSemantic/{query}'
+        },
+        type: 'category',
+        onSelect: function (result, response) {
+            $scope.addTag(result.o);
+        }
+    });
+    $('#sidebars-filter').click(function () {
+        $('.ui.sidebar')
+            .sidebar('toggle')
+    })
+    $('.beatmap-tooltip').popup()
+
+    // =================================================================================
+    // USER MANAGEMENT =================================================================
 
     // SIGNUP
     $scope.goToSignup = function () {
@@ -529,15 +405,80 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
         resetForm();
         $('.signup.modal').modal('show');
     }
+    var $signupForm = $('.signup-form');
+    $signupForm.form({
+        fields: {
+            pseudo: {
+                identifier: 'pseudo',
+                rules: [{
+                    type: 'empty',
+                    prompt: 'Please enter your pseudo'
+                }]
+            },
+            email: {
+                identifier: 'mail',
+                rules: [{
+                    type: 'empty',
+                    prompt: 'Please enter your e-mail'
+                }, {
+                    type: 'email',
+                    prompt: 'Please provide a valid e-mail'
+                }]
+            },
+            user_id: {
+                identifier: 'user_id',
+                rules: [{
+                    type: 'integer',
+                    prompt: 'Please enter an integer value'
+                }]
+            },
+            password1: {
+                identifier: 'password1',
+                rules: [{
+                    type: 'empty',
+                    prompt: 'Please enter your password'
+                }, {
+                    type: 'minLength[5]',
+                    prompt: 'Length of password must be at least 5 characters'
+                }]
+            },
+            password2: {
+                identifier: 'password2',
+                rules: [{
+                    type: 'empty',
+                    prompt: 'Please confirm your password'
+                }, {
+                    type: 'match[password1]',
+                    prompt: 'You must enter the same password'
+                }]
+            }
+        },
+        on: 'blur',
+        inline: 'true'
+    })
+    $signupForm.on('submit', function () {
+        if ($signupForm.form('is valid')) {
+            $('.signup').find('.dimmer').addClass('active')
+            var pseudo = $signupForm.find('#pseudo').val();
+            var password1 = $signupForm.find('#password1').val();
+            var mail = $signupForm.find('#mail').val();
+            var user_id = $signupForm.find('#user_id').val();
+            beatmapApi.createUser(pseudo, password1, mail, user_id, function () {
+                $('.signup').find('.dimmer').removeClass('active')
+                $('.signup-result-ok').modal('show')
+            }, function (result) {
+                $('.signup').find('.dimmer').removeClass('active')
+                $('.signup-result-ko .signup-result-ko-reason').html(result.reason)
+                $('.signup-result-ko').modal('show')
+            });
+        }
+    })
 
     // SIGNIN
-
-
     $scope.logout = function () {
         authService.ClearCredentials();
         window.location.href = '/'
     }
-
     $scope.forgotYourPassword = function () {
         $('.forgot-password-modal').modal('show');
     }
@@ -576,20 +517,69 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
         }
     }
 
-    $('.ui.search').search({
-        apiSettings: {
-            url: '/api/tagsSemantic/{query}'
+
+    var $signingForm = $('.signin-form')
+    $signingForm.form({})
+    $scope.username = null;
+    $scope.password = null;
+    $signingForm.on('click', '.send-another-email', function () {
+        console.log('here')
+        beatmapApi.resendEmail($scope.username, function (response) {
+            if (response.ok === true) {
+                $('.mail-sent').modal('show');
+            }
+            else {
+                $('.mail-sent-fail-reason').html(response.message);
+                $('.mail-sent-fail').modal('show');
+            }
+        });
+    })
+    $signingForm.on('submit', function () {
+        if ($signingForm.form('is valid')) {
+            authService.Login($scope.username, $scope.password, function (response) {
+                var errors = []
+                if (response.error !== null) {
+                    errors.push(response.error);
+                }
+                else if (response.userFound === false) {
+                    errors.push('This user or email does not exist.');
+                }
+                else if (response.mailVerified === false) {
+                    errors.push('That account has been created, but you have not yet clicked the verification link in your e-mail. <a class="send-another-email" >Send another email</a>');
+                }
+                else if (response.passwordOk === false) {
+                    errors.push(' Password is wrong.');
+                }
+                if (errors.length > 0) {
+                    $signingForm.form('add errors', errors);
+                    $signingForm.removeClass('success').addClass('error');
+                }
+                else {
+                    authService.SetCredentials(response.name, $scope.password);
+                    window.location.href = '/'
+                }
+            });
+        }
+    })
+
+
+    $scope.isLogged = $rootScope.globals && $rootScope.globals.currentUser;
+    $scope.user = $scope.isLogged ? $rootScope.globals.currentUser.username : null;
+    $('.ao-user').popup({
+        on: 'click',
+        popup: $scope.isLogged ? '.ao-user-options' : '.ao-user-login',
+        position: 'bottom right',
+        onShow: function () {
+            $signingForm.removeClass('error')
         },
-        type: 'category',
-        onSelect: function (result, response) {
-            $scope.addTag(result.o);
+        onVisible: function () {
+            $signingForm.find('.login-pseudo').focus();
         }
     });
-    $('#sidebars-filter').click(function () {
-        $('.ui.sidebar')
-            .sidebar('toggle')
-    })
-    $('.beatmap-tooltip').popup()
+
+    $scope.showProfileOptions = function () {
+        $('.user-options').modal('show');
+    }
 
 }]);
 

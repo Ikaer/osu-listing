@@ -123,11 +123,12 @@
             <div class="ui flowing popup top left transition hidden ao-user-options">
                 <div class="ui two column middle aligned very relaxed stackable grid">
                     <div class="column">
+                        <div class="ui blue button" ng-click="showProfileOptions()">Logout</div>
                         <div class="ui blue submit button" ng-click="logout()">Logout</div>
                     </div>
                 </div>
             </div>
-            <div class="ui flowing popup top left transition hidden ao-user-popup" style="width:500px;">
+            <div class="ui flowing popup top left transition hidden ao-user-login" style="width:500px;">
                 <div class="ui one column middle aligned very relaxed stackable grid">
                     <div class="ui column vertical buttons">
                         <div class="ui form signin-form">
@@ -279,6 +280,15 @@
             <div class="ui button close">close</div>
         </div>
     </div>
+    <div class="ui modal user-options">
+        <div class="ui form">
+            <div class="field">
+                <label for="options-osu_id" >Osu! ID</label>
+                <input type="text" id="options-osu_id" placeholder="" ng-model="user.osu_id">
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <script>
@@ -315,6 +325,7 @@
         $('.mail-sent-fail').modal('hide')
     })
 
+    $('.user-options').modal()
 
 
     $('.dropdown.ao-sorting').dropdown();

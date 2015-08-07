@@ -52,6 +52,12 @@ angular.module('BeatmapAPI', []).factory('beatmapApi', ['$http', function ($http
             $http.get(url).success(function (data) {
                 fnOk(data)
             });
+        },
+        getUser:function(userName){
+            var url = '/api/user/' + userName;
+            $http.get(url).success(function (data) {
+                fnOk(data)
+            });
         }
     }
 }]);

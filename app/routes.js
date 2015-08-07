@@ -398,7 +398,22 @@ var sendError = function(res, message){
 var sendOk = function(res){
     sendSimpleResponse(res, true, null);
 }
-
+var sendErrorData = function(res, message){
+    res.json({
+        ok:false,
+        data:null,
+        message: message
+    })
+    res.end();
+}
+var sendOkData = function(res, data){
+    res.json({
+        ok:true,
+        data:data,
+        message: null
+    })
+    res.end();
+}
 module.exports = function (app) {
     app.param('pageIndex', function (req, res, next, pageIndex) {
         req.pageIndex = parseInt(pageIndex, 10);
@@ -846,6 +861,19 @@ module.exports = function (app) {
             }
         });
     });
+    app.get('/api/user/:userName', function(req, res){
+        User.findOne({name: req.params.userName},{user_id:1, difficulties:1, modes:1},function(err, user){
+            if(err) sendErrorData(res, err.message);
+            else{
+                if(user === null){
+                    sendErrorData(res, 'Cant find the user')
+                }
+                else{
+                    sendOkData(res, user)
+                }
+            }
+        })
+    })
     app.get('/api/user/validateEmail/:verifyCode', function (req, res) {
         User.findOne({mailVerification: req.params.verifyCode}, function (err, user) {
             if (err) {
