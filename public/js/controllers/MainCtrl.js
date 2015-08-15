@@ -401,7 +401,8 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
         type: 'category',
         onSelect: function (result, response) {
             $scope.addTag(result.o);
-        }
+        },
+        delay:100
     });
     $('#sidebars-filter').click(function () {
         $('.ui.sidebar')
