@@ -423,7 +423,7 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
         resetForm();
         $('.signup.modal').modal('show');
     }
-    var $signupForm = $('.signup-form');
+    var $signupForm = $('.form.signup');
     $signupForm.form({
         fields: {
             pseudo: {
@@ -474,20 +474,26 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
         on: 'blur',
         inline: 'true'
     })
+
     $signupForm.on('submit', function () {
         if ($signupForm.form('is valid')) {
-            $('.signup').find('.dimmer').addClass('active')
+            $signupForm.find('.dimmer').addClass('active')
             var pseudo = $signupForm.find('#pseudo').val();
             var password1 = $signupForm.find('#password1').val();
             var mail = $signupForm.find('#mail').val();
             var user_id = $signupForm.find('#user_id').val();
             beatmapApi.createUser(pseudo, password1, mail, user_id, function () {
-                $('.signup').find('.dimmer').removeClass('active')
-                $('.signup-result-ok').modal('show')
+                window.setTimeout(function(){
+                    $signupForm.find('.dimmer').removeClass('active')
+                    $('.signup-result-ok').modal('show')
+                }, 1000)
+
             }, function (result) {
-                $('.signup').find('.dimmer').removeClass('active')
-                $('.signup-result-ko .signup-result-ko-reason').html(result.reason)
-                $('.signup-result-ko').modal('show')
+                window.setTimeout(function(){
+                    $signupForm.find('.dimmer').removeClass('active')
+                    $('.signup-result-ko .signup-result-ko-reason').html(result.reason)
+                    $('.signup-result-ko').modal('show')
+                }, 1000)
             });
         }
     })
