@@ -11,3 +11,10 @@
 .ui.menu.ao-bottom-menu{
     border-radius:0;
 }
+
+.ui.card.played,  .ui.cards > .ui.card.played {
+    background-color:#BCE5F5;
+}
+.ui.card.played:hover,  .ui.cards > .ui.card.played:hover {
+    background-color:#BCE5F5;
+}

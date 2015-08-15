@@ -10,7 +10,7 @@ angular.module('Authentication', ['BeatmapAPI'])
             service.Login = function (username, password, callback, callbackKo) {
                 beatmapApi.authenticateUser(username, password, function (result) {
                     callback(result)
-                }, function(result){
+                }, function (result) {
                     callbackKo(result);
                 });
             };
@@ -29,12 +29,14 @@ angular.module('Authentication', ['BeatmapAPI'])
                 $cookieStore.put('globals', $rootScope.globals);
             };
 
-            service.ClearCredentials = function () {
-                $rootScope.globals = {};
-                $cookieStore.remove('globals');
-                $http.defaults.headers.common.Authorization = 'Basic ';
+            service.ClearCredentials = function (callback) {
+                beatmapApi.logoutUser(function (result) {
+                    $rootScope.globals = {};
+                    $cookieStore.remove('globals');
+                    $http.defaults.headers.common.Authorization = 'Basic ';
+                    callback();
+                })
             };
-
 
 
             return service;

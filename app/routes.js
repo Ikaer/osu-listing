@@ -2,7 +2,7 @@
 
 var Beatmap = require('./models/beatmap');
 var User = require('./models/user');
-
+var escape = require('regexp.escape');
 var nconf = require('nconf');
 nconf.file({file: 'config.json'});
 nconf.file({file: 'private.json'});
@@ -20,7 +20,8 @@ var nodemailer = require('nodemailer');
 
 var crypto = require('crypto');
 var base64url = require('base64url');
-
+var moment = require('moment');
+require("moment-duration-format");
 /** Sync */
 function randomStringAsBase64Url(size) {
     return base64url(crypto.randomBytes(size));
@@ -116,6 +117,48 @@ AuthTools.prototype.decode = function (input) {
     return output;
 }
 
+AuthTools.prototype.updateUser = function (session) {
+    var q = Q.defer();
+    var that = this;
+    if (session.isAuthenticated === true) {
+        User.findOne({name: session.user.name}, function (err, user) {
+            if (err === null) {
+                session.user = user;
+                session.simplifiedUser = that.simplifyUser(user)
+            }
+            q.resolve();
+
+        });
+    }
+    else {
+        q.resolve();
+    }
+    return q.promise;
+}
+AuthTools.prototype.simplifyUser = function (mongoUser) {
+    var user = this.getEmptySimplifiedUser();
+
+    user.isAuthenticated = true;
+    user.name = mongoUser.name;
+    user.user_id = mongoUser.user_id;
+    if (mongoUser.difficulties) {
+        user.difficulties = mongoUser.difficulties;
+    }
+    if (mongoUser.modes) {
+        user.modes = mongoUser.modes;
+    }
+
+    return user;
+}
+AuthTools.prototype.getEmptySimplifiedUser = function () {
+    return {
+        isAuthenticated: false,
+        name: 'anonymous',
+        difficulties: [1, 2, 3, 4, 5],
+        modes: [0, 1, 2, 3],
+        user_id: null
+    }
+}
 var authTools = new AuthTools();
 
 function QueryTools() {
@@ -174,7 +217,7 @@ QueryTools.prototype.searchGeneric = function (search, field, sortByCount, sortI
     if (field === 'tags') {
         var o = {};
         if (search && search !== '') {
-            var regex = new RegExp(search, 'i');
+            var regex = new RegExp(escape(search), 'i');
             var $match = {};
             $match[field] = regex;
             o.query = {
@@ -215,7 +258,7 @@ QueryTools.prototype.searchGeneric = function (search, field, sortByCount, sortI
 
         // filter beatmaps table
         if (search && search !== '') {
-            var regex = new RegExp(search, 'i');
+            var regex = new RegExp(escape(search), 'i');
             var $match = {};
             $match[field] = regex;
             pipeline.push({
@@ -352,6 +395,33 @@ QueryTools.prototype.addResultToTags = function (results, currentTags, name, cat
     return 0;
 }
 
+QueryTools.prototype.attachUserDataToBeatmap = function (session, beatmap) {
+    beatmap.playedByUser = false;
+    beatmap.userRank = null;
+    if (session.isAuthenticated === true && session.user) {
+        if (session.user.beatmaps) {
+
+        }
+        if (session.user.beatmaps) {
+
+        }
+        if (session.user.scores) {
+            var foundBeatmap = _.find(session.user.scores, function (x) {
+                return x.beatmap_id === beatmap.beatmap_id;
+            })
+            if (foundBeatmap === undefined) {
+                foundBeatmap = _.find(session.user.recents, function (x) {
+                    return x.beatmap_id === beatmap.beatmap_id;
+                })
+            }
+            if (foundBeatmap !== undefined) {
+                beatmap.playedByUser = true;
+                beatmap.userRank = foundBeatmap.rank;
+            }
+        }
+    }
+}
+
 var queryTools = new QueryTools();
 
 var DownloadTools = function () {
@@ -383,33 +453,34 @@ QueryTools.prototype.normalizeData = function (beatmap) {
     that.normalizeInteger(beatmap, 'positiveUserRating')
 }
 
+
 var downloadTools = new DownloadTools();
 
 var sendSimpleResponse = function (res, ok, message) {
     res.json({
-        ok:ok,
+        ok: ok,
         message: message
     })
     res.end();
 }
-var sendError = function(res, message){
+var sendError = function (res, message) {
     sendSimpleResponse(res, false, message);
 }
-var sendOk = function(res){
+var sendOk = function (res) {
     sendSimpleResponse(res, true, null);
 }
-var sendErrorData = function(res, message){
+var sendErrorData = function (res, message) {
     res.json({
-        ok:false,
-        data:null,
+        ok: false,
+        data: null,
         message: message
     })
     res.end();
 }
-var sendOkData = function(res, data){
+var sendOkData = function (res, data) {
     res.json({
-        ok:true,
-        data:data,
+        ok: true,
+        data: data,
         message: null
     })
     res.end();
@@ -447,230 +518,213 @@ module.exports = function (app) {
         next();
     })
     app.get('/api/beatmaps/:pageIndex/:pageSize', function (req, res) {
-        var filters = req.query.f ? JSON.parse(req.query.f) : null;
+            var filters = req.query.f ? JSON.parse(req.query.f) : null;
 
+            Q.when(authTools.updateUser(req.session)).then(function () {
 
-        var getUserDataIsDone = Q.defer();
-        if (req.headers.authorization !== undefined) {
-            try {
-                var decodedData = authTools.decode(req.headers.authorization.replace('Basic ', ''));
-                var userData = decodedData.split(':');
-                User.findOne({name: userData[0]}, function (err, user) {
-                    if (user !== null && user.isValidPassword(userData[1])) {
-                        getUserDataIsDone.resolve(user);
-                    }
-                    else {
-                        getUserDataIsDone.resolve(null);
-                    }
-                });
-            }
-            catch (e) {
-                getUserDataIsDone.resolve(null);
-            }
-        }
-        else {
-            getUserDataIsDone.resolve(null);
-        }
+                var matchPipeline = {
+                    $match: {$and: []}
+                };
 
-        var matchPipeline = {
-            $match: {$and: []}
-        };
-
-        if (filters && filters.tags) {
-            _.each(filters.tags, function (v, k) {
-                if (v.length > 0) {
-                    var tagFilter = {};
-                    tagFilter[k] = {$in: v}
-                    matchPipeline.$match.$and.push(tagFilter);
-                }
-            });
-        }
-        if (filters && filters.difficulties && filters.difficulties.length < 5) {
-            matchPipeline.$match.$and.push({
-                difficulty: {
-                    $in: filters.difficulties
-                }
-            });
-        }
-        if (filters && filters.modes && filters.modes.length < 4) {
-            matchPipeline.$match.$and.push({
-                mode: {
-                    $in: filters.modes
-                }
-            });
-        }
-        if (filters && filters.approved) {
-            matchPipeline.$match.$and.push({
-                approved: {
-                    $in: filters.approved
-                }
-            });
-        }
-        var aggregatePipeline = [];
-        aggregatePipeline.push(matchPipeline);
-
-        var groupPipe = {
-            $group: {
-                _id: {
-                    "beatmapset_id": "$beatmapset_id"
-                },
-                beatmapsIds: {$push: "$$ROOT.beatmap_id"}
-
-            }
-        };
-
-        var sorting = {'approved_date': -1};
-        if (filters && filters.sorting && filters.sorting.name !== null) {
-            sorting = {};
-            sorting[filters.sorting.name] = filters.sorting.direction;
-            groupPipe.$group[filters.sorting.name] = {$first: "$" + filters.sorting.name}
-
-        }
-        aggregatePipeline.push(groupPipe);
-
-        var queryToGetdIds = Beatmap.aggregate(aggregatePipeline);
-        queryToGetdIds.sort(sorting);
-        queryToGetdIds.skip(req.pageSize * req.pageIndex);
-        queryToGetdIds.limit(req.pageSize + 1);
-        queryToGetdIds.options = {allowDiskUse: true};
-        queryToGetdIds.exec(function (err, packs) {
-            var response = {
-                packs: [],
-                downloadAllLink: null,
-                hasNextPage: false
-            }
-            if (err) {
-                res.send(response);
-            }
-            else {
-                if (packs.length > 0) {
-
-                    var matchPipeline = {
-                        $match: {
-                            $and: [
-                                {
-                                    beatmap_id: {
-                                        $in: []
-                                    }
-                                }
-                            ]
-                        }
-                    };
-                    _.each(packs, function (p) {
-                        _.each(p.beatmapsIds, function (bId) {
-                            matchPipeline.$match.$and[0].beatmap_id.$in.push(bId);
-                        })
-                    })
-
-
-                    var aggregatePipeline = [];
-                    aggregatePipeline.push(matchPipeline);
-                    aggregatePipeline.push(queryTools.pipes.projects.cleanBeatmap);
-
-                    var groupPipe = {
-                        $group: {
-                            _id: {
-                                "beatmapset_id": "$beatmapset_id"
-                            },
-                            beatmapsIds: {$push: "$$ROOT.beatmap_id"},
-                            beatmaps: {$push: "$$ROOT"},
-                            name: {$first: "$title"},
-                            title: {$first: "$title"},
-                            artist: {$first: "$artist"},
-                            creator: {$addToSet: "$creator"},
-                            bpm: {$first: "$bpm"},
-                            beatmapset_id: {$first: "$beatmapset_id"},
-                            approved: {$first: "$approved"},
-                            approved_date: {$first: "$approved_date"},
-                            last_update: {$first: "$last_update"},
-                            hit_length: {$first: "$hit_length"},
-                            source: {$first: "$source"},
-                            total_length: {$first: "$total_length"},
-                            "playCount": {$sum: "$playCount"},
-                            "playSuccess": {$sum: "$playSuccess"},
-                            "favouritedCount": {$first: "$favouritedCount"},
-                            "genre": {$first: "$genre"},
-                            "language": {$first: "$language"},
-                            "negativeUserRating": {$first: "$negativeUserRating"},
-                            "positiveUserRating": {$first: "$positiveUserRating"},
-                            "tags": {$first: "$tags"},
-                            "submitted_date": {$first: "$submitted_date"}
-                        }
-                    };
-                    aggregatePipeline.push(groupPipe);
-
-
-                    var sorting = {'approved_date': -1};
-                    if (filters && filters.sorting && filters.sorting.name !== null) {
-                        sorting = {};
-                        sorting[filters.sorting.name] = filters.sorting.direction;
-                    }
-
-
-                    var queryToGetData = Beatmap.aggregate(aggregatePipeline);
-                    queryToGetData.sort(sorting);
-                    queryToGetData.options = {allowDiskUse: true};
-                    queryToGetData.exec(function (err, packs) {
-                        var response = {
-                            packs: [],
-                            downloadAllLink: null,
-                            hasNextPage: false
-                        }
-                        if (err) {
-                            res.send(response);
-                        }
-                        else {
-                            if (packs.length === req.pageSize + 1) {
-                                packs.pop();
-                                response.hasNextPage = true;
-                            }
-                            response.packs = packs;
-
-                            var downloadAllLink = [];
-                            _.each(response.packs, function (pack) {
-                                queryTools.normalizeData(pack);
-                                if (filters.displayMode === 0) {
-                                    pack.beatmapsIds = [pack.beatmap_id];
-                                    pack.beatmaps = [JSON.parse(JSON.stringify(pack))];
-                                }
-
-
-                                var fileName = util.format('%s %s - %s.osz', pack.beatmaps[0].beatmapset_id, pack.beatmaps[0].artist, pack.beatmaps[0].title);
-
-                                var toDownloadParam = downloadTools.createToDownloadParams(pack, pack.beatmaps)
-                                downloadAllLink.push(toDownloadParam);
-                                pack.downloadLink = '/api/download/0/' + toDownloadParam;
-                                pack.downloadName = fileName;
-                                _.each(pack.beatmaps, function (beatmap) {
-
-
-                                    var replaceInvalidCharacters = beatmap.xFileName.replace(/[\/:*?"<>|.]/g, "");
-                                    var cleanExtenstion = S(replaceInvalidCharacters).left(replaceInvalidCharacters.length - 3).toString();
-                                    fileName = cleanExtenstion + '.osz';
-                                    beatmap.downloadLink = '/api/download/0/' + downloadTools.createToDownloadParams(pack, [beatmap]);
-                                    beatmap.downloadName = fileName;
-                                })
-                            });
-                            response.downloadAllLink = '/api/download/1/' + downloadAllLink.join(';');
-                            Q.when(getUserDataIsDone.promise).then(function (user) {
-                                if (user != null) {
-                                    console.log('user is ' + user.name)
-                                }
-                                else {
-                                    console.log('anonymous user');
-                                }
-                                res.json(response);
-                            });
+                if (filters && filters.tags) {
+                    _.each(filters.tags, function (v, k) {
+                        if (v.length > 0) {
+                            var tagFilter = {};
+                            tagFilter[k] = {$in: v}
+                            matchPipeline.$match.$and.push(tagFilter);
                         }
                     });
                 }
-                else {
-                    res.json(response);
+                if (filters && filters.difficulties && filters.difficulties.length < 5) {
+                    matchPipeline.$match.$and.push({
+                        difficulty: {
+                            $in: filters.difficulties
+                        }
+                    });
                 }
-            }
-        });
+                if (filters && filters.modes && filters.modes.length < 4) {
+                    matchPipeline.$match.$and.push({
+                        mode: {
+                            $in: filters.modes
+                        }
+                    });
+                }
+                if (filters && filters.approved) {
+                    matchPipeline.$match.$and.push({
+                        approved: {
+                            $in: filters.approved
+                        }
+                    });
+                }
+                var aggregatePipeline = [];
+                aggregatePipeline.push(matchPipeline);
 
-    });
+                var groupPipe = {
+                    $group: {
+                        _id: {
+                            "beatmapset_id": "$beatmapset_id"
+                        },
+                        beatmapsIds: {$push: "$$ROOT.beatmap_id"}
+
+                    }
+                };
+
+                var sorting = {'approved_date': -1};
+                if (filters && filters.sorting && filters.sorting.name !== null) {
+                    sorting = {};
+                    sorting[filters.sorting.name] = filters.sorting.direction;
+                    groupPipe.$group[filters.sorting.name] = {$first: "$" + filters.sorting.name}
+
+                }
+                aggregatePipeline.push(groupPipe);
+
+                var queryToGetdIds = Beatmap.aggregate(aggregatePipeline);
+                queryToGetdIds.sort(sorting);
+                queryToGetdIds.skip(req.pageSize * req.pageIndex);
+                queryToGetdIds.limit(req.pageSize + 1);
+                queryToGetdIds.options = {allowDiskUse: true};
+                queryToGetdIds.exec(function (err, packs) {
+                    var response = {
+                        packs: [],
+                        downloadAllLink: null,
+                        hasNextPage: false
+                    }
+                    if (err) {
+                        res.send(response);
+                    }
+                    else {
+                        if (packs.length > 0) {
+
+                            var matchPipeline = {
+                                $match: {
+                                    $and: [
+                                        {
+                                            beatmap_id: {
+                                                $in: []
+                                            }
+                                        }
+                                    ]
+                                }
+                            };
+                            _.each(packs, function (p) {
+                                _.each(p.beatmapsIds, function (bId) {
+                                    matchPipeline.$match.$and[0].beatmap_id.$in.push(bId);
+                                })
+                            })
+
+
+                            var aggregatePipeline = [];
+                            aggregatePipeline.push(matchPipeline);
+                            aggregatePipeline.push(queryTools.pipes.projects.cleanBeatmap);
+
+                            var groupPipe = {
+                                $group: {
+                                    _id: {
+                                        "beatmapset_id": "$beatmapset_id"
+                                    },
+                                    beatmapsIds: {$push: "$$ROOT.beatmap_id"},
+                                    beatmaps: {$push: "$$ROOT"},
+                                    name: {$first: "$title"},
+                                    title: {$first: "$title"},
+                                    artist: {$first: "$artist"},
+                                    creator: {$addToSet: "$creator"},
+                                    bpm: {$first: "$bpm"},
+                                    beatmapset_id: {$first: "$beatmapset_id"},
+                                    approved: {$first: "$approved"},
+                                    approved_date: {$first: "$approved_date"},
+                                    last_update: {$first: "$last_update"},
+                                    hit_length: {$first: "$hit_length"},
+                                    source: {$first: "$source"},
+                                    total_length: {$first: "$total_length"},
+                                    "playCount": {$sum: "$playCount"},
+                                    "playSuccess": {$sum: "$playSuccess"},
+                                    "favouritedCount": {$first: "$favouritedCount"},
+                                    "genre": {$first: "$genre"},
+                                    "language": {$first: "$language"},
+                                    "negativeUserRating": {$first: "$negativeUserRating"},
+                                    "positiveUserRating": {$first: "$positiveUserRating"},
+                                    "tags": {$first: "$tags"},
+                                    "submitted_date": {$first: "$submitted_date"}
+                                }
+                            };
+                            aggregatePipeline.push(groupPipe);
+
+
+                            var sorting = {'approved_date': -1};
+                            if (filters && filters.sorting && filters.sorting.name !== null) {
+                                sorting = {};
+                                sorting[filters.sorting.name] = filters.sorting.direction;
+                            }
+
+
+                            var queryToGetData = Beatmap.aggregate(aggregatePipeline);
+                            queryToGetData.sort(sorting);
+                            queryToGetData.options = {allowDiskUse: true};
+                            queryToGetData.exec(function (err, packs) {
+                                var response = {
+                                    packs: [],
+                                    downloadAllLink: null,
+                                    hasNextPage: false
+                                }
+                                if (err) {
+                                    res.send(response);
+                                }
+                                else {
+                                    if (packs.length === req.pageSize + 1) {
+                                        packs.pop();
+                                        response.hasNextPage = true;
+                                    }
+                                    response.packs = packs;
+
+                                    var downloadAllLink = [];
+                                    _.each(response.packs, function (pack) {
+                                        queryTools.normalizeData(pack);
+
+
+                                        var fileName = util.format('%s %s - %s.osz', pack.beatmaps[0].beatmapset_id, pack.beatmaps[0].artist, pack.beatmaps[0].title);
+
+                                        var toDownloadParam = downloadTools.createToDownloadParams(pack, pack.beatmaps)
+                                        downloadAllLink.push(toDownloadParam);
+                                        pack.downloadLink = '/api/download/0/' + toDownloadParam;
+                                        pack.downloadName = fileName;
+
+
+                                        _.each(pack.beatmaps, function (beatmap) {
+
+
+                                            var replaceInvalidCharacters = beatmap.xFileName.replace(/[\/:*?"<>|.]/g, "");
+                                            var cleanExtenstion = S(replaceInvalidCharacters).left(replaceInvalidCharacters.length - 3).toString();
+                                            fileName = cleanExtenstion + '.osz';
+                                            beatmap.downloadLink = '/api/download/0/' + downloadTools.createToDownloadParams(pack, [beatmap]);
+                                            beatmap.downloadName = fileName;
+
+                                            queryTools.attachUserDataToBeatmap(req.session, beatmap);
+
+                                        })
+                                        pack.hasBeenPlayedByUser = _.where(pack.beatmaps, {playedByUser: true}).length > 0
+                                        pack.length = moment.duration({
+                                            seconds:pack.beatmaps[0].total_length
+                                        }).format()
+
+                                    });
+                                    response.downloadAllLink = '/api/download/1/' + downloadAllLink.join(';');
+
+                                }
+
+                                res.json(response);
+
+                            });
+                        }
+                        else {
+                            res.json(response);
+                        }
+                    }
+                });
+
+
+            })
+        }
+    );
     app.get('/api/download/:isMultiPack/:toDownload', function (req, res) {
 
         var errorOccurred = function (message, endResponse) {
@@ -861,19 +915,40 @@ module.exports = function (app) {
             }
         });
     });
-    app.get('/api/user/:userName', function(req, res){
-        User.findOne({name: req.params.userName},{user_id:1, difficulties:1, modes:1},function(err, user){
-            if(err) sendErrorData(res, err.message);
-            else{
-                if(user === null){
+    app.get('/api/user', function (req, res) {
+        if (req.session.isAuthenticated === true) {
+            sendOkData(res, req.session.simplifiedUser)
+        }
+        else {
+            sendOkData(res, authTools.getEmptySimplifiedUser())
+        }
+    })
+    app.get('/api/user/:userName', function (req, res) {
+        User.findOne({name: req.params.userName}, {user_id: 1, difficulties: 1, modes: 1}, function (err, user) {
+            if (err) sendErrorData(res, err.message);
+            else {
+                if (user === null) {
                     sendErrorData(res, 'Cant find the user')
                 }
-                else{
+                else {
                     sendOkData(res, user)
                 }
             }
         })
     })
+    app.post('/api/user/profile', function (req, res) {
+        if (req.session.isAuthenticated === true) {
+            var json = req.body.profile;
+            User.findOneAndUpdate({name: req.session.user.name}, req.body.profile, function (err, user) {
+                if (err)sendErrorData(res, err.message);
+                else {
+                    req.session.user = user;
+                    req.session.simplifiedUser = authTools.simplifyUser(req.session.user);
+                    sendOkData(res, 'ok');
+                }
+            });
+        }
+    });
     app.get('/api/user/validateEmail/:verifyCode', function (req, res) {
         User.findOne({mailVerification: req.params.verifyCode}, function (err, user) {
             if (err) {
@@ -881,11 +956,11 @@ module.exports = function (app) {
             }
             else {
                 user.mailHasBeenVerified = true;
-                user.save(function(err){
-                    if(err){
+                user.save(function (err) {
+                    if (err) {
                         sendError(res, err.message)
                     }
-                    else{
+                    else {
                         sendOk(res);
                     }
                 });
@@ -931,11 +1006,11 @@ module.exports = function (app) {
             else {
                 if (user !== null) {
                     user.resetPasswordHash = randomStringAsBase64Url(30)
-                    user.save(function(err){
-                        if(err){
-                         sendSimpleResponse(res, false, err.message);
+                    user.save(function (err) {
+                        if (err) {
+                            sendSimpleResponse(res, false, err.message);
                         }
-                        else{
+                        else {
                             var link = "http://www.altosu.org/resetPassword.html?id=" + user.resetPasswordHash;
                             var mailOptions = {
                                 from: 'altosu.org<altosu.org@gmail.com>', // sender address
@@ -972,7 +1047,7 @@ module.exports = function (app) {
                         if (err) {
                             sendSimpleResponse(res, false, err.message);
                         }
-                        else{
+                        else {
                             user.resetPasswordHash = randomStringAsBase64Url(30);
                             user.save();
                             sendSimpleResponse(res, true, null);
@@ -1003,10 +1078,21 @@ module.exports = function (app) {
                     result.name = user.name;
                     result.passwordOk = user.isValidPassword(req.params.password)
                     result.mailVerified = user.mailHasBeenVerified;
+                    if (result.passwordOk) {
+                        req.session.isAuthenticated = true;
+                        req.session.user = user;
+                        req.session.simplifiedUser = authTools.simplifyUser(user);
+                        req.session.userName = user.name;
+                        req.session.save();
+                    }
                 }
             }
             res.json(result);
         });
+    })
+    app.delete('/api/user/logout', function (req, res) {
+        req.session.destroy();
+        sendOk(res);
     })
     app.get('*', function (req, res) {
         res.sendfile('./public/index.html'); // load the single view file (angular will handle the page changes on the front-end)

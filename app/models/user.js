@@ -20,8 +20,8 @@ var userSchema = new Schema({
     scores:[UserScore.schema],
     recents:[UserRecent.schema],
     beatmaps : [Number],
-    difficulties :[Number],
-    mode:[Number]
+    difficulties : {type:[Number], default:[1,2,3,4,5]},
+    modes:{type:[Number], default:[0,1,2,3]}
 });
 
 var hash = function (passwd, salt) {

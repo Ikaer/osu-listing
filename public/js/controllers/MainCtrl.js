@@ -35,28 +35,49 @@ TagTools.prototype.getTagsByType = function (tags, type) {
     return selectedTags;
 }
 
+angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainController', ['$rootScope', '$scope', '$location', '$state', 'beatmapApi', 'AuthenticationService', 'userLoader', function ($rootScope, $scope, $location, $state, beatmapApi, authService, userLoader) {
 
-angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainController', ['$rootScope', '$scope', '$location', '$state', 'beatmapApi', 'AuthenticationService', function ($rootScope, $scope, $location, $state, beatmapApi, authService) {
+    console.log(userLoader.data.data)
+    /*
+     isAuthenticated: false,
+     name: 'anonymous',
+     difficulties: [1, 2, 3, 4, 5],
+     modes: [0, 1, 2, 3],
+     user_id:null
 
+     */
 
+    $scope.user = userLoader.data.data;
     $scope.loading = true;
     $scope.notLoading = false;
     showLoading();
     var tagTools = new TagTools();
 
+    function findValueInUserProfile(name, value) {
+        return _.find($scope.user[name], function (x) {
+                return x === value;
+            }) !== undefined;
+    }
+
     $scope.modes = [
-        {value: 0, name: 'Osu!', active: true},
-        {value: 1, name: 'Taiko', active: true},
-        {value: 2, name: 'Catch the beat', active: true},
-        {value: 3, name: 'Osu!Mania', active: true}
+        {value: 0, name: 'Osu!', active: findValueInUserProfile('modes', 0), init: false},
+        {value: 1, name: 'Taiko', active: findValueInUserProfile('modes', 1), init: false},
+        {value: 2, name: 'Catch the beat', active: findValueInUserProfile('modes', 2), init: false},
+        {value: 3, name: 'Osu!Mania', active: findValueInUserProfile('modes', 3), init: false}
     ]
+    _.each($scope.modes, function (m) {
+        m.init = m.active;
+    })
     $scope.difficulties = [
-        {value: 1, name: 'Easy', active: true},
-        {value: 2, name: 'Normal', active: true},
-        {value: 3, name: 'Hard', active: true},
-        {value: 4, name: 'Insane', active: true},
-        {value: 5, name: 'Expert', active: true}
+        {value: 1, name: 'Easy', active: findValueInUserProfile('difficulties', 1), init: false},
+        {value: 2, name: 'Normal', active: findValueInUserProfile('difficulties', 2), init: false},
+        {value: 3, name: 'Hard', active: findValueInUserProfile('difficulties', 3), init: false},
+        {value: 4, name: 'Insane', active: findValueInUserProfile('difficulties', 4), init: false},
+        {value: 5, name: 'Expert', active: findValueInUserProfile('difficulties', 5), init: false}
     ];
+    _.each($scope.difficulties, function (d) {
+        d.init = d.active;
+    })
     $scope.approved = [
         {value: 0, name: 'Pending', active: false},
         {value: 1, name: 'Ranked', active: true},
@@ -65,7 +86,6 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
         {value: -1, name: 'WIP', active: false},
         {value: -2, name: 'Graveyard', active: false}
     ];
-    $scope.displayMode = 1;
     $scope.converter = {
         difficulty: {
             '1': 'easy',
@@ -89,7 +109,6 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
             '-2': 'graveyard'
         }
     };
-
     $scope.sortings = {
         approved: {label: 'Approved date', value: 'approved_date', direction: -1},
         title: {label: 'Title', value: 'title', direction: 1},
@@ -246,8 +265,7 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
             sorting: {
                 name: $scope.sorting.value,
                 direction: $scope.sorting.direction
-            },
-            displayMode: $scope.displayMode
+            }
         }
         beatmapApi.get(function (errMessage) {
             },
@@ -391,7 +409,7 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
     })
     $('.beatmap-tooltip').popup()
 
-    // =================================================================================
+
     // USER MANAGEMENT =================================================================
 
     // SIGNUP
@@ -476,8 +494,9 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
 
     // SIGNIN
     $scope.logout = function () {
-        authService.ClearCredentials();
-        window.location.href = '/'
+        authService.ClearCredentials(function () {
+            window.location.href = '/'
+        });
     }
     $scope.forgotYourPassword = function () {
         $('.forgot-password-modal').modal('show');
@@ -555,6 +574,7 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
                     $signingForm.removeClass('success').addClass('error');
                 }
                 else {
+                    $scope.username = response.name;
                     authService.SetCredentials(response.name, $scope.password);
                     window.location.href = '/'
                 }
@@ -564,7 +584,6 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
 
 
     $scope.isLogged = $rootScope.globals && $rootScope.globals.currentUser;
-    $scope.user = $scope.isLogged ? $rootScope.globals.currentUser.username : null;
     $('.ao-user').popup({
         on: 'click',
         popup: $scope.isLogged ? '.ao-user-options' : '.ao-user-login',
@@ -577,9 +596,41 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
         }
     });
 
-    $scope.showProfileOptions = function () {
-        $('.user-options').modal('show');
-    }
 
+    var $profileform = $('.user-options')
+    $profileform.form({
+        fields: {
+            user_id: {
+                identifier: 'options-osu_id',
+                rules: [{
+                    type: 'integer',
+                    prompt: 'Please enter an integer value'
+                }]
+            }
+        },
+        on: 'blur',
+        inline: 'true'
+    });
+    $profileform.on('submit', function () {
+        if ($profileform.form('is valid')) {
+            $profileform.find('.dimmer').addClass('active')
+            beatmapApi.saveProfile({
+                modes: _.map(_.where($scope.modes, {init: true}), function (x) {
+                    return x.value
+                }),
+                difficulties: _.map(_.where($scope.difficulties, {init: true}), function (x) {
+                    return x.value
+                }),
+                user_id: $scope.user.user_id
+            }, function (ok) {
+                window.setTimeout(function () {
+                    $profileform.find('.dimmer').removeClass('active')
+                }, 1000)
+            })
+        }
+    });
+    $scope.showProfileOptions = function () {
+        $profileform.modal('show');
+    }
 }]);
 

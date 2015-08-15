@@ -10,25 +10,33 @@
         <!--<div class="ui active dimmer" style="margin-top:50px" >-->
         <!--<div class="ui large text loader">Loading</div>-->
         <!--</div>-->
-        <div ng-repeat="pack in packs" class="ui card beatmap-card" style="width:200px;text-align:left;cursor:default;"
-             ng-init="$last ? bindCardsEvents() : null">
+        <div ng-repeat="pack in packs" class="ui card tiny beatmap-card"
+             style="width:200px;text-align:left;cursor:default;"
+             ng-init="$last ? bindCardsEvents() : null" ng-class="pack.hasBeenPlayedByUser ? 'played':'' ">
             <div class="image ao-beatmap-image-container"
                  style="min-height:150px;background-image:url('/img/image.png');background-size:cover;">
                 <div class="ui dimmer">
                     <div class="content">
                         <div class="ui list">
                             <div class="item">
-                                <img class="ui image middle aligned"  src="/img/bpm-inverted.png"
+                                <img class="ui image middle aligned" src="/img/bpm-inverted.png"
                                      style="width:20px;">
                                     <span>
                                         {{pack.bpm}}
                                     </span>
                             </div>
-                            <div class="item"  >
+                            <div class="item">
                                 <img class="ui image middle aligned"
                                      src="/img/medals7-inverted.png" style="width:20px;">
                                     <span>
                                         {{pack.playSuccess}}
+                                    </span>
+                            </div>
+                            <div class="item">
+                                <img class="ui image middle aligned"
+                                     src="/img/clock104-inverted.png" style="width:20px;">
+                                    <span>
+                                        {{pack.length }}
                                     </span>
                             </div>
                         </div>
@@ -57,12 +65,17 @@
                 </div>
             </div>
             <div class="extra content flowing center">
-                <img id="popover-{{beatmap.beatmap_id}}"
-                     ng-repeat="beatmap in pack.beatmaps | orderBy:'difficultyrating'"
+                <div class="" ng-repeat="beatmap in pack.beatmaps | orderBy:'difficultyrating'" style="display:inline;">
+                    <div style="display:inline;position:relative;">
+                        <img id="popover-{{beatmap.beatmap_id}}"
+                             src="/img/mode/{{converter.mode[beatmap.mode]}}/{{converter.difficulty[beatmap.difficulty]}}.png"
+                             style="width:20px;margin-left:2px;opacity:0.8;"/>
 
-                     src="/img/mode/{{converter.mode[beatmap.mode]}}/{{converter.difficulty[beatmap.difficulty]}}.png"
-                     style="width:20px;margin-left:2px;opacity:0.8;"/>
-                <!--ng-click="showBeatmap(beatmap)"-->
+                        <div ng-show="beatmap.playedByUser" style="display:inline">
+                            <img src="/img/rank/{{beatmap.userRank}}.png" style="width:18px;">
+                        </div>
+                    </div>
+                </div>
 
             </div>
             <div class="extra content ">

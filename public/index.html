@@ -35,7 +35,7 @@
     <script src="js/services/AuthenticationService.js"></script>
 
     <script>
-        var app = angular.module('sampleApp', [ 'MainCtrl',  'ui.router', 'ngCookies'])
+        var app = angular.module('sampleApp', [ 'MainCtrl',  'ui.router', 'ngCookies', 'BeatmapAPI'])
         app.config(function($stateProvider, $urlRouterProvider){
             $urlRouterProvider.otherwise("/home")
             $stateProvider
@@ -43,7 +43,12 @@
                         abstract:true,
                         url: "/home",
                         templateUrl: "views/main.html",
-                        controller: 'MainController'
+                        controller: 'MainController',
+                        resolve: {
+                            userLoader: function($http){
+                                return $http({method: 'GET', url: '/api/user'})
+                            }
+                        }
                     })
                     .state('home.beatmaps', {
                         url: "",
