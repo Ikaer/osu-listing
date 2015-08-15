@@ -400,6 +400,7 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
         },
         type: 'category',
         onSelect: function (result, response) {
+            $scope.pageIndex = 0;
             $scope.addTag(result.o);
         },
         delay:100
