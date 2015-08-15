@@ -2,11 +2,11 @@
 
 var Beatmap = require('./models/beatmap');
 var User = require('./models/user');
-var escape = require('regexp.escape');
+
 var nconf = require('nconf');
 nconf.file({file: 'config.json'});
-nconf.file({file: 'private.json'});
-
+nconf.file('private', 'private.json');
+var escape = require('regexp.escape');
 var _ = require('underscore');
 var http = require('http');
 var fs = require('fs');
