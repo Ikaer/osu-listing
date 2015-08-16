@@ -4,7 +4,6 @@ var mongoose = require('mongoose'),
     crypto = require('crypto'),
     uuid = require('node-uuid'),
     Schema = mongoose.Schema,
-    ObjectId = Schema.ObjectId,
     UserScore = require('./userScore'),
     UserRecent = require('./userRecent');
 

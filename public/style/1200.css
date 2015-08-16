@@ -1,0 +1,19 @@
+/* Large devices (large desktops, 1200px and up) */
+@media screen and (min-width: 1200px) {
+    /*.ui.link.cards.grid.centered  {*/
+        /*background-color: green*/
+    /*}*/
+    .header-menu-label-small {
+        display:none;
+    }
+    .header-menu-label-big {
+        display:inline;
+    }
+
+    .search-little{
+        display:none!important;
+    }
+    .search-big{
+        display:flex!important;
+    }
+}

@@ -1,0 +1,19 @@
+/* Small devices (tablets, 768px and up) */
+@media screen and (min-width: 480px) {
+    /*.ui.link.cards.grid.centered  {*/
+        /*background-color: orange*/
+    /*}*/
+    .header-menu-label-small {
+        display:inline;
+    }
+    .header-menu-label-big {
+        display:none;
+    }
+
+    .search-little{
+        display:none!important;
+    }
+    .search-big{
+        display:flex!important;
+    }
+}

@@ -1,71 +1,79 @@
-<div class="ui sidebar inverted vertical menu">
+<div class="ui top sidebar filters">
+    <div>
+        <div class="ui form" style="background-color:white;padding:10px">
+            <div class="fields">
+                <div class="field four wide" style="margin-right:30px">
+                    <h4 class="ui dividing header">Duration</h4>
 
-    <!--<a class="item">-->
-    <!--Language-->
-    <!--<div class="menu">-->
-    <!--<div class="item">-->
-    <!--<div class="ui search selection dropdown ao-filter-language">-->
-    <!--<input type="hidden" name="country">-->
+                    <div class="field">
+                        <div class="fields">
+                            <div class="field">
+                                <label for="min-duration">Minimum (in seconds)</label>
+                                <input id="min-duration" ng-model="minDuration" ng-change="draw()" type="number"/>
+                            </div>
+                            <div class="field">
+                                <label for="max-duration">Maximum (in seconds)</label>
+                                <input id="max-duration" ng-model="maxDuration" ng-change="draw()" type="number"/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="field twelve wide">
+                    <h4 class="ui dividing header">Display cards</h4>
 
-    <!--<div class="default text">Select language</div>-->
-    <!--<i class="dropdown icon"></i>-->
-
-    <!--<div class="menu horizontal">-->
-    <!--"0" : "Japanese",-->
-    <!--"1" : "Instrumental",-->
-    <!--"2" : "English",-->
-    <!--"3" : null,-->
-    <!--"4" : "Other",-->
-    <!--"5" : "Spanish",-->
-    <!--"6" : "Korean",-->
-    <!--"7" : "Chinese",-->
-    <!--"8" : "German",-->
-    <!--"9" : "French",-->
-    <!--"10" : "Italian",-->
-    <!--"11" : "Swedish",-->
-    <!--"12" : "Any"-->
-
-    <!--<div class="item" data-value="Japanese">Japanese</div>-->
-    <!--<div class="item" data-value="ax"><i class="ax flag"></i>Aland Islands</div>-->
-    <!--</div>-->
-    <!--</div>-->
-    <!--</div>-->
-    <!--</div>-->
-    <!--</a>-->
-    <!--<a class="item">-->
-    <!--Mode-->
-    <!--</a>-->
-</div>
-<div class="pusher">
-    <div class="ui fixed inverted menu ao-menu">
-        <div class="ui container">
-            <a class="item disabled">
-                <div class="ui small loader ao-loader"></div>
-            </a>
-
-            <a href="/" class="item">
-                <img class="logo ao-logo" src="img/1437607408_osu.png">&nbsp;&nbsp;
-                AltOsu
-            </a>
-
-            <div class="ui dropdown item ao-sorting right">
-                <input type="hidden" name="gender">
-
-                <div class="default text">{{sorting.label}}</div>
-                <i class="dropdown icon"></i>
-
-                <div class="menu">
-                    <div class="item" ng-if="(displayMode === 0 && s.single === true) || s.single !== true"
-                         ng-repeat="s in sortings" data-value="{{s.value}}" ng-click="sort(s)">
-                        {{s.label}}
+                    <div class="field inline" ng-repeat="db in playedBeatmaps">
+                        <input type="radio" name="played-beatmaps-radio" id="played-beatmaps-{{db.value}}"
+                               ng-model="$parent.playedBeatmapValue" value="{{db.value}}" ng-change="draw()"/>
+                        <label for="played-beatmaps-{{db.value}}">{{db.name}}</label>
                     </div>
                 </div>
             </div>
-            <a class="item"> <i class="sort content icon" ng-click="changeSortingDirection()"
-                                ng-class="sorting.direction === 1 ? 'ascending' : 'descending'"></i></a>
+        </div>
+    </div>
+</div>
+<div class="ui right sidebar side-search" style="background-color:white;">
+    <div class="ui container" style="padding:5px;">
+        <div class="ui fluid category search">
+            <div class="ui icon input fluid">
+                <input class="prompt" type="text" placeholder="Search creators / titles / artits ...">
+                <i class="search icon"></i>
+            </div>
+        </div>
+        <div class="results"></div>
+    </div>
+</div>
+<!--"0" : "Japanese",-->
+<!--"1" : "Instrumental",-->
+<!--"2" : "English",-->
+<!--"3" : null,-->
+<!--"4" : "Other",-->
+<!--"5" : "Spanish",-->
+<!--"6" : "Korean",-->
+<!--"7" : "Chinese",-->
+<!--"8" : "German",-->
+<!--"9" : "French",-->
+<!--"10" : "Italian",-->
+<!--"11" : "Swedish",-->
+<!--"12" : "Any"-->
+
+<div class="pusher">
+    <div class="ui fixed inverted menu ao-menu fluid centered">
+        <div class="ui container ">
+
+            <!--<a>-->
+            <!---->
+            <!--</a>-->
+            <a href="/" class="item">
+                <div class="ui dimmer ao-loader">
+                    <div class="ui tiny loader"></div>
+                </div>
+                <img class="logo ao-logo" src="img/1437607408_osu.png"/>
+            </a>
+
+
             <a class="ui dropdown item aligned ao-filters">
-                Mode
-                <i class="dropdown icon"></i>
+                <span class="header-menu-label-big">Mode</span>
+                <span class="header-menu-label-small">M</span>
 
                 <div class="menu">
                     <div class="item" ng-repeat="m in modes" ng-click="changeMode(m.value)" style="width:180px;">
@@ -77,8 +85,8 @@
                 </div>
             </a>
             <a class="ui dropdown item aligned ao-filters">
-                Difficulty
-                <i class="dropdown icon"></i>
+                <span class="header-menu-label-big">Difficulty</span>
+                <span class="header-menu-label-small">D</span>
 
                 <div class="menu">
                     <div class="item" ng-repeat="d in difficulties" ng-click="changeDifficulty(d.value)"
@@ -91,8 +99,8 @@
                 </div>
             </a>
             <a class="ui dropdown item aligned ao-filters">
-                Status
-                <i class="dropdown icon"></i>
+                <span class="header-menu-label-big">Status</span>
+                <span class="header-menu-label-small">S</span>
 
                 <div class="menu">
                     <div class="item" ng-repeat="d in approved" ng-click="changeApproved(d.value)" style="width:180px;">
@@ -103,21 +111,25 @@
                     </div>
                 </div>
             </a>
+            <a class="ui item icon aligned ao-filters sidenav-open">
+                <i class="filter icon"></i>
+            </a>
 
-            <div class="ui category search item  aligned" style="width:300px;">
+            <!--*************************  SEARCH     ******************************-->
+            <div class="ui category search item right aligned search-big" style="width:300px;">
                 <div class="ui icon input">
-                    <input class="prompt" type="text" placeholder="Search creators / titles / artits ...">
+                    <input class="prompt inverted" type="text" placeholder="Search creators / titles / artits ...">
                     <i class="search icon"></i>
                 </div>
                 <div class="results"></div>
             </div>
-
-
-            <a class="item ao-user">
-                <i class="user icon"></i>
+            <a class="ui item icon sidenav-search-open search-little">
+                <i class="search icon"></i>
             </a>
-            <a class="item ao-user-welcome" ng-show="isLogged">
-                Welcome {{user.name}}
+            <!--*************************  USER ICONS ******************************-->
+            <a class="item ao-user" ng-class="isLogged ? '':'icon'">
+                <i class="user icon"></i>
+                <span ng-show="isLogged">{{user.name}}</span>
             </a>
 
             <div class="ui flowing popup top left transition hidden ao-user-options">
@@ -169,13 +181,26 @@
             </div>
         </div>
     </div>
-    <!--<div style="margin-top:100px;"></div>-->
     <div style="position:fixed;top:52px;bottom:40px;right:0;left:0;overflow-y:auto;overflow-x:hidden;">
         <div ui-view></div>
     </div>
     <div class="ui menu inverted ao-bottom-menu" style="position:fixed;bottom:0;left:0;right:0;">
         <div class="ui container">
             <a class="item" ng-show="isNotFirstPage" ng-click="goPreviousPage()">previous page</a>
+
+            <div class="ui dropdown item ao-sorting right">
+                <input type="hidden" name="gender">
+
+                <div class="default text">{{sorting.label}}</div>
+                <div class="menu">
+                    <div class="item"
+                         ng-repeat="s in sortings" data-value="{{s.value}}" ng-click="sort(s)">
+                        {{s.label}}
+                    </div>
+                </div>
+            </div>
+            <a class="item"> <i class="sort content icon" ng-click="changeSortingDirection()"
+                                ng-class="sorting.direction === 1 ? 'ascending' : 'descending'"></i></a>
 
             <div class="right menu">
                 <a class="item" ng-show="hasNextPage" ng-click="goNextPage()">next page</a>
@@ -295,90 +320,92 @@
         <div class="ui form content user-options-form">
             <div class="inline field">
                 <label for="options-osu_id">Osu! ID</label>
-                <input  type="text" id="options-osu_id" placeholder="" ng-model="user.user_id">
+                <input type="text" id="options-osu_id" placeholder="" ng-model="user.user_id">
             </div>
             <div class="inline fields">
                 <label>Starting difficulties</label>
+
                 <div class="field" ng-repeat="difficulty in difficulties">
                     <div class="ui checkbox">
-                        <input id="profile-difficulty-{{difficulty.value}}" type="checkbox" ng-model="difficulty.init"  >
-                        <label for="profile-difficulty-{{difficulty.value}}" >{{difficulty.name}}</label>
+                        <input id="profile-difficulty-{{difficulty.value}}" type="checkbox" ng-model="difficulty.init">
+                        <label for="profile-difficulty-{{difficulty.value}}">{{difficulty.name}}</label>
                     </div>
                 </div>
             </div>
             <div class="inline fields">
                 <label>Starting modes</label>
+
                 <div class="field" ng-repeat="mode in modes">
                     <div class="ui checkbox">
-                        <input id="profile-mode-{{mode.value}}"  type="checkbox"  ng-model="mode.init" >
-                        <label for="profile-mode-{{mode.value}}" >{{mode.name}}</label>
+                        <input id="profile-mode-{{mode.value}}" type="checkbox" ng-model="mode.init">
+                        <label for="profile-mode-{{mode.value}}">{{mode.name}}</label>
                     </div>
                 </div>
             </div>
-            </div>
-            <div class="actions">
-                <div class="ui button blue submit" >save</div>
-                <div class="ui button close">close</div>
-            </div>
         </div>
-
+        <div class="actions">
+            <div class="ui button blue submit">save</div>
+            <div class="ui button close">close</div>
+        </div>
     </div>
 
-    <script>
-        $('.signup.modal').modal({
-            allowMultiple: false
-        })
-        $('.signup-result-ok').modal()
-        $('.signup-result-ko').modal()
-        $('.signup.modal .signup_cancel').click(function () {
-            $('.signup.modal').modal('hide')
-        })
-        $('.signup-result-ok .signup-result-ok_cancel').click(function () {
-            $('.signup-result-ok').modal('hide')
-        })
-        $('.signup-result-ko .signup-result-ko_cancel').click(function () {
-            $('.signup-result-ko').modal('hide')
-        })
+</div>
+
+<script>
+    $('.signup.modal').modal({
+        allowMultiple: false
+    })
+    $('.signup-result-ok').modal()
+    $('.signup-result-ko').modal()
+    $('.signup.modal .signup_cancel').click(function () {
+        $('.signup.modal').modal('hide')
+    })
+    $('.signup-result-ok .signup-result-ok_cancel').click(function () {
+        $('.signup-result-ok').modal('hide')
+    })
+    $('.signup-result-ko .signup-result-ko_cancel').click(function () {
+        $('.signup-result-ko').modal('hide')
+    })
 
 
-        // MAIL SEND MODAL - VARIOUS SOURCE
-        $('.mail-sent').modal();
-        $('.mail-sent .mail-sent_cancel').click(function () {
-            $('.mail-sent').modal('hide')
-        })
-        $('.mail-sent-fail').modal();
-        $('.mail-sent-fail .close').click(function () {
-            $('.mail-sent-fail').modal('hide')
-        })
+    // MAIL SEND MODAL - VARIOUS SOURCE
+    $('.mail-sent').modal();
+    $('.mail-sent .mail-sent_cancel').click(function () {
+        $('.mail-sent').modal('hide')
+    })
+    $('.mail-sent-fail').modal();
+    $('.mail-sent-fail .close').click(function () {
+        $('.mail-sent-fail').modal('hide')
+    })
 
 
-        // FORGOT PASSWORD MODAL
-        $('.forgot-password-modal').modal();
-        $('.forgot-password-modal .close').click(function () {
-            $('.mail-sent-fail').modal('hide')
-        })
+    // FORGOT PASSWORD MODAL
+    $('.forgot-password-modal').modal();
+    $('.forgot-password-modal .close').click(function () {
+        $('.mail-sent-fail').modal('hide')
+    })
 
-        $('.user-options').modal()
-        $('.user-options .close').click(function () {
-            $('.user-options').modal('hide')
-        })
-        $('.user-options .menu .item').tab();
+    $('.user-options').modal()
+    $('.user-options .close').click(function () {
+        $('.user-options').modal('hide')
+    })
+    $('.user-options .menu .item').tab();
 
-        $('.dropdown.ao-sorting').dropdown();
-        $('.dropdown.ao-filters').dropdown({
-            action: function () {
-                /*hack do nothing*/
-            }
-        });
-        $('.dropdown.ao-filter-language').dropdown();
-        $('.ao-extra-filters').popup({
-            on: 'click',
-            popup: '.ao-extra-filters-popup',
-            position: 'bottom right'
-        });
-        $('.ui.checkbox').checkbox();
-    </script>
-    <audio id="player" src="" type="audio/mp3"></audio>
+    $('.dropdown.ao-sorting').dropdown();
+    $('.dropdown.ao-filters').dropdown({
+        action: function () {
+            /*hack do nothing*/
+        }
+    });
+    $('.dropdown.ao-filter-language').dropdown();
+    $('.ao-extra-filters').popup({
+        on: 'click',
+        popup: '.ao-extra-filters-popup',
+        position: 'bottom right'
+    });
+    $('.ui.checkbox').checkbox();
+</script>
+<audio id="player" src="" type="audio/mp3"></audio>
 
 
 

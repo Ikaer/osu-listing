@@ -8,11 +8,12 @@ angular.module('Authentication', ['BeatmapAPI'])
             var service = {};
 
             service.Login = function (username, password, callback, callbackKo) {
-                beatmapApi.authenticateUser(username, password, function (result) {
-                    callback(result)
-                }, function (result) {
-                    callbackKo(result);
-                });
+                beatmapApi.authenticateUser(username, password,
+                    function (data) {
+                        callback(data)
+                    }, function (message) {
+                        callbackKo(message);
+                    });
             };
 
             service.SetCredentials = function (username, password) {

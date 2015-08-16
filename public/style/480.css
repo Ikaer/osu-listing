@@ -1,0 +1,19 @@
+/* Landscape phones and down */
+@media screen and (max-width: 480px) {
+    /*.ui.link.cards.grid.centered  {*/
+        /*background-color: red*/
+    /*}*/
+    .header-menu-label-small {
+        display:inline;
+    }
+    .header-menu-label-big {
+        display:none;
+    }
+
+    .search-little{
+        display:flex!important;
+    }
+    .search-big{
+        display:none!important;
+    }
+}

@@ -59,6 +59,12 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
             }) !== undefined;
     }
 
+    $scope.playedBeatmaps = [
+        {value: 0, name: 'all of them'},
+        {value: 1, name: 'only the ones I\'ve never played any difficulty in it'},
+        {value: 2, name: 'only the ones I\'ve at least one difficulty in it'}
+    ]
+    $scope.playedBeatmapValue = 0;
     $scope.modes = [
         {value: 0, name: 'Osu!', active: findValueInUserProfile('modes', 0), init: false},
         {value: 1, name: 'Taiko', active: findValueInUserProfile('modes', 1), init: false},
@@ -136,7 +142,8 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
             $scope.draw();
         }
     }
-
+    $scope.minDuration = null;
+    $scope.maxDuration = null;
     $scope.pageSize = 20;
     $scope.pageIndex = 0;
     $scope.isNotFirstPage = false;
@@ -232,7 +239,6 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
     }
 
     $scope.listStyle = 2;
-
     function showLoading() {
         $('.ao-loader').addClass('active');
     }
@@ -242,6 +248,7 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
     }
 
     $scope.draw = function () {
+        console.log($scope.playedBeatmapValue);
         showLoading();
         var filters = {
             difficulties: _.map(_.where($scope.difficulties, {active: true}), function (x) {
@@ -265,7 +272,10 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
             sorting: {
                 name: $scope.sorting.value,
                 direction: $scope.sorting.direction
-            }
+            },
+            minDuration: $scope.minDuration,
+            maxDuration: $scope.maxDuration,
+            playedBeatmapValue: parseInt($scope.playedBeatmapValue, 10)
         }
         beatmapApi.get(function (errMessage) {
             },
@@ -403,10 +413,14 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
             $scope.pageIndex = 0;
             $scope.addTag(result.o);
         },
-        delay:100
+        delay: 100
     });
-    $('#sidebars-filter').click(function () {
-        $('.ui.sidebar')
+    $('.sidenav-open').click(function () {
+        $('.ui.sidebar.filters')
+            .sidebar('toggle')
+    })
+    $('.sidenav-search-open').click(function(){
+        $('.ui.sidebar.side-search')
             .sidebar('toggle')
     })
     $('.beatmap-tooltip').popup()
@@ -485,15 +499,14 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
             var mail = $signupForm.find('#mail').val();
             var user_id = $signupForm.find('#user_id').val();
             beatmapApi.createUser(pseudo, password1, mail, user_id, function () {
-                window.setTimeout(function(){
+                window.setTimeout(function () {
                     $signupForm.find('.dimmer').removeClass('active')
                     $('.signup-result-ok').modal('show')
                 }, 1000)
-
-            }, function (result) {
-                window.setTimeout(function(){
+            }, function (message) {
+                window.setTimeout(function () {
                     $signupForm.find('.dimmer').removeClass('active')
-                    $('.signup-result-ko .signup-result-ko-reason').html(result.reason)
+                    $('.signup-result-ko .signup-result-ko-reason').html(message)
                     $('.signup-result-ko').modal('show')
                 }, 1000)
             });
@@ -531,15 +544,11 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
     $scope.sendResetMail = function () {
         if ($resetPwdForm.form('is valid')) {
             var mail = $('#forgot-password-email').val();
-            beatmapApi.resetPassword(mail, function (response) {
-                console.log(response);
-                if (response.ok === true) {
-                    $('.mail-sent').modal('show');
-                }
-                else {
-                    $('.mail-sent-fail-reason').html(response.message);
-                    $('.mail-sent-fail').modal('show');
-                }
+            beatmapApi.resetPassword(mail, function () {
+                $('.mail-sent').modal('show');
+            }, function (message) {
+                $('.mail-sent-fail-reason').html(message);
+                $('.mail-sent-fail').modal('show');
             })
         }
     }
@@ -550,25 +559,18 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
     $scope.username = null;
     $scope.password = null;
     $signingForm.on('click', '.send-another-email', function () {
-        console.log('here')
-        beatmapApi.resendEmail($scope.username, function (response) {
-            if (response.ok === true) {
-                $('.mail-sent').modal('show');
-            }
-            else {
-                $('.mail-sent-fail-reason').html(response.message);
-                $('.mail-sent-fail').modal('show');
-            }
+        beatmapApi.resendEmail($scope.username, function () {
+            $('.mail-sent').modal('show');
+        }, function (message) {
+            $('.mail-sent-fail-reason').html(message);
+            $('.mail-sent-fail').modal('show');
         });
     })
     $signingForm.on('submit', function () {
         if ($signingForm.form('is valid')) {
             authService.Login($scope.username, $scope.password, function (response) {
-                var errors = []
-                if (response.error !== null) {
-                    errors.push(response.error);
-                }
-                else if (response.userFound === false) {
+                var errors = [];
+                if (response.userFound === false) {
                     errors.push('This user or email does not exist.');
                 }
                 else if (response.mailVerified === false) {
@@ -586,6 +588,9 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
                     authService.SetCredentials(response.name, $scope.password);
                     window.location.href = '/'
                 }
+            }, function (message) {
+                var errors = [message];
+                $signingForm.form('add errors', errors);
             });
         }
     })
@@ -630,10 +635,12 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
                     return x.value
                 }),
                 user_id: $scope.user.user_id
-            }, function (ok) {
+            }, function () {
                 window.setTimeout(function () {
                     $profileform.find('.dimmer').removeClass('active')
                 }, 1000)
+            }, function (message) {
+                // todo: handle error message
             })
         }
     });

@@ -6,7 +6,9 @@ var User = require('./models/user');
 var nconf = require('nconf');
 nconf.file({file: 'config.json'});
 nconf.file('private', 'private.json');
+
 var escape = require('regexp.escape');
+
 var _ = require('underscore');
 var http = require('http');
 var fs = require('fs');
@@ -18,16 +20,14 @@ var archiver = require('archiver');
 var contentDisposition = require('content-disposition')
 var nodemailer = require('nodemailer');
 
-var crypto = require('crypto');
-var base64url = require('base64url');
-var moment = require('moment');
-require("moment-duration-format");
-/** Sync */
-function randomStringAsBase64Url(size) {
-    return base64url(crypto.randomBytes(size));
-}
 
-// create reusable transporter object using SMTP transport
+var moment = require('moment');
+var AuthTools = require('./authTools');
+var authTools = new AuthTools();
+
+require("moment-duration-format");
+
+
 var transporter = nodemailer.createTransport({
     service: 'Gmail',
     auth: {
@@ -36,130 +36,6 @@ var transporter = nodemailer.createTransport({
     }
 });
 
-
-function AuthTools() {
-    this.keyStr = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
-}
-AuthTools.prototype.encode = function (input) {
-    var that = this;
-    var output = "";
-    var chr1, chr2, chr3 = "";
-    var enc1, enc2, enc3, enc4 = "";
-    var i = 0;
-
-    do {
-        chr1 = input.charCodeAt(i++);
-        chr2 = input.charCodeAt(i++);
-        chr3 = input.charCodeAt(i++);
-
-        enc1 = chr1 >> 2;
-        enc2 = ((chr1 & 3) << 4) | (chr2 >> 4);
-        enc3 = ((chr2 & 15) << 2) | (chr3 >> 6);
-        enc4 = chr3 & 63;
-
-        if (isNaN(chr2)) {
-            enc3 = enc4 = 64;
-        } else if (isNaN(chr3)) {
-            enc4 = 64;
-        }
-
-        output = output +
-            that.keyStr.charAt(enc1) +
-            that.keyStr.charAt(enc2) +
-            that.keyStr.charAt(enc3) +
-            that.keyStr.charAt(enc4);
-        chr1 = chr2 = chr3 = "";
-        enc1 = enc2 = enc3 = enc4 = "";
-    } while (i < input.length);
-
-    return output;
-};
-AuthTools.prototype.decode = function (input) {
-    var that = this;
-    var output = "";
-    var chr1, chr2, chr3 = "";
-    var enc1, enc2, enc3, enc4 = "";
-    var i = 0;
-
-    // remove all characters that are not A-Z, a-z, 0-9, +, /, or =
-    var base64test = /[^A-Za-z0-9\+\/\=]/g;
-    if (base64test.exec(input)) {
-        window.alert("There were invalid base64 characters in the input text.\n" +
-            "Valid base64 characters are A-Z, a-z, 0-9, '+', '/',and '='\n" +
-            "Expect errors in decoding.");
-    }
-    input = input.replace(/[^A-Za-z0-9\+\/\=]/g, "");
-
-    do {
-        enc1 = that.keyStr.indexOf(input.charAt(i++));
-        enc2 = that.keyStr.indexOf(input.charAt(i++));
-        enc3 = that.keyStr.indexOf(input.charAt(i++));
-        enc4 = that.keyStr.indexOf(input.charAt(i++));
-
-        chr1 = (enc1 << 2) | (enc2 >> 4);
-        chr2 = ((enc2 & 15) << 4) | (enc3 >> 2);
-        chr3 = ((enc3 & 3) << 6) | enc4;
-
-        output = output + String.fromCharCode(chr1);
-
-        if (enc3 != 64) {
-            output = output + String.fromCharCode(chr2);
-        }
-        if (enc4 != 64) {
-            output = output + String.fromCharCode(chr3);
-        }
-
-        chr1 = chr2 = chr3 = "";
-        enc1 = enc2 = enc3 = enc4 = "";
-
-    } while (i < input.length);
-
-    return output;
-}
-
-AuthTools.prototype.updateUser = function (session) {
-    var q = Q.defer();
-    var that = this;
-    if (session.isAuthenticated === true) {
-        User.findOne({name: session.user.name}, function (err, user) {
-            if (err === null) {
-                session.user = user;
-                session.simplifiedUser = that.simplifyUser(user)
-            }
-            q.resolve();
-
-        });
-    }
-    else {
-        q.resolve();
-    }
-    return q.promise;
-}
-AuthTools.prototype.simplifyUser = function (mongoUser) {
-    var user = this.getEmptySimplifiedUser();
-
-    user.isAuthenticated = true;
-    user.name = mongoUser.name;
-    user.user_id = mongoUser.user_id;
-    if (mongoUser.difficulties) {
-        user.difficulties = mongoUser.difficulties;
-    }
-    if (mongoUser.modes) {
-        user.modes = mongoUser.modes;
-    }
-
-    return user;
-}
-AuthTools.prototype.getEmptySimplifiedUser = function () {
-    return {
-        isAuthenticated: false,
-        name: 'anonymous',
-        difficulties: [1, 2, 3, 4, 5],
-        modes: [0, 1, 2, 3],
-        user_id: null
-    }
-}
-var authTools = new AuthTools();
 
 function QueryTools() {
     this.pipes = {
@@ -314,68 +190,8 @@ QueryTools.prototype.searchArtists = function (search, sortByCount, sortIsDesc) 
 QueryTools.prototype.searchSources = function (search, sortByCount, sortIsDesc) {
     return this.searchGeneric(search, 'source', sortByCount, sortIsDesc);
 }
-QueryTools.prototype.searchGenres = function (search, sortByCount, sortIsDesc) {
-    return this.searchGeneric(search, 'genre', sortByCount, sortIsDesc);
-}
-QueryTools.prototype.searchLanguages = function (search, sortByCount, sortIsDesc) {
-    return this.searchGeneric(search, 'language', sortByCount, sortIsDesc);
-}
 QueryTools.prototype.searchTags = function (search, sortByCount, sortIsDesc) {
     return this.searchGeneric(search, 'tags', sortByCount, sortIsDesc);
-}
-
-QueryTools.prototype.mergeSortedTags = function (a, b, sortByCount, sortIsDesc) {
-    var sortComparison = null;
-    if (true === sortByCount) {
-        if (true === sortIsDesc) {
-            sortComparison = function (x, y) {
-                return x.count > y.count
-            }
-        }
-        else {
-            sortComparison = function (x, y) {
-                return x.count < y.count
-            }
-        }
-    }
-    else {
-        if (true === sortIsDesc) {
-            sortComparison = function (x, y) {
-                return x.value > y.value
-            }
-        }
-        else {
-            sortComparison = function (x, y) {
-                return x.value < y.value
-            }
-        }
-    }
-
-    var answer = [];
-    var i = 0, j = 0;
-    var maxCount = a.length > b.length ? a.length : b.length;
-
-    while (i < a.length && j < b.length) {
-        if (sortComparison(a[i], b[j])) {
-            answer.push(a[i]);
-            i++;
-        }
-        else {
-            answer.push(b[j]);
-            j++;
-        }
-    }
-
-    while (i < a.length) {
-        answer.push(a[i]);
-        i++;
-    }
-
-    while (j < b.length) {
-        answer.push(b[j]);
-        j++;
-    }
-    return answer;
 }
 QueryTools.prototype.addResultToTags = function (results, currentTags, name, categoryIndex) {
     if (currentTags.length > 0) {
@@ -421,17 +237,6 @@ QueryTools.prototype.attachUserDataToBeatmap = function (session, beatmap) {
         }
     }
 }
-
-var queryTools = new QueryTools();
-
-var DownloadTools = function () {
-
-}
-DownloadTools.prototype.createToDownloadParams = function (beatmapSet, beatmaps) {
-    return util.format('%s|%s', beatmapSet.beatmapset_id, _.map(beatmaps, function (b) {
-        return b.beatmap_id
-    }).join(','));
-}
 QueryTools.prototype.normalizeInteger = function (object, property) {
     if (object.hasOwnProperty(property)) {
         try {
@@ -453,38 +258,45 @@ QueryTools.prototype.normalizeData = function (beatmap) {
     that.normalizeInteger(beatmap, 'positiveUserRating')
 }
 
+QueryTools.prototype.getBeatmapsetIdsFromBeatmapId = function (beatmapIds, fnOk, fnKo) {
+    Beatmap.find({
+        beatmap_id: {
+            $in: beatmapIds
+        }
+    }, {
+        beatmapset_id: 1
+    }, {
+        sort: {
+            beatmapset_id: 1
+        }
+    }, function (err, beatmaps) {
+        if (err) {
+            fnKo(err.message)
+        }
+        else {
+            var beatmapsetIds = _.uniq(_.map(beatmaps, function (b) {
+                return b.beatmapset_id
+            }), true);
+            fnOk(beatmapsetIds);
+        }
+    });
+}
 
+var queryTools = new QueryTools();
+
+var DownloadTools = function () {
+
+}
+DownloadTools.prototype.createToDownloadParams = function (beatmapSet, beatmaps) {
+    return util.format('%s|%s', beatmapSet.beatmapset_id, _.map(beatmaps, function (b) {
+        return b.beatmap_id
+    }).join(','));
+}
 var downloadTools = new DownloadTools();
 
-var sendSimpleResponse = function (res, ok, message) {
-    res.json({
-        ok: ok,
-        message: message
-    })
-    res.end();
-}
-var sendError = function (res, message) {
-    sendSimpleResponse(res, false, message);
-}
-var sendOk = function (res) {
-    sendSimpleResponse(res, true, null);
-}
-var sendErrorData = function (res, message) {
-    res.json({
-        ok: false,
-        data: null,
-        message: message
-    })
-    res.end();
-}
-var sendOkData = function (res, data) {
-    res.json({
-        ok: true,
-        data: data,
-        message: null
-    })
-    res.end();
-}
+var RF = require('./formatResponse');
+var rf = new RF();
+
 module.exports = function (app) {
     app.param('pageIndex', function (req, res, next, pageIndex) {
         req.pageIndex = parseInt(pageIndex, 10);
@@ -517,11 +329,12 @@ module.exports = function (app) {
         );
         next();
     })
+
     app.get('/api/beatmaps/:pageIndex/:pageSize', function (req, res) {
-            var filters = req.query.f ? JSON.parse(req.query.f) : null;
+        var filters = req.query.f ? JSON.parse(req.query.f) : null;
 
-            Q.when(authTools.updateUser(req.session)).then(function () {
-
+        Q.when(authTools.updateUser(req.session)).then(function () {
+                var deferreds = [];
                 var matchPipeline = {
                     $match: {$and: []}
                 };
@@ -556,6 +369,65 @@ module.exports = function (app) {
                         }
                     });
                 }
+                if (filters && (filters.maxDuration || filters.minDuration)) {
+                    try {
+                        var maxDuration = parseInt(filters.maxDuration, 10);
+                        if (isNaN(maxDuration) == false) {
+                            matchPipeline.$match.$and.push({
+                                total_length: {
+                                    $lt: maxDuration
+                                }
+                            })
+                        }
+                    }
+                    catch (e) {
+                        console.log(e);
+                    }
+                    try {
+                        var minDuration = parseInt(filters.minDuration, 10);
+                        if (isNaN(minDuration) == false) {
+                            matchPipeline.$match.$and.push({
+                                total_length: {
+                                    $gt: minDuration
+                                }
+                            })
+                        }
+                    }
+                    catch (e) {
+                        console.log(e);
+                    }
+                }
+
+                if (filters && filters.playedBeatmapValue > 0 && req.session.isAuthenticated === true) {
+
+                    var recentIds = _.map(req.session.user.recents, function (r) {
+                        return r.beatmap_id;
+                    });
+                    var scoreIds = _.map(req.session.user.scores, function (s) {
+                        return s.beatmap_id;
+                    })
+                    var playedIds = recentIds.concat(scoreIds);
+                    switch (filters.playedBeatmapValue) {
+                        case 1: //  name:'Display only them when I\'ve played at least one difficulty', active:true},
+                        case 2:// name:'Display only them when I\'ve played all difficulties'
+                            var operator = filters.playedBeatmapValue === 1 ? '$nin' : '$in';
+                            var getbeatmapsetIds = Q.defer();
+                            deferreds.push(getbeatmapsetIds.promise);
+                            queryTools.getBeatmapsetIdsFromBeatmapId(playedIds, function (beatmapset_ids) {
+                                var playedFilter = {
+                                    beatmapset_id: { }
+                                }
+                                playedFilter.beatmapset_id[operator] = beatmapset_ids;
+                                matchPipeline.$match.$and.push(playedFilter);
+                                getbeatmapsetIds.resolve();
+                            }, function () {
+                                getbeatmapsetIds.resolve();
+                            })
+                            break;
+                    }
+                }
+
+
                 var aggregatePipeline = [];
                 aggregatePipeline.push(matchPipeline);
 
@@ -583,148 +455,151 @@ module.exports = function (app) {
                 queryToGetdIds.skip(req.pageSize * req.pageIndex);
                 queryToGetdIds.limit(req.pageSize + 1);
                 queryToGetdIds.options = {allowDiskUse: true};
-                queryToGetdIds.exec(function (err, packs) {
-                    var response = {
-                        packs: [],
-                        downloadAllLink: null,
-                        hasNextPage: false
-                    }
-                    if (err) {
-                        res.send(response);
-                    }
-                    else {
-                        if (packs.length > 0) {
 
-                            var matchPipeline = {
-                                $match: {
-                                    $and: [
-                                        {
-                                            beatmap_id: {
-                                                $in: []
-                                            }
-                                        }
-                                    ]
-                                }
-                            };
-                            _.each(packs, function (p) {
-                                _.each(p.beatmapsIds, function (bId) {
-                                    matchPipeline.$match.$and[0].beatmap_id.$in.push(bId);
-                                })
-                            })
-
-
-                            var aggregatePipeline = [];
-                            aggregatePipeline.push(matchPipeline);
-                            aggregatePipeline.push(queryTools.pipes.projects.cleanBeatmap);
-
-                            var groupPipe = {
-                                $group: {
-                                    _id: {
-                                        "beatmapset_id": "$beatmapset_id"
-                                    },
-                                    beatmapsIds: {$push: "$$ROOT.beatmap_id"},
-                                    beatmaps: {$push: "$$ROOT"},
-                                    name: {$first: "$title"},
-                                    title: {$first: "$title"},
-                                    artist: {$first: "$artist"},
-                                    creator: {$addToSet: "$creator"},
-                                    bpm: {$first: "$bpm"},
-                                    beatmapset_id: {$first: "$beatmapset_id"},
-                                    approved: {$first: "$approved"},
-                                    approved_date: {$first: "$approved_date"},
-                                    last_update: {$first: "$last_update"},
-                                    hit_length: {$first: "$hit_length"},
-                                    source: {$first: "$source"},
-                                    total_length: {$first: "$total_length"},
-                                    "playCount": {$sum: "$playCount"},
-                                    "playSuccess": {$sum: "$playSuccess"},
-                                    "favouritedCount": {$first: "$favouritedCount"},
-                                    "genre": {$first: "$genre"},
-                                    "language": {$first: "$language"},
-                                    "negativeUserRating": {$first: "$negativeUserRating"},
-                                    "positiveUserRating": {$first: "$positiveUserRating"},
-                                    "tags": {$first: "$tags"},
-                                    "submitted_date": {$first: "$submitted_date"}
-                                }
-                            };
-                            aggregatePipeline.push(groupPipe);
-
-
-                            var sorting = {'approved_date': -1};
-                            if (filters && filters.sorting && filters.sorting.name !== null) {
-                                sorting = {};
-                                sorting[filters.sorting.name] = filters.sorting.direction;
-                            }
-
-
-                            var queryToGetData = Beatmap.aggregate(aggregatePipeline);
-                            queryToGetData.sort(sorting);
-                            queryToGetData.options = {allowDiskUse: true};
-                            queryToGetData.exec(function (err, packs) {
-                                var response = {
-                                    packs: [],
-                                    downloadAllLink: null,
-                                    hasNextPage: false
-                                }
-                                if (err) {
-                                    res.send(response);
-                                }
-                                else {
-                                    if (packs.length === req.pageSize + 1) {
-                                        packs.pop();
-                                        response.hasNextPage = true;
-                                    }
-                                    response.packs = packs;
-
-                                    var downloadAllLink = [];
-                                    _.each(response.packs, function (pack) {
-                                        queryTools.normalizeData(pack);
-
-
-                                        var fileName = util.format('%s %s - %s.osz', pack.beatmaps[0].beatmapset_id, pack.beatmaps[0].artist, pack.beatmaps[0].title);
-
-                                        var toDownloadParam = downloadTools.createToDownloadParams(pack, pack.beatmaps)
-                                        downloadAllLink.push(toDownloadParam);
-                                        pack.downloadLink = '/api/download/0/' + toDownloadParam;
-                                        pack.downloadName = fileName;
-
-
-                                        _.each(pack.beatmaps, function (beatmap) {
-
-
-                                            var replaceInvalidCharacters = beatmap.xFileName.replace(/[\/:*?"<>|.]/g, "");
-                                            var cleanExtenstion = S(replaceInvalidCharacters).left(replaceInvalidCharacters.length - 3).toString();
-                                            fileName = cleanExtenstion + '.osz';
-                                            beatmap.downloadLink = '/api/download/0/' + downloadTools.createToDownloadParams(pack, [beatmap]);
-                                            beatmap.downloadName = fileName;
-
-                                            queryTools.attachUserDataToBeatmap(req.session, beatmap);
-
-                                        })
-                                        pack.hasBeenPlayedByUser = _.where(pack.beatmaps, {playedByUser: true}).length > 0
-                                        pack.length = moment.duration({
-                                            seconds:pack.beatmaps[0].total_length
-                                        }).format()
-
-                                    });
-                                    response.downloadAllLink = '/api/download/1/' + downloadAllLink.join(';');
-
-                                }
-
-                                res.json(response);
-
-                            });
+                Q.all(deferreds).then(function () {
+                    queryToGetdIds.exec(function (err, packs) {
+                        var response = {
+                            packs: [],
+                            downloadAllLink: null,
+                            hasNextPage: false
+                        }
+                        if (err) {
+                            rf.sendError(res, err.message);
                         }
                         else {
-                            res.json(response);
+                            if (packs.length > 0) {
+
+                                var matchPipeline = {
+                                    $match: {
+                                        $and: [
+                                            {
+                                                beatmap_id: {
+                                                    $in: []
+                                                }
+                                            }
+                                        ]
+                                    }
+                                };
+                                _.each(packs, function (p) {
+                                    _.each(p.beatmapsIds, function (bId) {
+                                        matchPipeline.$match.$and[0].beatmap_id.$in.push(bId);
+                                    })
+                                })
+
+
+                                var aggregatePipeline = [];
+                                aggregatePipeline.push(matchPipeline);
+                                aggregatePipeline.push(queryTools.pipes.projects.cleanBeatmap);
+
+                                var groupPipe = {
+                                    $group: {
+                                        _id: {
+                                            "beatmapset_id": "$beatmapset_id"
+                                        },
+                                        beatmapsIds: {$push: "$$ROOT.beatmap_id"},
+                                        beatmaps: {$push: "$$ROOT"},
+                                        name: {$first: "$title"},
+                                        title: {$first: "$title"},
+                                        artist: {$first: "$artist"},
+                                        creator: {$addToSet: "$creator"},
+                                        bpm: {$first: "$bpm"},
+                                        beatmapset_id: {$first: "$beatmapset_id"},
+                                        approved: {$first: "$approved"},
+                                        approved_date: {$first: "$approved_date"},
+                                        last_update: {$first: "$last_update"},
+                                        hit_length: {$first: "$hit_length"},
+                                        source: {$first: "$source"},
+                                        total_length: {$first: "$total_length"},
+                                        "playCount": {$sum: "$playCount"},
+                                        "playSuccess": {$sum: "$playSuccess"},
+                                        "favouritedCount": {$first: "$favouritedCount"},
+                                        "genre": {$first: "$genre"},
+                                        "language": {$first: "$language"},
+                                        "negativeUserRating": {$first: "$negativeUserRating"},
+                                        "positiveUserRating": {$first: "$positiveUserRating"},
+                                        "tags": {$first: "$tags"},
+                                        "submitted_date": {$first: "$submitted_date"}
+                                    }
+                                };
+                                aggregatePipeline.push(groupPipe);
+
+
+                                var sorting = {'approved_date': -1};
+                                if (filters && filters.sorting && filters.sorting.name !== null) {
+                                    sorting = {};
+                                    sorting[filters.sorting.name] = filters.sorting.direction;
+                                }
+
+
+                                var queryToGetData = Beatmap.aggregate(aggregatePipeline);
+                                queryToGetData.sort(sorting);
+                                queryToGetData.options = {allowDiskUse: true};
+                                queryToGetData.exec(function (err, packs) {
+                                    var response = {
+                                        packs: [],
+                                        downloadAllLink: null,
+                                        hasNextPage: false
+                                    }
+                                    if (err) {
+                                        rf.sendError(res, err.message);
+                                    }
+                                    else {
+                                        if (packs.length === req.pageSize + 1) {
+                                            packs.pop();
+                                            response.hasNextPage = true;
+                                        }
+                                        response.packs = packs;
+
+                                        var downloadAllLink = [];
+                                        _.each(response.packs, function (pack) {
+                                            queryTools.normalizeData(pack);
+
+
+                                            var fileName = util.format('%s %s - %s.osz', pack.beatmaps[0].beatmapset_id, pack.beatmaps[0].artist, pack.beatmaps[0].title);
+
+                                            var toDownloadParam = downloadTools.createToDownloadParams(pack, pack.beatmaps)
+                                            downloadAllLink.push(toDownloadParam);
+                                            pack.downloadLink = '/api/download/0/' + toDownloadParam;
+                                            pack.downloadName = fileName;
+
+
+                                            _.each(pack.beatmaps, function (beatmap) {
+
+
+                                                var replaceInvalidCharacters = beatmap.xFileName.replace(/[\/:*?"<>|.]/g, "");
+                                                var cleanExtenstion = S(replaceInvalidCharacters).left(replaceInvalidCharacters.length - 3).toString();
+                                                fileName = cleanExtenstion + '.osz';
+                                                beatmap.downloadLink = '/api/download/0/' + downloadTools.createToDownloadParams(pack, [beatmap]);
+                                                beatmap.downloadName = fileName;
+
+                                                queryTools.attachUserDataToBeatmap(req.session, beatmap);
+
+                                            })
+                                            pack.hasBeenPlayedByUser = _.where(pack.beatmaps, {playedByUser: true}).length > 0
+                                            pack.length = moment.duration({
+                                                seconds: pack.beatmaps[0].total_length
+                                            }).format()
+
+                                        });
+                                        response.downloadAllLink = '/api/download/1/' + downloadAllLink.join(';');
+
+                                    }
+                                    rf.sendOkData(res, response);
+
+                                });
+                            }
+                            else {
+                                rf.sendOkData(res, response);
+                            }
                         }
-                    }
-                });
+                    });
+                })
 
 
-            })
-        }
-    );
+            }
+        )
+    });
+
     app.get('/api/download/:isMultiPack/:toDownload', function (req, res) {
 
         var errorOccurred = function (message, endResponse) {
@@ -823,18 +698,16 @@ module.exports = function (app) {
     });
     app.get('/api/authors', function (req, res) {
         Q.when(queryTools.searchCreators('', true, true)).then(function (creators) {
-            res.json(creators)
+            rf.sendOkData(res, creators);
         }).catch(function (err) {
-            res.statusCode = '500';
-            res.json = err;
+            rf.sendError(res, err.message);
         });
     });
     app.get('/api/authors/:search', function (req, res) {
         Q.when(queryTools.searchCreators(req.params.search, true, true)).then(function (creators) {
-            res.json(creators)
+            rf.sendOkData(res, creators);
         }).catch(function (err) {
-            res.statusCode = '500';
-            res.json = err;
+            rf.sendError(res, err.message);
         });
     });
     app.get('/api/tagsSemantic/:search', function (req, res) {
@@ -863,28 +736,20 @@ module.exports = function (app) {
     });
     app.post('/api/user', function (req, res) {
         User.findOne({name: req.body.pseudo}, function (err, dbUser) {
-            var that = this;
-            var result = {
-                created: false,
-                reason: null
-            }
             if (dbUser === null) {
                 var user = new User({
                     name: req.body.pseudo,
                     email: req.body.mail,
                     user_id: req.body.user_id,
-                    resetPasswordHash: randomStringAsBase64Url(30),
-                    mailVerification: randomStringAsBase64Url(27),
+                    resetPasswordHash: authTools.randomStringAsBase64Url(30),
+                    mailVerification: authTools.randomStringAsBase64Url(27),
                     mailHasBeenVerified: false
                 });
                 user.setPassword(req.body.password);
 
                 user.save(function (err) {
                     if (err) {
-                        res.json({
-                            created: false,
-                            reason: err
-                        });
+                        rf.sendError(res, err.message);
                     }
                     else {
                         var link = "http://www.altosu.org/validation.html?id=" + user.mailVerification;
@@ -896,72 +761,74 @@ module.exports = function (app) {
                         }
                         transporter.sendMail(mailOptions, function (error, info) {
                             if (error) {
-                                console.log(error);
+                                rf.sendError(error.message);
                             } else {
-                                console.log('Message sent: ' + info.response);
+                                rf.sendOk(res);
                             }
                         });
 
-                        res.json({
-                            created: true,
-                            reason: null
-                        });
                     }
                 });
             }
             else {
-                result.reason = 'it already exist';
-                res.json(result);
+                rf.sendError(res, 'it already exist');
             }
         });
     });
     app.get('/api/user', function (req, res) {
         if (req.session.isAuthenticated === true) {
-            sendOkData(res, req.session.simplifiedUser)
+            rf.sendOkData(res, req.session.simplifiedUser);
         }
         else {
-            sendOkData(res, authTools.getEmptySimplifiedUser())
+            rf.sendOkData(res, authTools.getEmptySimplifiedUser());
         }
     })
     app.get('/api/user/:userName', function (req, res) {
         User.findOne({name: req.params.userName}, {user_id: 1, difficulties: 1, modes: 1}, function (err, user) {
-            if (err) sendErrorData(res, err.message);
+            if (err) rf.sendError(res, err.message);
             else {
                 if (user === null) {
-                    sendErrorData(res, 'Cant find the user')
+                    rf.sendError(res, 'Cant find the user')
                 }
                 else {
-                    sendOkData(res, user)
+                    rf.sendOkData(res, user);
                 }
             }
         })
     })
     app.post('/api/user/profile', function (req, res) {
         if (req.session.isAuthenticated === true) {
-            var json = req.body.profile;
             User.findOneAndUpdate({name: req.session.user.name}, req.body.profile, function (err, user) {
-                if (err)sendErrorData(res, err.message);
+                if (err) rf.sendError(res, err.message);
                 else {
-                    req.session.user = user;
-                    req.session.simplifiedUser = authTools.simplifyUser(req.session.user);
-                    sendOkData(res, 'ok');
+                    if (user === null) {
+                        rf.sendError(res, 'Cannot found the user who owns this profile.');
+                    }
+                    else {
+                        req.session.user = user;
+                        req.session.simplifiedUser = authTools.simplifyUser(req.session.user);
+                        rf.sendOk(res);
+                    }
                 }
             });
+        }
+        else {
+            rf.sendError(res, 'You must authentified to save a profile')
         }
     });
     app.get('/api/user/validateEmail/:verifyCode', function (req, res) {
         User.findOne({mailVerification: req.params.verifyCode}, function (err, user) {
             if (err) {
-                sendError(res, err.message);
+                rf.sendError(res, err.message);
             }
             else {
                 user.mailHasBeenVerified = true;
                 user.save(function (err) {
                     if (err) {
-                        sendError(res, err.message)
+                        rf.sendError(res, err.message)
                     }
                     else {
-                        sendOk(res);
+                        rf.sendOk(res);
                     }
                 });
             }
@@ -969,13 +836,8 @@ module.exports = function (app) {
     })
     app.get('/api/user/sendVerificationEmail/:pseudoOrMail', function (req, res) {
         User.findOne({$or: [{name: req.params.pseudoOrMail}, {email: req.params.pseudoOrMail}]}, function (err, user) {
-            var result = {
-                ok: false,
-                message: null
-            }
             if (err) {
-                result.message = err.message
-                res.json(result);
+                rf.sendError(res, err.message);
             }
             else {
                 var link = "http://www.altosu.org/validation.html?id=" + user.mailVerification;
@@ -987,13 +849,10 @@ module.exports = function (app) {
                 }
                 transporter.sendMail(mailOptions, function (error, info) {
                     if (error) {
-                        result.message = error.message;
-                        console.log(error);
+                        rf.sendError(res, error.message)
                     } else {
-                        result.ok = true;
-                        console.log('Message sent: ' + info.response);
+                        rf.sendOk(res);
                     }
-                    res.json(result);
                 });
             }
         });
@@ -1001,14 +860,15 @@ module.exports = function (app) {
     app.get('/api/user/sendResetPasswordLink/:mail', function (req, res) {
         User.findOne({email: req.params.mail}, function (err, user) {
             if (err) {
-                sendSimpleResponse(res, false, err.message);
+                rf.sendError(res, err.message);
+
             }
             else {
                 if (user !== null) {
-                    user.resetPasswordHash = randomStringAsBase64Url(30)
+                    user.resetPasswordHash = authTools.randomStringAsBase64Url(30)
                     user.save(function (err) {
                         if (err) {
-                            sendSimpleResponse(res, false, err.message);
+                            rf.sendError(res, err.message);
                         }
                         else {
                             var link = "http://www.altosu.org/resetPassword.html?id=" + user.resetPasswordHash;
@@ -1020,16 +880,16 @@ module.exports = function (app) {
                             }
                             transporter.sendMail(mailOptions, function (error, info) {
                                 if (error) {
-                                    sendSimpleResponse(res, false, error.message);
+                                    rf.sendError(res, error.message);
                                 } else {
-                                    sendSimpleResponse(res, true, null);
+                                    rf.sendOk(res);
                                 }
                             });
                         }
                     });
                 }
                 else {
-                    sendSimpleResponse(res, false, 'Cannot found an account with this email.');
+                    rf.sendError(res, 'Cannot found an account with this email.');
                 }
             }
         });
@@ -1037,25 +897,24 @@ module.exports = function (app) {
     app.get('/api/user/newPassword/:verifyCode/:newPassword', function (req, res) {
         User.findOne({resetPasswordHash: req.params.verifyCode}, function (err, user) {
             if (err) {
-                sendSimpleResponse(res, false, err.message);
-                result.message = err.message;
+                rf.sendError(res, err.message);
             }
             else {
                 if (user !== null) {
                     user.setPassword(req.params.newPassword);
                     user.save(function (err) {
                         if (err) {
-                            sendSimpleResponse(res, false, err.message);
+                            rf.sendError(res, err.message);
                         }
                         else {
-                            user.resetPasswordHash = randomStringAsBase64Url(30);
+                            user.resetPasswordHash = authTools.randomStringAsBase64Url(30);
                             user.save();
-                            sendSimpleResponse(res, true, null);
+                            rf.sendOk(res);
                         }
                     });
                 }
                 else {
-                    sendSimpleResponse(res, false, 'Cannot found an account with this procedure of reset.');
+                    rf.sendError(res, 'Cannot found an account with this procedure of reset.');
                 }
             }
         });
@@ -1066,11 +925,10 @@ module.exports = function (app) {
                 userFound: false,
                 passwordOk: false,
                 mailVerified: false,
-                name: null,
-                error: null
+                name: null
             }
             if (err) {
-                result.error = err;
+                rf.sendError(res, err.message);
             }
             else {
                 if (user !== null) {
@@ -1086,18 +944,15 @@ module.exports = function (app) {
                         req.session.save();
                     }
                 }
+                rf.sendOkData(res, result);
             }
-            res.json(result);
         });
     })
     app.delete('/api/user/logout', function (req, res) {
         req.session.destroy();
-        sendOk(res);
+        rf.sendOk(res);
     })
     app.get('*', function (req, res) {
         res.sendfile('./public/index.html'); // load the single view file (angular will handle the page changes on the front-end)
     });
-
-
-}
-;
+};

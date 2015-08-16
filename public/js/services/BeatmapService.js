@@ -11,14 +11,19 @@ angular.module('BeatmapAPI', []).factory('beatmapApi', ['$http', function ($http
                 myUrl += '?f=' + encodeURIComponent(JSON.stringify(filters));
             }
             $http.get(myUrl).
-                success(function (data, status, headers, config) {
-                    fnCallbackWithData(data)
+                success(function (response) {
+                    if(response.ok){
+                        fnCallbackWithData(response.data)
+                    }
+                    else{
+                        err(response.message);
+                    }
                 }).
-                error(function (data, status, headers, config) {
+                error(function () {
                     err("cannot get beatmaps");
                 })
         },
-        createUser: function (pseudo, password, mail, user_id, fnOk, fnErr) {
+        createUser: function (pseudo, password, mail, user_id, fnOk, fnKo) {
             var url = '/api/user'
             $http.post(url, {
                 pseudo: pseudo,
@@ -26,51 +31,64 @@ angular.module('BeatmapAPI', []).factory('beatmapApi', ['$http', function ($http
                 mail: mail,
                 user_id: user_id
             }).then(function (response) {
-                if (response.data.created === true) {
-                    fnOk(response.data);
+                if (response.data.ok) {
+                    fnOk();
                 }
                 else {
-                    fnErr(response.data);
+                    fnKo(response.data.message);
                 }
             })
         },
         authenticateUser: function (pseudoOrMail, password, fnOk, fnKo) {
             var url = '/api/user/authenticate/' + pseudoOrMail + '/' + password;
-            $http.get(url).success(function (data) {
-                fnOk(data)
-
+            $http.get(url).success(function (response) {
+                if (response.ok) {
+                    fnOk(response.data);
+                }
+                else {
+                    fnKo(response.message)
+                }
             });
         },
-        logoutUser:function(callback){
+        logoutUser: function (callback) {
             var url = '/api/user/logout';
             $http.delete(url).success(function () {
                 callback()
             });
         },
-        resendEmail: function (pseudoOrMail, fnOk) {
+        resendEmail: function (pseudoOrMail, fnOk, fnKo) {
             var url = '/api/user/sendVerificationEmail/' + pseudoOrMail;
-            $http.get(url).success(function (data) {
-                fnOk(data)
+            $http.get(url).success(function (response) {
+                if (response.ok) {
+                    fnOk();
+                }
+                else {
+                    fnKo(response.message);
+                }
             });
         },
-        resetPassword: function (mail, fnOk) {
+        resetPassword: function (mail, fnOk, fnKo) {
             var url = '/api/user/sendResetPasswordLink/' + mail;
-            $http.get(url).success(function (data) {
-                fnOk(data)
+            $http.get(url).success(function (response) {
+                if (response.ok) {
+                    fnOk()
+                }
+                else {
+                    fnKo(response.message);
+                }
             });
         },
-        getUser: function (fnOk) {
-            var url = '/api/user';
-            $http.get(url).success(function (data) {
-                fnOk(data)
-            });
-        },
-        saveProfile: function ( profile, fnOk) {
+        saveProfile: function (profile, fnOk, fnKo) {
             var url = '/api/user/profile';
             $http.post(url, {
                 profile: profile
             }).then(function (response) {
-                fnOk()
+                if (response.data.ok) {
+                    fnOk()
+                }
+                else {
+                    fnKo(response.data.message);
+                }
             })
         }
     }

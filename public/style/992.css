@@ -1,0 +1,18 @@
+/* Medium devices (desktops, 992px and up) */
+@media (min-width: 992px) {
+    /*.ui.link.cards.grid.centered  {*/
+        /*background-color: purple*/
+    /*}*/
+    .header-menu-label-small {
+        display:none;
+    }
+    .header-menu-label-big {
+        display:inline;
+    }
+    .search-little{
+        display:none!important;
+    }
+    .search-big{
+        display:inline!important;
+    }
+}
