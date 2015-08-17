@@ -117,7 +117,11 @@ AuthTools.prototype.getEmptySimplifiedUser = function () {
         name: 'anonymous',
         difficulties: [1, 2, 3, 4, 5],
         modes: [0, 1, 2, 3],
-        user_id: null
+        fileExtensionsToExclude:[],
+        playedBeatmaps: 0,
+        user_id: null,
+        durationMin: null,
+        durationMax:null
     }
 }
 AuthTools.prototype.simplifyUser = function (mongoUser) {
@@ -132,7 +136,20 @@ AuthTools.prototype.simplifyUser = function (mongoUser) {
     if (mongoUser.modes) {
         user.modes = mongoUser.modes;
     }
-
+    //displayCards:{type:Number, default:0},
+    //fileExtensionsToExclude:{type: [String], default:[]}
+    if (mongoUser.playedBeatmaps) {
+        user.playedBeatmaps = mongoUser.playedBeatmaps;
+    }
+    if(mongoUser.fileExtensionsToExclude){
+        user.fileExtensionsToExclude = mongoUser.fileExtensionsToExclude;
+    }
+    if(mongoUser.durationMin){
+        user.durationMin = mongoUser.durationMin;
+    }
+    if(mongoUser.durationMax){
+        user.durationMax = mongoUser.durationMax;
+    }
     return user;
 }
 module.exports = AuthTools;

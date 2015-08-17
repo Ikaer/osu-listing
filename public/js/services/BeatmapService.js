@@ -2,11 +2,16 @@ angular.module('BeatmapAPI', []).factory('beatmapApi', ['$http', function ($http
 
     return {
         // call to get all nerds
-        get: function (err, fnCallbackWithData, pageIndex, pageSize, filters) {
+        get: function (err, fnCallbackWithData, pageIndex, pageSize, filters, extensionsToExclude) {
 
 
             var myUrl = '/api/beatmaps/' + pageIndex + '/' + pageSize + '/';
-
+            if(extensionsToExclude && extensionsToExclude.length>0){
+                myUrl += extensionsToExclude.join(';')
+            }
+            else{
+                myUrl += 'none';
+            }
             if (filters) {
                 myUrl += '?f=' + encodeURIComponent(JSON.stringify(filters));
             }

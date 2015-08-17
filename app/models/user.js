@@ -20,7 +20,12 @@ var userSchema = new Schema({
     recents:[UserRecent.schema],
     beatmaps : [Number],
     difficulties : {type:[Number], default:[1,2,3,4,5]},
-    modes:{type:[Number], default:[0,1,2,3]}
+    modes:{type:[Number], default:[0,1,2,3]},
+    creationDate:Date,
+    playedBeatmaps:{type:Number, default:0},
+    fileExtensionsToExclude:{type: [String], default:[]},
+    durationMin:{type:Number, default:null},
+    durationMax:{type:Number, default:null}
 });
 
 var hash = function (passwd, salt) {

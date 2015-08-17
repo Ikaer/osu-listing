@@ -59,12 +59,65 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
             }) !== undefined;
     }
 
+    $scope.extensions = [
+        {
+            value: 'osu',
+            name: '*.osu file(s)',
+            active: !findValueInUserProfile('fileExtensionsToExclude', 'osu'),
+            init: true
+        },
+        {
+            value: 'mp3',
+            name: '*.mp3 file(s)',
+            active: !findValueInUserProfile('fileExtensionsToExclude', 'mp3'),
+            init: true
+        },
+        {
+            value: 'jpg',
+            name: '*.jpg file(s)',
+            active: !findValueInUserProfile('fileExtensionsToExclude', 'jpg'),
+            init: true
+        },
+        {
+            value: 'osb',
+            name: '*.osb file(s) - contains beatmaps storyboard information',
+            active: !findValueInUserProfile('fileExtensionsToExclude', 'osb'),
+            init: true
+        },
+        {
+            value: 'png',
+            name: '*.png file(s)',
+            active: !findValueInUserProfile('fileExtensionsToExclude', 'png'),
+            init: true
+        },
+        {
+            value: 'wav',
+            name: '*.wav file(s)',
+            active: !findValueInUserProfile('fileExtensionsToExclude', 'wav'),
+            init: true
+        },
+        {
+            value: 'avi',
+            name: '*.avi file(s)',
+            active: !findValueInUserProfile('fileExtensionsToExclude', 'avi'),
+            init: true
+        },
+        {
+            value: 'others',
+            name: 'Any file extension other than the one listed above',
+            active: !findValueInUserProfile('fileExtensionsToExclude', 'others'),
+            init: true
+        }
+    ]
+    _.each($scope.extensions, function (m) {
+        m.init = m.active;
+    })
     $scope.playedBeatmaps = [
         {value: 0, name: 'all of them'},
         {value: 1, name: 'only the ones I\'ve never played any difficulty in it'},
         {value: 2, name: 'only the ones I\'ve at least one difficulty in it'}
     ]
-    $scope.playedBeatmapValue = 0;
+    $scope.playedBeatmapValue = $scope.user.playedBeatmaps;
     $scope.modes = [
         {value: 0, name: 'Osu!', active: findValueInUserProfile('modes', 0), init: false},
         {value: 1, name: 'Taiko', active: findValueInUserProfile('modes', 1), init: false},
@@ -142,8 +195,8 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
             $scope.draw();
         }
     }
-    $scope.minDuration = null;
-    $scope.maxDuration = null;
+    $scope.minDuration = $scope.user.durationMin;
+    $scope.maxDuration = $scope.user.durationMax;
     $scope.pageSize = 20;
     $scope.pageIndex = 0;
     $scope.isNotFirstPage = false;
@@ -191,54 +244,14 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
 
 
     $scope.selectedTag = null
-
-
     $scope.playBeatmap = function (beatmapId) {
         var zik = document.getElementById('player')
         zik.setAttribute('src', '/media/' + beatmapId + '/' + beatmapId + '.mp3');
         zik.play();
     };
-
-
     $scope.downloadAllLink = null;
 
-    $scope.currentPopover = null;
-    $scope.showBeatmap = function (beatmap) {
-        if ($scope.currentPopover !== null) {
-            $scope.currentPopover.popover('destroy')
-        }
-        $scope.currentPopover = $('#popover-' + beatmap.beatmap_id);
 
-        var templateHtml = '<div style="btn-group">';
-
-        templateHtml += "<a type=\"button\" class=\"btn btn-primary\" target=\"_self\" href='" + beatmap.downloadLink + "'";
-        templateHtml += ' download="' + beatmap.downloadName + '">';
-        templateHtml += '<span class="glyphicon glyphicon-download" aria-hidden="true"></span>&nbsp;download this beatmap only';
-        templateHtml += '</a>';
-        templateHtml += "<a type=\"button\" class=\"btn btn-default close-popover\">";
-        templateHtml += '<span class="glyphicon glyphicon-remove" aria-hidden="true"></span>&nbsp;close';
-        templateHtml += '</a>';
-
-        templateHtml += '</div>';
-
-
-        $scope.currentPopover.popover({
-                content: templateHtml,
-                html: true,
-                title: beatmap.version,
-                placement: 'top'
-            }
-        )
-
-        $scope.currentPopover.popover('show')
-        $('.close-popover').on('click', function () {
-            if ($scope.currentPopover !== null) {
-                $scope.currentPopover.popover('destroy')
-            }
-        })
-    }
-
-    $scope.listStyle = 2;
     function showLoading() {
         $('.ao-loader').addClass('active');
     }
@@ -278,6 +291,7 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
             playedBeatmapValue: parseInt($scope.playedBeatmapValue, 10)
         }
         beatmapApi.get(function (errMessage) {
+
             },
             function (res) {
                 _.each(res.packs, function (p) {
@@ -294,7 +308,10 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
             },
             $scope.pageIndex,
             $scope.pageSize,
-            filters);
+            filters,
+            _.map(_.where($scope.extensions, {active: false}), function (e) {
+                return e.value;
+            }));
 
     }
     $scope.draw();
@@ -304,11 +321,7 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
         console.log('foo');
     }
 
-    $scope.$watch('displayMode', function (newValue, oldValue) {
-        if (newValue !== oldValue) {
-            $scope.draw();
-        }
-    })
+    $scope.listStyle = 2;
     $scope.defineView = function () {
         var viewState = ''
         switch ($scope.listStyle) {
@@ -403,6 +416,52 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
             }
         });
     }
+    //playedBeatmaps:{type:Number, default:0},
+    //fileExtensionsToExclude:{type: [String], default:[]},
+    //durationMin:{type:Number, default:null},
+    //durationMax:{type:Number, default:null
+    $scope.saveDuration = function () {
+        var $button = $('#save-duration');
+        $button.addClass('loading');
+        beatmapApi.saveProfile({
+            durationMin: $scope.minDuration,
+            durationMax: $scope.maxDuration
+        }, function () {
+            window.setTimeout(function () {
+                $button.removeClass('loading');
+            }, 1000)
+        }, function (message) {
+            // todo: handle error message
+        })
+    }
+    $scope.savePlayedBeatmaps = function () {
+        var $button = $('#save-played-beatmaps');
+        $button.addClass('loading');
+        beatmapApi.saveProfile({
+            playedBeatmaps: $scope.playedBeatmapValue
+        }, function () {
+            window.setTimeout(function () {
+                $button.removeClass('loading');
+            }, 1000)
+        }, function (message) {
+            // todo: handle error message
+        })
+    }
+    $scope.saveExtensions = function () {
+        var $button = $('#save-extensions');
+        $button.addClass('loading');
+        beatmapApi.saveProfile({
+            fileExtensionsToExclude: _.map(_.where($scope.extensions, {active: false}), function (e) {
+                return e.value;
+            })
+        }, function () {
+            window.setTimeout(function () {
+                $button.removeClass('loading');
+            }, 1000)
+        }, function (message) {
+            // todo: handle error message
+        })
+    }
 
     $('.ui.search').search({
         apiSettings: {
@@ -419,7 +478,7 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
         $('.ui.sidebar.filters')
             .sidebar('toggle')
     })
-    $('.sidenav-search-open').click(function(){
+    $('.sidenav-search-open').click(function () {
         $('.ui.sidebar.side-search')
             .sidebar('toggle')
     })

@@ -2,10 +2,15 @@
     <div>
         <div class="ui form" style="background-color:white;padding:10px">
             <div class="fields">
-                <div class="field four wide" style="margin-right:30px">
+                <div class="field four wide" style="margin-right:30px;position:relative">
+                    <div style="position: absolute;right:0px;top: 10px;" ng-show="isLogged">
+                        <button class="ui tiny icon button" ng-click="saveDuration()" id="save-duration">
+                            <i class="save icon"></i>
+                        </button>
+                    </div>
                     <h4 class="ui dividing header">Duration</h4>
 
-                    <div class="field">
+                    <div class="field" >
                         <div class="fields">
                             <div class="field">
                                 <label for="min-duration">Minimum (in seconds)</label>
@@ -18,8 +23,15 @@
                         </div>
                     </div>
                 </div>
-                <div class="field twelve wide">
-                    <h4 class="ui dividing header">Display cards</h4>
+                <div class="field six wide" style="margin-right:30px;position:relative">
+                    <div  style="position: absolute;right:0px;top: 10px;"  ng-show="isLogged">
+                        <button class="ui tiny icon button" ng-click="savePlayedBeatmaps()" id="save-played-beatmaps">
+                            <i class="save icon"></i>
+                        </button>
+                    </div>
+                    <h4 class="ui dividing header">
+                        <span>Display cards</span>
+                    </h4>
 
                     <div class="field inline" ng-repeat="db in playedBeatmaps">
                         <input type="radio" name="played-beatmaps-radio" id="played-beatmaps-{{db.value}}"
@@ -27,7 +39,20 @@
                         <label for="played-beatmaps-{{db.value}}">{{db.name}}</label>
                     </div>
                 </div>
+                <div class="field four wide" style="margin-right:30px;position:relative" ng-show="isLogged">
+                    <div  style="position: absolute;right:0px;top: 10px;"  >
+                    <button class="ui tiny icon button" ng-click="saveExtensions()" id="save-extensions">
+                        <i class="save icon"></i>
+                    </button>
+                </div>
+                    <h4 class="ui dividing header">Files to include in osz (experimental)</h4>
+                    <div class="field inline" ng-repeat="ext in extensions">
+                        <input type="checkbox" id="extension-{{ext.value}}" ng-model="ext.active" ng-change="draw()"/>
+                        <label for="extension-{{ext.value}}">{{ext.name}}</label>
+                    </div>
+                </div>
             </div>
+
         </div>
     </div>
 </div>
@@ -59,10 +84,6 @@
 <div class="pusher">
     <div class="ui fixed inverted menu ao-menu fluid centered">
         <div class="ui container ">
-
-            <!--<a>-->
-            <!---->
-            <!--</a>-->
             <a href="/" class="item">
                 <div class="ui dimmer ao-loader">
                     <div class="ui tiny loader"></div>

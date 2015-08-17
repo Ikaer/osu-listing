@@ -19,7 +19,7 @@ var Q = require('q');
 var archiver = require('archiver');
 var contentDisposition = require('content-disposition')
 var nodemailer = require('nodemailer');
-
+var path = require('path');
 
 var moment = require('moment');
 var AuthTools = require('./authTools');
@@ -296,7 +296,6 @@ var downloadTools = new DownloadTools();
 
 var RF = require('./formatResponse');
 var rf = new RF();
-
 module.exports = function (app) {
     app.param('pageIndex', function (req, res, next, pageIndex) {
         req.pageIndex = parseInt(pageIndex, 10);
@@ -329,8 +328,16 @@ module.exports = function (app) {
         );
         next();
     })
-
-    app.get('/api/beatmaps/:pageIndex/:pageSize', function (req, res) {
+    app.param('extensionsToExclude', function (req, res, next, extensionsToExclude) {
+        if (extensionsToExclude && extensionsToExclude !== '' && extensionsToExclude !== 'none') {
+            req.extensionsToExclude = extensionsToExclude.split(';');
+        }
+        else {
+            req.extensionsToExclude = [];
+        }
+        next();
+    })
+    app.get('/api/beatmaps/:pageIndex/:pageSize/:extensionsToExclude', function (req, res) {
         var filters = req.query.f ? JSON.parse(req.query.f) : null;
 
         Q.when(authTools.updateUser(req.session)).then(function () {
@@ -415,7 +422,7 @@ module.exports = function (app) {
                             deferreds.push(getbeatmapsetIds.promise);
                             queryTools.getBeatmapsetIdsFromBeatmapId(playedIds, function (beatmapset_ids) {
                                 var playedFilter = {
-                                    beatmapset_id: { }
+                                    beatmapset_id: {}
                                 }
                                 playedFilter.beatmapset_id[operator] = beatmapset_ids;
                                 matchPipeline.$match.$and.push(playedFilter);
@@ -559,7 +566,13 @@ module.exports = function (app) {
 
                                             var toDownloadParam = downloadTools.createToDownloadParams(pack, pack.beatmaps)
                                             downloadAllLink.push(toDownloadParam);
-                                            pack.downloadLink = '/api/download/0/' + toDownloadParam;
+                                            pack.downloadLink = '/api/download/0/' + toDownloadParam + '/';
+                                            if(req.extensionsToExclude.length>0){
+                                                pack.downloadLink += req.extensionsToExclude.join(';')
+                                            }
+                                            else{
+                                                pack.downloadLink += 'none';
+                                            }
                                             pack.downloadName = fileName;
 
 
@@ -581,8 +594,13 @@ module.exports = function (app) {
                                             }).format()
 
                                         });
-                                        response.downloadAllLink = '/api/download/1/' + downloadAllLink.join(';');
-
+                                        response.downloadAllLink = '/api/download/1/' + downloadAllLink.join(';') + '/';
+                                        if(req.extensionsToExclude.length>0){
+                                            response.downloadAllLink += req.extensionsToExclude.join(';')
+                                        }
+                                        else{
+                                            response.downloadAllLink  += 'none';
+                                        }
                                     }
                                     rf.sendOkData(res, response);
 
@@ -600,7 +618,7 @@ module.exports = function (app) {
         )
     });
 
-    app.get('/api/download/:isMultiPack/:toDownload', function (req, res) {
+    app.get('/api/download/:isMultiPack/:toDownload/:extensionsToExclude', function (req, res) {
 
         var errorOccurred = function (message, endResponse) {
             console.error(message);
@@ -656,6 +674,33 @@ module.exports = function (app) {
                                     var addExtension = cleanExtenstion + 'osu';
                                     zip.remove(addExtension);
                                 });
+                                if (req.extensionsToExclude.length > 0) {
+                                    var fileByExtensions = {}
+                                    _.each(zip.files, function(f){
+                                        var ext = path.extname(f.name);
+                                        if(ext === '.jpeg'){
+                                            ext = '.jpg';
+                                        }
+                                        if(ext !== '.osu' && ext != '.osb'
+                                        && ext !== '.mp3'
+                                        && ext !== '.jpg' && ext !== '.png'
+                                        && ext !== '.wav'
+                                        && ext !== '.avi'){
+                                            ext = '.others'
+                                        }
+                                        if(fileByExtensions[ext] === undefined){
+                                            fileByExtensions[ext] = [];
+                                        }
+                                        fileByExtensions[ext].push(f.name);
+                                    })
+                                    _.each(req.extensionsToExclude, function (x) {
+                                        if(fileByExtensions['.' + x] !== undefined){
+                                            _.each(fileByExtensions['.' + x], function(f){
+                                                zip.remove(f);
+                                            })
+                                        }
+                                    })
+                                }
                                 var buffer = zip.generate({type: 'nodebuffer'});
                                 if (req.isMultiPack === false) {
                                     res.write(buffer, 'binary');
@@ -743,7 +788,8 @@ module.exports = function (app) {
                     user_id: req.body.user_id,
                     resetPasswordHash: authTools.randomStringAsBase64Url(30),
                     mailVerification: authTools.randomStringAsBase64Url(27),
-                    mailHasBeenVerified: false
+                    mailHasBeenVerified: false,
+                    creationDate: new Date()
                 });
                 user.setPassword(req.body.password);
 
@@ -816,6 +862,8 @@ module.exports = function (app) {
             rf.sendError(res, 'You must authentified to save a profile')
         }
     });
+
+
     app.get('/api/user/validateEmail/:verifyCode', function (req, res) {
         User.findOne({mailVerification: req.params.verifyCode}, function (err, user) {
             if (err) {
