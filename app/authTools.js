@@ -117,11 +117,19 @@ AuthTools.prototype.getEmptySimplifiedUser = function () {
         name: 'anonymous',
         difficulties: [1, 2, 3, 4, 5],
         modes: [0, 1, 2, 3],
-        fileExtensionsToExclude:[],
+        fileExtensionsToExclude: [],
         playedBeatmaps: 0,
         user_id: null,
         durationMin: null,
-        durationMax:null
+        durationMax: null,
+        minHPDrainRate: null,
+        maxHPDrainRate: null,
+        minCircleSize: null,
+        maxCircleSize: null,
+        minOverallDifficulty: null,
+        maxOverallDifficulty: null,
+        minApproachRate: null,
+        maxApproachRate: null
     }
 }
 AuthTools.prototype.simplifyUser = function (mongoUser) {
@@ -141,14 +149,39 @@ AuthTools.prototype.simplifyUser = function (mongoUser) {
     if (mongoUser.playedBeatmaps) {
         user.playedBeatmaps = mongoUser.playedBeatmaps;
     }
-    if(mongoUser.fileExtensionsToExclude){
+    if (mongoUser.fileExtensionsToExclude) {
         user.fileExtensionsToExclude = mongoUser.fileExtensionsToExclude;
     }
-    if(mongoUser.durationMin){
+    if (mongoUser.durationMin) {
         user.durationMin = mongoUser.durationMin;
     }
-    if(mongoUser.durationMax){
+    if (mongoUser.durationMax) {
         user.durationMax = mongoUser.durationMax;
+    }
+
+    if (mongoUser.minHPDrainRate) {
+        user.minHPDrainRate = mongoUser.minHPDrainRate;
+    }
+    if (mongoUser.maxHPDrainRate) {
+        user.maxHPDrainRate = mongoUser.maxHPDrainRate;
+    }
+    if (mongoUser.minCircleSize) {
+        user.minCircleSize = mongoUser.minCircleSize;
+    }
+    if (mongoUser.maxCircleSize) {
+        user.maxCircleSize = mongoUser.maxCircleSize;
+    }
+    if (mongoUser.minOverallDifficulty) {
+        user.minOverallDifficulty = mongoUser.minOverallDifficulty;
+    }
+    if (mongoUser.maxOverallDifficulty) {
+        user.maxOverallDifficulty = mongoUser.maxOverallDifficulty;
+    }
+    if (mongoUser.minApproachRate) {
+        user.minApproachRate = mongoUser.minApproachRate;
+    }
+    if (mongoUser.maxApproachRate) {
+        user.maxApproachRate = mongoUser.maxApproachRate;
     }
     return user;
 }

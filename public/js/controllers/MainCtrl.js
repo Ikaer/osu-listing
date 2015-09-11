@@ -37,7 +37,7 @@ TagTools.prototype.getTagsByType = function (tags, type) {
 
 angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainController', ['$rootScope', '$scope', '$location', '$state', 'beatmapApi', 'AuthenticationService', 'userLoader', function ($rootScope, $scope, $location, $state, beatmapApi, authService, userLoader) {
 
-    console.log(userLoader.data.data)
+
     /*
      isAuthenticated: false,
      name: 'anonymous',
@@ -58,6 +58,8 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
                 return x === value;
             }) !== undefined;
     }
+
+
 
     $scope.extensions = [
         {
@@ -197,6 +199,19 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
     }
     $scope.minDuration = $scope.user.durationMin;
     $scope.maxDuration = $scope.user.durationMax;
+    var diffNames = [
+        'HPDrainRate',
+        'CircleSize',
+        'OverallDifficulty',
+        'ApproachRate'
+    ]
+    _.each(diffNames, function(diffName){
+        var minProperty = 'min' + diffName;
+        var maxProperty = 'max' + diffName;
+        $scope[minProperty] = $scope.user[minProperty];
+        $scope[maxProperty] = $scope.user[maxProperty];
+    })
+
     $scope.pageSize = 20;
     $scope.pageIndex = 0;
     $scope.isNotFirstPage = false;
@@ -261,7 +276,6 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
     }
 
     $scope.draw = function () {
-        console.log($scope.playedBeatmapValue);
         showLoading();
         var filters = {
             difficulties: _.map(_.where($scope.difficulties, {active: true}), function (x) {
@@ -290,6 +304,12 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
             maxDuration: $scope.maxDuration,
             playedBeatmapValue: parseInt($scope.playedBeatmapValue, 10)
         }
+        _.each(diffNames, function(diffName){
+            var minProperty = 'min' + diffName;
+            var maxProperty = 'max' + diffName;
+            filters[minProperty] = $scope[minProperty];
+            filters[maxProperty] = $scope[maxProperty];
+        })
         beatmapApi.get(function (errMessage) {
 
             },
@@ -420,13 +440,21 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
     //fileExtensionsToExclude:{type: [String], default:[]},
     //durationMin:{type:Number, default:null},
     //durationMax:{type:Number, default:null
-    $scope.saveDuration = function () {
-        var $button = $('#save-duration');
+
+    $scope.saveDurationAndDiffs = function () {
+        var $button = $('#save-durationAndDiffs');
         $button.addClass('loading');
-        beatmapApi.saveProfile({
+        var toSave = {
             durationMin: $scope.minDuration,
             durationMax: $scope.maxDuration
-        }, function () {
+        }
+        _.each(diffNames,function(diffName){
+            var minProperty = 'min' + diffName;
+            var maxProperty = 'max' + diffName;
+            toSave[minProperty] = $scope[minProperty];
+            toSave[maxProperty] = $scope[maxProperty];
+        })
+        beatmapApi.saveProfile(toSave, function () {
             window.setTimeout(function () {
                 $button.removeClass('loading');
             }, 1000)
@@ -434,6 +462,10 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
             // todo: handle error message
         })
     }
+
+
+
+
     $scope.savePlayedBeatmaps = function () {
         var $button = $('#save-played-beatmaps');
         $button.addClass('loading');

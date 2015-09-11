@@ -25,7 +25,15 @@ var userSchema = new Schema({
     playedBeatmaps:{type:Number, default:0},
     fileExtensionsToExclude:{type: [String], default:[]},
     durationMin:{type:Number, default:null},
-    durationMax:{type:Number, default:null}
+    durationMax:{type:Number, default:null},
+    minHPDrainRate: {type:Number, default:null},
+    maxHPDrainRate: {type:Number, default:null},
+    minCircleSize: {type:Number, default:null},
+    maxCircleSize: {type:Number, default:null},
+    minOverallDifficulty: {type:Number, default:null},
+    maxOverallDifficulty: {type:Number, default:null},
+    minApproachRate: {type:Number, default:null},
+    maxApproachRate: {type:Number, default:null}
 });
 
 var hash = function (passwd, salt) {

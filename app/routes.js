@@ -281,7 +281,46 @@ QueryTools.prototype.getBeatmapsetIdsFromBeatmapId = function (beatmapIds, fnOk,
         }
     });
 }
+QueryTools.prototype.testMinAndMaxEquality = function (minProperty, maxProperty, databaseProperty, filters, matchPipeline) {
+    var ret = false;
+    try {
+        var val = parseInt(filters[minProperty], 10);
+        var val2 = parseInt(filters[maxProperty], 10);
+        if (val === val2) {
+            var dbFilter = {}
+            dbFilter[databaseProperty] = val;
+            matchPipeline.$match.$and.push(dbFilter)
+            ret = true;
+        }
+    }
+    catch (e) {
 
+    }
+    return ret;
+}
+QueryTools.prototype.addMinOrMaxToQuery = function (minProperty, maxProperty, databaseProperty, filters, matchPipeline, isMin) {
+    var operator = isMin ? '$gt' : '$lt';
+    var property = isMin ? minProperty : maxProperty;
+    try {
+        var val = parseInt(filters[property], 10);
+        if (isNaN(val) == false) {
+            var dbFilter = {}
+            dbFilter[databaseProperty] = {}
+            dbFilter[databaseProperty][operator] = val;
+            matchPipeline.$match.$and.push(dbFilter)
+        }
+    }
+    catch (e) {
+    }
+}
+QueryTools.prototype.addMinAndMaxToQuery = function (minProperty, maxProperty, databaseProperty, filters, matchPipeline) {
+    if (filters && (filters[maxProperty] || filters[minProperty])) {
+        if (this.testMinAndMaxEquality(minProperty, maxProperty, databaseProperty, filters, matchPipeline) == false) {
+            this.addMinOrMaxToQuery(minProperty, maxProperty, databaseProperty, filters, matchPipeline, true);
+            this.addMinOrMaxToQuery(minProperty, maxProperty, databaseProperty, filters, matchPipeline, false);
+        }
+    }
+}
 var queryTools = new QueryTools();
 
 var DownloadTools = function () {
@@ -376,34 +415,12 @@ module.exports = function (app) {
                         }
                     });
                 }
-                if (filters && (filters.maxDuration || filters.minDuration)) {
-                    try {
-                        var maxDuration = parseInt(filters.maxDuration, 10);
-                        if (isNaN(maxDuration) == false) {
-                            matchPipeline.$match.$and.push({
-                                total_length: {
-                                    $lt: maxDuration
-                                }
-                            })
-                        }
-                    }
-                    catch (e) {
-                        console.log(e);
-                    }
-                    try {
-                        var minDuration = parseInt(filters.minDuration, 10);
-                        if (isNaN(minDuration) == false) {
-                            matchPipeline.$match.$and.push({
-                                total_length: {
-                                    $gt: minDuration
-                                }
-                            })
-                        }
-                    }
-                    catch (e) {
-                        console.log(e);
-                    }
-                }
+                queryTools.addMinAndMaxToQuery('minDuration', 'maxDuration', 'total_length', filters, matchPipeline);
+                queryTools.addMinAndMaxToQuery('minHPDrainRate', 'maxHPDrainRate', 'diff_drain', filters, matchPipeline);
+                queryTools.addMinAndMaxToQuery('minCircleSize', 'maxCircleSize', 'diff_size', filters, matchPipeline);
+                queryTools.addMinAndMaxToQuery('minOverallDifficulty', 'maxOverallDifficulty', 'diff_overall', filters, matchPipeline);
+                queryTools.addMinAndMaxToQuery('minApproachRate', 'maxApproachRate', 'diff_approach', filters, matchPipeline);
+
 
                 if (filters && filters.playedBeatmapValue > 0 && req.session.isAuthenticated === true) {
 
@@ -567,10 +584,10 @@ module.exports = function (app) {
                                             var toDownloadParam = downloadTools.createToDownloadParams(pack, pack.beatmaps)
                                             downloadAllLink.push(toDownloadParam);
                                             pack.downloadLink = '/api/download/0/' + toDownloadParam + '/';
-                                            if(req.extensionsToExclude.length>0){
+                                            if (req.extensionsToExclude.length > 0) {
                                                 pack.downloadLink += req.extensionsToExclude.join(';')
                                             }
-                                            else{
+                                            else {
                                                 pack.downloadLink += 'none';
                                             }
                                             pack.downloadName = fileName;
@@ -595,11 +612,11 @@ module.exports = function (app) {
 
                                         });
                                         response.downloadAllLink = '/api/download/1/' + downloadAllLink.join(';') + '/';
-                                        if(req.extensionsToExclude.length>0){
+                                        if (req.extensionsToExclude.length > 0) {
                                             response.downloadAllLink += req.extensionsToExclude.join(';')
                                         }
-                                        else{
-                                            response.downloadAllLink  += 'none';
+                                        else {
+                                            response.downloadAllLink += 'none';
                                         }
                                     }
                                     rf.sendOkData(res, response);
@@ -676,26 +693,26 @@ module.exports = function (app) {
                                 });
                                 if (req.extensionsToExclude.length > 0) {
                                     var fileByExtensions = {}
-                                    _.each(zip.files, function(f){
+                                    _.each(zip.files, function (f) {
                                         var ext = path.extname(f.name);
-                                        if(ext === '.jpeg'){
+                                        if (ext === '.jpeg') {
                                             ext = '.jpg';
                                         }
-                                        if(ext !== '.osu' && ext != '.osb'
-                                        && ext !== '.mp3'
-                                        && ext !== '.jpg' && ext !== '.png'
-                                        && ext !== '.wav'
-                                        && ext !== '.avi'){
+                                        if (ext !== '.osu' && ext != '.osb'
+                                            && ext !== '.mp3'
+                                            && ext !== '.jpg' && ext !== '.png'
+                                            && ext !== '.wav'
+                                            && ext !== '.avi') {
                                             ext = '.others'
                                         }
-                                        if(fileByExtensions[ext] === undefined){
+                                        if (fileByExtensions[ext] === undefined) {
                                             fileByExtensions[ext] = [];
                                         }
                                         fileByExtensions[ext].push(f.name);
                                     })
                                     _.each(req.extensionsToExclude, function (x) {
-                                        if(fileByExtensions['.' + x] !== undefined){
-                                            _.each(fileByExtensions['.' + x], function(f){
+                                        if (fileByExtensions['.' + x] !== undefined) {
+                                            _.each(fileByExtensions['.' + x], function (f) {
                                                 zip.remove(f);
                                             })
                                         }
