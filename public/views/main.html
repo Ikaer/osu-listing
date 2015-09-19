@@ -1,103 +1,252 @@
 <div class="ui top sidebar filters">
+    <div class="toBottomPart">
+        dsfdsf
+    </div>
     <div>
         <div class="ui form" style="background-color:white;padding:10px">
-            <div class="fields">
-                <div class="field four wide" style="margin-right:30px;position:relative">
-                    <div style="position: absolute;right:0px;top: 10px;" ng-show="isLogged">
-                        <button class="ui tiny icon button" ng-click="saveDurationAndDiffs()" id="save-durationAndDiffs">
-                            <i class="save icon"></i>
-                        </button>
-                    </div>
-                    <h4 class="ui dividing header">Parameters</h4>
 
-                    <div class="inline fields">
-                        <div class="four wide field">
-                            <label>Duration (seconds)</label>
-                        </div>
-                        <div class="six wide field">
-                            <input ng-model="minDuration" ng-change="draw()" type="number" placeholder="Minimum"/>
-                        </div>
-                        <div class="six wide field">
-                            <input ng-model="maxDuration" ng-change="draw()" type="number" placeholder="Maximum"/>
-                        </div>
-                    </div>
-                    <div class="inline fields">
-                        <div class="four wide field">
-                            <label>Overall difficulty</label>
-                        </div>
-                        <div class="six wide field">
-                            <input ng-model="minOverallDifficulty" ng-change="draw()" type="number" placeholder="Minimum" min="1" max="10"/>
-                        </div>
-                        <div class="six wide field">
-                            <input ng-model="maxOverallDifficulty" ng-change="draw()" type="number" placeholder="Maximum" min="1" max="10"/>
-                        </div>
-                    </div>
-                    <div class="inline fields">
-                        <div class="four wide field">
-                            <label>HP drain rate</label>
-                        </div>
-                        <div class="six wide field">
-                            <input ng-model="minHPDrainRate" ng-change="draw()" type="number" placeholder="Minimum" min="1" max="10"/>
-                        </div>
-                        <div class="six wide field">
-                            <input ng-model="maxHPDrainRate" ng-change="draw()" type="number" placeholder="Maximum" min="1" max="10"/>
-                        </div>
-                    </div>
-                    <div class="inline fields">
-                        <div class="four wide field">
-                            <label>Circle size / key count</label>
-                        </div>
-                        <div class="six wide field">
-                            <input ng-model="minCircleSize" ng-change="draw()" type="number" placeholder="Minimum" min="1" max="10"/>
-                        </div>
-                        <div class="six wide field">
-                            <input ng-model="maxCircleSize" ng-change="draw()" type="number" placeholder="Maximum" min="1" max="10"/>
-                        </div>
-                    </div>
-                    <div class="inline fields">
-                        <div class="four wide field">
-                            <label>Approach rate</label>
-                        </div>
-                        <div class="six wide field">
-                            <input ng-model="minApproachRate" ng-change="draw()" type="number" placeholder="Minimum" min="1" max="10"/>
-                        </div>
-                        <div class="six wide field">
-                            <input ng-model="maxApproachRate" ng-change="draw()" type="number" placeholder="Maximum" min="1" max="10"/>
-                        </div>
-                    </div>
+            <div style="position:relative">
+                <div style="position: absolute;right:0;top:-15px;" >
+                    <button class="ui tiny icon button" ng-click="closeExtraFilters()"
+                            id="close-extraFilters">
+                        <i class="close icon"></i>
+                    </button>
                 </div>
-                <div class="field six wide" style="margin-right:30px;position:relative">
-                    <div  style="position: absolute;right:0px;top: 10px;"  ng-show="isLogged">
-                        <button class="ui tiny icon button" ng-click="savePlayedBeatmaps()" id="save-played-beatmaps">
-                            <i class="save icon"></i>
-                        </button>
-                    </div>
-                    <h4 class="ui dividing header">
-                        <span>Display cards</span>
-                    </h4>
-
-                    <div class="field inline" ng-repeat="db in playedBeatmaps">
-                        <input type="radio" name="played-beatmaps-radio" id="played-beatmaps-{{db.value}}"
-                               ng-model="$parent.playedBeatmapValue" value="{{db.value}}" ng-change="draw()"/>
-                        <label for="played-beatmaps-{{db.value}}">{{db.name}}</label>
-                    </div>
-                </div>
-                <div class="field four wide" style="margin-right:30px;position:relative">
-                    <div  style="position: absolute;right:0px;top: 10px;"  ng-show="isLogged" >
-                    <button class="ui tiny icon button" ng-click="saveExtensions()" id="save-extensions">
+                <div style="position: absolute;right:40px;top:-15px;" ng-show="isLogged">
+                    <button class="ui tiny icon button" ng-click="saveExtrafilters()"
+                            id="save-extraFilters">
                         <i class="save icon"></i>
                     </button>
                 </div>
-                    <h4 class="ui dividing header">Files to include in osz (experimental)</h4>
-                    <div class="field inline" ng-repeat="ext in extensions">
-                        <input type="checkbox" id="extension-{{ext.value}}" ng-model="ext.active" ng-change="draw()"/>
-                        <label for="extension-{{ext.value}}">{{ext.name}}</label>
+                <h4 class="ui dividing header">Extra filters</h4>
+
+                <div class="fields">
+                    <div class="field four wide">
+                        <h4 class="ui dividing header">Map parameters</h4>
+
+
+                        <div class="inline fields">
+                            <div class="four wide field">
+                                <label>Duration (seconds)</label>
+                            </div>
+                            <div class="six wide field">
+                                <input ng-model="minDuration" ng-change="draw()" type="number" placeholder="Minimum"/>
+                            </div>
+                            <div class="six wide field">
+                                <input ng-model="maxDuration" ng-change="draw()" type="number" placeholder="Maximum"/>
+                            </div>
+                        </div>
+                        <div class="inline fields">
+                            <div class="four wide field">
+                                <label>Overall difficulty</label>
+                            </div>
+                            <div class="six wide field">
+                                <input ng-model="minOverallDifficulty" ng-change="draw()" type="number"
+                                       placeholder="Minimum" min="1" max="10"/>
+                            </div>
+                            <div class="six wide field">
+                                <input ng-model="maxOverallDifficulty" ng-change="draw()" type="number"
+                                       placeholder="Maximum" min="1" max="10"/>
+                            </div>
+                        </div>
+                        <div class="inline fields">
+                            <div class="four wide field">
+                                <label>HP drain rate</label>
+                            </div>
+                            <div class="six wide field">
+                                <input ng-model="minHPDrainRate" ng-change="draw()" type="number" placeholder="Minimum"
+                                       min="1" max="10"/>
+                            </div>
+                            <div class="six wide field">
+                                <input ng-model="maxHPDrainRate" ng-change="draw()" type="number" placeholder="Maximum"
+                                       min="1" max="10"/>
+                            </div>
+                        </div>
+                        <div class="inline fields">
+                            <div class="four wide field">
+                                <label>Circle size / key count</label>
+                            </div>
+                            <div class="six wide field">
+                                <input ng-model="minCircleSize" ng-change="draw()" type="number" placeholder="Minimum"
+                                       min="1" max="10"/>
+                            </div>
+                            <div class="six wide field">
+                                <input ng-model="maxCircleSize" ng-change="draw()" type="number" placeholder="Maximum"
+                                       min="1" max="10"/>
+                            </div>
+                        </div>
+                        <div class="inline fields">
+                            <div class="four wide field">
+                                <label>Approach rate</label>
+                            </div>
+                            <div class="six wide field">
+                                <input ng-model="minApproachRate" ng-change="draw()" type="number" placeholder="Minimum"
+                                       min="1" max="10"/>
+                            </div>
+                            <div class="six wide field">
+                                <input ng-model="maxApproachRate" ng-change="draw()" type="number" placeholder="Maximum"
+                                       min="1" max="10"/>
+                            </div>
+                        </div>
+                        <div class="inline fields">
+                            <div class="four wide field">
+                                <label>Difficulty (more accurate than easy, hard, etc.)</label>
+                            </div>
+                            <div class="six wide field">
+                                <input ng-model="minDifficultyRating" ng-change="draw()" type="number"
+                                       placeholder="Minimum"
+                                       min="1" max="20"/>
+                            </div>
+                            <div class="six wide field">
+                                <input ng-model="maxDifficultyRating" ng-change="draw()" type="number"
+                                       placeholder="Maximum"
+                                       min="1" max="20"/>
+                            </div>
+                        </div>
+                        <div class="inline fields">
+                            <div class="four wide field">
+                                <label>Play duration (seconds from first note to last note not including breaks)</label>
+                            </div>
+                            <div class="six wide field">
+                                <input ng-model="minHit_length" ng-change="draw()" type="number" placeholder="Minimum"/>
+                            </div>
+                            <div class="six wide field">
+                                <input ng-model="maxHit_length" ng-change="draw()" type="number" placeholder="Maximum"/>
+                            </div>
+                        </div>
+
+
+                    </div>
+                    <div class="field four wide">
+                        <h4 class="ui dividing header">Social parameters</h4>
+
+                        <div class="inline fields">
+                            <div class="four wide field">
+                                <label>Playcount</label>
+                            </div>
+                            <div class="six wide field">
+                                <input ng-model="minPlayCount" ng-change="draw()" type="number" placeholder="Minimum"/>
+                            </div>
+                            <div class="six wide field">
+                                <input ng-model="maxPlayCount" ng-change="draw()" type="number" placeholder="Maximum"/>
+                            </div>
+                        </div>
+                        <div class="inline fields">
+                            <div class="four wide field">
+                                <label>Played with success count</label>
+                            </div>
+                            <div class="six wide field">
+                                <input ng-model="minPlaySuccess" ng-change="draw()" type="number"
+                                       placeholder="Minimum"/>
+                            </div>
+                            <div class="six wide field">
+                                <input ng-model="maxPlaySuccess" ng-change="draw()" type="number"
+                                       placeholder="Maximum"/>
+                            </div>
+                        </div>
+                        <div class="inline fields">
+                            <div class="four wide field">
+                                <label>Favourited count</label>
+                            </div>
+                            <div class="six wide field">
+                                <input ng-model="minFavouritedCount" ng-change="draw()" type="number"
+                                       placeholder="Minimum"/>
+                            </div>
+                            <div class="six wide field">
+                                <input ng-model="maxFavouritedCount" ng-change="draw()" type="number"
+                                       placeholder="Maximum"/>
+                            </div>
+                        </div>
+                        <div class="inline fields">
+                            <div class="four wide field">
+                                <label>Negative user rating</label>
+                            </div>
+                            <div class="six wide field">
+                                <input ng-model="minNegativeUserRating" ng-change="draw()" type="number"
+                                       placeholder="Minimum"/>
+                            </div>
+                            <div class="six wide field">
+                                <input ng-model="maxNegativeUserRating" ng-change="draw()" type="number"
+                                       placeholder="Maximum"/>
+                            </div>
+                        </div>
+                        <div class="inline fields">
+                            <div class="four wide field">
+                                <label>Positive user rating</label>
+                            </div>
+                            <div class="six wide field">
+                                <input ng-model="minPositiveUserRating" ng-change="draw()" type="number"
+                                       placeholder="Minimum"/>
+                            </div>
+                            <div class="six wide field">
+                                <input ng-model="maxPositiveUserRating" ng-change="draw()" type="number"
+                                       placeholder="Maximum"/>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="field four wide">
+                        <h4 class="ui dividing header">Date parameters</h4>
+
+                        <div class="inline fields">
+                            <div class="four wide field">
+                                <label>Approved date</label>
+                            </div>
+                            <div class="six wide field">
+                                <input ng-model="minApproved_date" ng-change="draw()" type="date"
+                                       placeholder="Minimum"/>
+                            </div>
+                            <div class="six wide field">
+                                <input ng-model="maxApproved_date" ng-change="draw()" type="date"
+                                       placeholder="Maximum"/>
+                            </div>
+                        </div>
+                        <div class="inline fields">
+                            <div class="four wide field">
+                                <label>Last update date</label>
+                            </div>
+                            <div class="six wide field">
+                                <input ng-model="minLast_update" ng-change="draw()" type="date" placeholder="Minimum"/>
+                            </div>
+                            <div class="six wide field">
+                                <input ng-model="maxLast_update" ng-change="draw()" type="date" placeholder="Maximum"/>
+                            </div>
+                        </div>
+                        <div class="inline fields">
+                            <div class="four wide field">
+                                <label>Submitted date</label>
+                            </div>
+                            <div class="six wide field">
+                                <input ng-model="minSubmitted_date" ng-change="draw()" type="date"
+                                       placeholder="Minimum"/>
+                            </div>
+                            <div class="six wide field">
+                                <input ng-model="maxSubmitted_date" ng-change="draw()" type="date"
+                                       placeholder="Maximum"/>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="field four wide">
+                        <h4 class="ui dividing header">Display cards</h4>
+
+                        <div class="inline field" ng-repeat="db in playedBeatmaps">
+                            <input type="radio" name="played-beatmaps-radio" id="played-beatmaps-{{db.value}}"
+                                   ng-model="$parent.playedBeatmapValue" value="{{db.value}}" ng-change="draw()"/>
+                            <label for="played-beatmaps-{{db.value}}">{{db.name}}</label>
+                        </div>
+
+                        <h4 class="ui dividing header">Files to include in osz</h4>
+
+                        <div class="inline field" ng-repeat="ext in extensions">
+                            <input type="checkbox" id="extension-{{ext.value}}" ng-model="ext.active"
+                                   ng-change="draw()"/>
+                            <label for="extension-{{ext.value}}">{{ext.name}}</label>
+                        </div>
                     </div>
                 </div>
             </div>
-
         </div>
     </div>
+
 </div>
 <div class="ui right sidebar side-search" style="background-color:white;">
     <div class="ui container" style="padding:5px;">

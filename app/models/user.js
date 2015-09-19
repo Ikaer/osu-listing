@@ -33,7 +33,27 @@ var userSchema = new Schema({
     minOverallDifficulty: {type:Number, default:null},
     maxOverallDifficulty: {type:Number, default:null},
     minApproachRate: {type:Number, default:null},
-    maxApproachRate: {type:Number, default:null}
+    maxApproachRate: {type:Number, default:null},
+    minDifficultyRating: {type:Number, default:null},
+    maxDifficultyRating: {type:Number, default:null},
+    minHit_length: {type:Number, default:null},
+    maxHit_length: {type:Number, default:null},
+    minPlayCount: {type:Number, default:null},
+    maxPlayCount: {type:Number, default:null},
+    minPlaySuccess: {type:Number, default:null},
+    maxPlaySuccess: {type:Number, default:null},
+    minFavouritedCount: {type:Number, default:null},
+    maxFavouritedCount: {type:Number, default:null},
+    minNegativeUserRating: {type:Number, default:null},
+    maxNegativeUserRating: {type:Number, default:null},
+    minPositiveUserRating: {type:Number, default:null},
+    maxPositiveUserRating: {type:Number, default:null},
+    minApproved_date: {type:Date, default:null},
+    maxApproved_date: {type:Date, default:null},
+    minLast_update: {type:Date, default:null},
+    maxLast_update: {type:Date, default:null},
+    minSubmitted_date: {type:Date, default:null},
+    maxSubmitted_date: {type:Date, default:null}
 });
 
 var hash = function (passwd, salt) {

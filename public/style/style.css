@@ -20,3 +20,17 @@
 }
 
 
+.altosu-body .ui.top.sidebar{
+    top:50px!important;
+    bottom: 40px !important;
+
+    opacity:0.9;
+}
+.altosu-body .ui.top.sidebar .toBottomPart {
+    position:absolute;
+    top:0!important;
+    bottom: 0 !important;
+    right:0!important;
+    left:0!important;
+    background:transparent;
+}

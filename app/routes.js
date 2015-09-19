@@ -281,16 +281,47 @@ QueryTools.prototype.getBeatmapsetIdsFromBeatmapId = function (beatmapIds, fnOk,
         }
     });
 }
-QueryTools.prototype.testMinAndMaxEquality = function (minProperty, maxProperty, databaseProperty, filters, matchPipeline) {
+QueryTools.prototype.testMinAndMaxEquality = function (minProperty, maxProperty, databaseProperty, filters, matchPipeline, isDate) {
     var ret = false;
     try {
-        var val = parseInt(filters[minProperty], 10);
-        var val2 = parseInt(filters[maxProperty], 10);
-        if (val === val2) {
+        if (filters[minProperty] !== null && filters[maxProperty] !== null) {
+            var val = null;
+            var val2 = null;
             var dbFilter = {}
-            dbFilter[databaseProperty] = val;
-            matchPipeline.$match.$and.push(dbFilter)
-            ret = true;
+            if (isDate === true) {
+                var moment1 = moment(filters[minProperty]);
+                var moment2 = moment(filters[maxProperty]);
+                val = moment1.format('YYYY-MM-DD')
+                val2 = moment2.format('YYYY-MM-DD')
+                if (val === val2) {
+
+
+                    val += 'T00:00:00.000Z';
+                    val2 += 'T23:59:59.999Z';
+                    var start = new Date(val);
+                    var end = new Date(val2);
+
+                    var dbfilter1 = {};
+                    dbfilter1[databaseProperty] = {}
+                    dbfilter1[databaseProperty].$lte = end;
+                    matchPipeline.$match.$and.push(dbfilter1)
+                    var dbfilter2 = {};
+                    dbfilter2[databaseProperty] = {}
+                    dbfilter2[databaseProperty].$gte = start;
+                    matchPipeline.$match.$and.push(dbfilter2)
+                    var a = 2;
+                    ret = true;
+                }
+            }
+            else {
+                val = parseInt(filters[minProperty], 10);
+                val2 = parseInt(filters[maxProperty], 10);
+                if (val === val2) {
+                    dbFilter[databaseProperty] = val;
+                    matchPipeline.$match.$and.push(dbFilter)
+                    ret = true;
+                }
+            }
         }
     }
     catch (e) {
@@ -298,26 +329,49 @@ QueryTools.prototype.testMinAndMaxEquality = function (minProperty, maxProperty,
     }
     return ret;
 }
-QueryTools.prototype.addMinOrMaxToQuery = function (minProperty, maxProperty, databaseProperty, filters, matchPipeline, isMin) {
-    var operator = isMin ? '$gt' : '$lt';
+QueryTools.prototype.addMinOrMaxToQuery = function (minProperty, maxProperty, databaseProperty, filters, matchPipeline, isMin, isDate) {
+    var operator = isMin ? '$gte' : '$lte';
     var property = isMin ? minProperty : maxProperty;
-    try {
-        var val = parseInt(filters[property], 10);
-        if (isNaN(val) == false) {
+
+    var isParsed = false;
+    var val = null;
+    if (filters[property] !== null) {
+        if (isDate === true) {
+            try {
+                var moment1 = moment(filters[property]);
+                var lastPart = isMin ? 'T00:00:00.000Z' : 'T23:59:59.999Z';
+                val = new Date( moment1.format('YYYY-MM-DD') + lastPart);
+                isParsed = true;
+            }
+            catch (e) {
+
+            }
+        }
+        else {
+            try {
+                val = parseInt(filters[property], 10);
+                if (isNaN(val) == false) {
+                    isParsed = true;
+                }
+            }
+            catch
+                (e) {
+            }
+
+        }
+        if (true === isParsed) {
             var dbFilter = {}
             dbFilter[databaseProperty] = {}
             dbFilter[databaseProperty][operator] = val;
             matchPipeline.$match.$and.push(dbFilter)
         }
     }
-    catch (e) {
-    }
 }
-QueryTools.prototype.addMinAndMaxToQuery = function (minProperty, maxProperty, databaseProperty, filters, matchPipeline) {
+QueryTools.prototype.addMinAndMaxToQuery = function (minProperty, maxProperty, databaseProperty, filters, matchPipeline, isDate) {
     if (filters && (filters[maxProperty] || filters[minProperty])) {
-        if (this.testMinAndMaxEquality(minProperty, maxProperty, databaseProperty, filters, matchPipeline) == false) {
-            this.addMinOrMaxToQuery(minProperty, maxProperty, databaseProperty, filters, matchPipeline, true);
-            this.addMinOrMaxToQuery(minProperty, maxProperty, databaseProperty, filters, matchPipeline, false);
+        if (this.testMinAndMaxEquality(minProperty, maxProperty, databaseProperty, filters, matchPipeline, isDate) == false) {
+            this.addMinOrMaxToQuery(minProperty, maxProperty, databaseProperty, filters, matchPipeline, true, isDate);
+            this.addMinOrMaxToQuery(minProperty, maxProperty, databaseProperty, filters, matchPipeline, false, isDate);
         }
     }
 }
@@ -420,6 +474,18 @@ module.exports = function (app) {
                 queryTools.addMinAndMaxToQuery('minCircleSize', 'maxCircleSize', 'diff_size', filters, matchPipeline);
                 queryTools.addMinAndMaxToQuery('minOverallDifficulty', 'maxOverallDifficulty', 'diff_overall', filters, matchPipeline);
                 queryTools.addMinAndMaxToQuery('minApproachRate', 'maxApproachRate', 'diff_approach', filters, matchPipeline);
+
+                queryTools.addMinAndMaxToQuery('minDifficultyRating', 'maxDifficultyRating', 'difficultyrating', filters, matchPipeline);
+                queryTools.addMinAndMaxToQuery('minHit_length', 'maxHit_length', 'hit_length', filters, matchPipeline);
+                queryTools.addMinAndMaxToQuery('minPlayCount', 'maxPlayCount', 'playCount', filters, matchPipeline);
+                queryTools.addMinAndMaxToQuery('minPlaySuccess', 'maxPlaySuccess', 'playSuccess', filters, matchPipeline);
+                queryTools.addMinAndMaxToQuery('minFavouritedCount', 'maxFavouritedCount', 'favouritedCount', filters, matchPipeline);
+                queryTools.addMinAndMaxToQuery('minNegativeUserRating', 'maxNegativeUserRating', 'negativeUserRating', filters, matchPipeline);
+                queryTools.addMinAndMaxToQuery('minPositiveUserRating', 'maxPositiveUserRating', 'positiveUserRating', filters, matchPipeline);
+
+                queryTools.addMinAndMaxToQuery('minApproved_date', 'maxApproved_date', 'approved_date', filters, matchPipeline, true);
+                queryTools.addMinAndMaxToQuery('minLast_update', 'maxLast_update', 'last_update', filters, matchPipeline, true);
+                queryTools.addMinAndMaxToQuery('minSubmitted_date', 'maxSubmitted_date', 'submitted_date', filters, matchPipeline, true);
 
 
                 if (filters && filters.playedBeatmapValue > 0 && req.session.isAuthenticated === true) {

@@ -2,9 +2,25 @@ var Q = require('q');
 var User = require('./models/user');
 var base64url = require('base64url');
 var crypto = require('crypto');
-
+var _ = require('underscore');
 function AuthTools() {
     this.keyStr = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
+    this.diffNames = [
+        'HPDrainRate',
+        'CircleSize',
+        'OverallDifficulty',
+        'ApproachRate',
+        'DifficultyRating',
+        'Hit_length',
+        'PlayCount',
+        'PlaySuccess',
+        'FavouritedCount',
+        'NegativeUserRating',
+        'PositiveUserRating',
+        'Approved_date',
+        'Last_update',
+        'Submitted_date'
+    ]
 }
 AuthTools.prototype.randomStringAsBase64Url = function (size) {
     return base64url(crypto.randomBytes(size));
@@ -112,7 +128,8 @@ AuthTools.prototype.updateUser = function (session) {
     return q.promise;
 }
 AuthTools.prototype.getEmptySimplifiedUser = function () {
-    return {
+    var that = this;
+    var simplifiedUser = {
         isAuthenticated: false,
         name: 'anonymous',
         difficulties: [1, 2, 3, 4, 5],
@@ -121,18 +138,20 @@ AuthTools.prototype.getEmptySimplifiedUser = function () {
         playedBeatmaps: 0,
         user_id: null,
         durationMin: null,
-        durationMax: null,
-        minHPDrainRate: null,
-        maxHPDrainRate: null,
-        minCircleSize: null,
-        maxCircleSize: null,
-        minOverallDifficulty: null,
-        maxOverallDifficulty: null,
-        minApproachRate: null,
-        maxApproachRate: null
+        durationMax: null
     }
+    _.each(that.diffNames, function(diffName) {
+        var minProperty = 'min' + diffName;
+        var maxProperty = 'max' + diffName;
+        simplifiedUser[minProperty]= null;
+        simplifiedUser[maxProperty]= null;
+    });
+    return simplifiedUser;
 }
+
+
 AuthTools.prototype.simplifyUser = function (mongoUser) {
+    var that = this;
     var user = this.getEmptySimplifiedUser();
 
     user.isAuthenticated = true;
@@ -159,30 +178,17 @@ AuthTools.prototype.simplifyUser = function (mongoUser) {
         user.durationMax = mongoUser.durationMax;
     }
 
-    if (mongoUser.minHPDrainRate) {
-        user.minHPDrainRate = mongoUser.minHPDrainRate;
-    }
-    if (mongoUser.maxHPDrainRate) {
-        user.maxHPDrainRate = mongoUser.maxHPDrainRate;
-    }
-    if (mongoUser.minCircleSize) {
-        user.minCircleSize = mongoUser.minCircleSize;
-    }
-    if (mongoUser.maxCircleSize) {
-        user.maxCircleSize = mongoUser.maxCircleSize;
-    }
-    if (mongoUser.minOverallDifficulty) {
-        user.minOverallDifficulty = mongoUser.minOverallDifficulty;
-    }
-    if (mongoUser.maxOverallDifficulty) {
-        user.maxOverallDifficulty = mongoUser.maxOverallDifficulty;
-    }
-    if (mongoUser.minApproachRate) {
-        user.minApproachRate = mongoUser.minApproachRate;
-    }
-    if (mongoUser.maxApproachRate) {
-        user.maxApproachRate = mongoUser.maxApproachRate;
-    }
+    _.each(that.diffNames, function(diffName){
+
+        var minProperty = 'min' + diffName;
+        var maxProperty = 'max' + diffName;
+        if(mongoUser[minProperty]){
+            user[minProperty] = mongoUser[minProperty];
+        }
+        if(mongoUser[maxProperty]){
+            user[maxProperty] = mongoUser[maxProperty];
+        }
+    })
     return user;
 }
 module.exports = AuthTools;

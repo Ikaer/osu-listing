@@ -60,7 +60,6 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
     }
 
 
-
     $scope.extensions = [
         {
             value: 'osu',
@@ -203,13 +202,34 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
         'HPDrainRate',
         'CircleSize',
         'OverallDifficulty',
-        'ApproachRate'
+        'ApproachRate',
+        'DifficultyRating',
+        'Hit_length',
+        'PlayCount',
+        'PlaySuccess',
+        'FavouritedCount',
+        'NegativeUserRating',
+        'PositiveUserRating',
+        'Approved_date',
+        'Last_update',
+        'Submitted_date'
     ]
-    _.each(diffNames, function(diffName){
+
+    _.each(diffNames, function (diffName) {
         var minProperty = 'min' + diffName;
         var maxProperty = 'max' + diffName;
-        $scope[minProperty] = $scope.user[minProperty];
-        $scope[maxProperty] = $scope.user[maxProperty];
+        if (diffName === 'Approved_date' || diffName === 'Last_update' || diffName === 'Submitted_date') {
+            if ($scope.user[minProperty] != null) {
+                $scope[minProperty] = new Date($scope.user[minProperty])
+            }
+            if ($scope.user[maxProperty] != null) {
+                $scope[maxProperty] = new Date($scope.user[maxProperty])
+            }
+        }
+        else {
+            $scope[minProperty] = $scope.user[minProperty];
+            $scope[maxProperty] = $scope.user[maxProperty];
+        }
     })
 
     $scope.pageSize = 20;
@@ -304,16 +324,21 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
             maxDuration: $scope.maxDuration,
             playedBeatmapValue: parseInt($scope.playedBeatmapValue, 10)
         }
-        _.each(diffNames, function(diffName){
+        _.each(diffNames, function (diffName) {
             var minProperty = 'min' + diffName;
             var maxProperty = 'max' + diffName;
             filters[minProperty] = $scope[minProperty];
             filters[maxProperty] = $scope[maxProperty];
+
+            //console.log(minProperty + ':' + $scope[minProperty])
+            //console.log(maxProperty + ':' + $scope[maxProperty])
         })
+
         beatmapApi.get(function (errMessage) {
 
             },
             function (res) {
+                //ga('send', 'pageview', '/');
                 _.each(res.packs, function (p) {
                     p.getPercentUserRating = function () {
                         return p.positiveUserRating * 100 / (p.positiveUserRating + p.negativeUserRating);
@@ -436,57 +461,25 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
             }
         });
     }
-    //playedBeatmaps:{type:Number, default:0},
-    //fileExtensionsToExclude:{type: [String], default:[]},
-    //durationMin:{type:Number, default:null},
-    //durationMax:{type:Number, default:null
 
-    $scope.saveDurationAndDiffs = function () {
-        var $button = $('#save-durationAndDiffs');
+    $scope.saveExtrafilters = function () {
+        var $button = $('#save-extraFilters');
         $button.addClass('loading');
         var toSave = {
+            fileExtensionsToExclude: _.map(_.where($scope.extensions, {active: false}), function (e) {
+                return e.value;
+            }),
+            playedBeatmaps: $scope.playedBeatmapValue,
             durationMin: $scope.minDuration,
             durationMax: $scope.maxDuration
         }
-        _.each(diffNames,function(diffName){
+        _.each(diffNames, function (diffName) {
             var minProperty = 'min' + diffName;
             var maxProperty = 'max' + diffName;
             toSave[minProperty] = $scope[minProperty];
             toSave[maxProperty] = $scope[maxProperty];
         })
         beatmapApi.saveProfile(toSave, function () {
-            window.setTimeout(function () {
-                $button.removeClass('loading');
-            }, 1000)
-        }, function (message) {
-            // todo: handle error message
-        })
-    }
-
-
-
-
-    $scope.savePlayedBeatmaps = function () {
-        var $button = $('#save-played-beatmaps');
-        $button.addClass('loading');
-        beatmapApi.saveProfile({
-            playedBeatmaps: $scope.playedBeatmapValue
-        }, function () {
-            window.setTimeout(function () {
-                $button.removeClass('loading');
-            }, 1000)
-        }, function (message) {
-            // todo: handle error message
-        })
-    }
-    $scope.saveExtensions = function () {
-        var $button = $('#save-extensions');
-        $button.addClass('loading');
-        beatmapApi.saveProfile({
-            fileExtensionsToExclude: _.map(_.where($scope.extensions, {active: false}), function (e) {
-                return e.value;
-            })
-        }, function () {
             window.setTimeout(function () {
                 $button.removeClass('loading');
             }, 1000)
@@ -506,7 +499,7 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
         },
         delay: 100
     });
-    $('.sidenav-open').click(function () {
+    $('.sidenav-open, .toBottomPart').click(function () {
         $('.ui.sidebar.filters')
             .sidebar('toggle')
     })
@@ -515,7 +508,10 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
             .sidebar('toggle')
     })
     $('.beatmap-tooltip').popup()
-
+    $scope.closeExtraFilters = function(){
+        $('.ui.sidebar.filters')
+            .sidebar('toggle')
+    }
 
     // USER MANAGEMENT =================================================================
 

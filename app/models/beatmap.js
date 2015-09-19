@@ -34,3 +34,17 @@ module.exports = mongoose.model('Beatmap', {
     "tags":[String],
     "submitted_date":Date
 }, 'beatmaps');
+
+/*
+ "approved_date"    : Date, // date ranked, UTC+8 for now
+ "last_update"      : Date, //
+ "submitted_date":Date
+
+ "difficulty"
+ "hit_length"
+ "playCount"
+ "playSuccess"
+ "favouritedCount"
+ "negativeUserRating"
+ "positiveUserRating"
+ */
