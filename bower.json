@@ -14,8 +14,7 @@
     "angular-ui-router": "~0.2.15",
     "semantic-ui": "~2.0.6",
     "angular-cookies": "~1.4.3",
-    "ngUrlBind": "~0.0.2",
-    "jsurl": "*"
+    "ngUrlBind": "~0.0.2"
   },
   "resolutions": {
     "angular": "1.4.3"
