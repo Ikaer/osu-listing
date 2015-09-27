@@ -6,6 +6,7 @@ var _ = require('underscore');
 function AuthTools() {
     this.keyStr = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
     this.diffNames = [
+        'Duration',
         'HPDrainRate',
         'CircleSize',
         'OverallDifficulty',
@@ -136,15 +137,13 @@ AuthTools.prototype.getEmptySimplifiedUser = function () {
         modes: [0, 1, 2, 3],
         fileExtensionsToExclude: [],
         playedBeatmaps: 0,
-        user_id: null,
-        durationMin: null,
-        durationMax: null
+        user_id: null
     }
-    _.each(that.diffNames, function(diffName) {
+    _.each(that.diffNames, function (diffName) {
         var minProperty = 'min' + diffName;
         var maxProperty = 'max' + diffName;
-        simplifiedUser[minProperty]= null;
-        simplifiedUser[maxProperty]= null;
+        simplifiedUser[minProperty] = null;
+        simplifiedUser[maxProperty] = null;
     });
     return simplifiedUser;
 }
@@ -172,21 +171,22 @@ AuthTools.prototype.simplifyUser = function (mongoUser) {
         user.fileExtensionsToExclude = mongoUser.fileExtensionsToExclude;
     }
     if (mongoUser.durationMin) {
-        user.durationMin = mongoUser.durationMin;
+        user.minDuration = mongoUser.durationMin;
     }
     if (mongoUser.durationMax) {
-        user.durationMax = mongoUser.durationMax;
+        user.maxDuration = mongoUser.durationMax;
     }
 
-    _.each(that.diffNames, function(diffName){
-
-        var minProperty = 'min' + diffName;
-        var maxProperty = 'max' + diffName;
-        if(mongoUser[minProperty]){
-            user[minProperty] = mongoUser[minProperty];
-        }
-        if(mongoUser[maxProperty]){
-            user[maxProperty] = mongoUser[maxProperty];
+    _.each(that.diffNames, function (diffName) {
+        if (diffName !== 'Duration') {
+            var minProperty = 'min' + diffName;
+            var maxProperty = 'max' + diffName;
+            if (mongoUser[minProperty]) {
+                user[minProperty] = mongoUser[minProperty];
+            }
+            if (mongoUser[maxProperty]) {
+                user[maxProperty] = mongoUser[maxProperty];
+            }
         }
     })
     return user;

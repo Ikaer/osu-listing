@@ -35,7 +35,7 @@ TagTools.prototype.getTagsByType = function (tags, type) {
     return selectedTags;
 }
 
-angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainController', ['$rootScope', '$scope', '$location', '$state', 'beatmapApi', 'AuthenticationService', 'userLoader', function ($rootScope, $scope, $location, $state, beatmapApi, authService, userLoader) {
+angular.module('MainCtrl', ['BeatmapAPI', 'Authentication', 'ngUrlBind']).controller('MainController', ['$rootScope', '$scope', '$location', '$state', 'beatmapApi', 'AuthenticationService', 'userLoader', 'ngUrlBind', function ($rootScope, $scope, $location, $state, beatmapApi, authService, userLoader, ngUrlBind) {
 
 
     /*
@@ -110,24 +110,65 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
             init: true
         }
     ]
-    _.each($scope.extensions, function (m) {
+    $scope.e = {};
+    _.each($scope.extensions, function (m, i) {
+        $scope.e[i] = m.active ? 1 : 0;
+        $scope.$watch('extensions[' + i + '].active', function (newVal, oldVal) {
+            if (oldVal !== newVal) {
+                $scope.e[i] = newVal ? 1 : 0;
+                $scope.draw();
+            }
+        })
+        $scope.$watch('e[' + i + ']', function (newVal, oldVal) {
+            var isActive = newVal === 1;
+            if (m.active !== isActive) {
+                m.active = isActive;
+            }
+        })
         m.init = m.active;
     })
+    ngUrlBind($scope, 'e');
+
+
     $scope.playedBeatmaps = [
         {value: 0, name: 'all of them'},
         {value: 1, name: 'only the ones I\'ve never played any difficulty in it'},
         {value: 2, name: 'only the ones I\'ve at least one difficulty in it'}
     ]
-    $scope.playedBeatmapValue = $scope.user.playedBeatmaps;
+    $scope.pbv = $scope.user.playedBeatmaps;
+    $scope.$watch('pbv', function (newVal, oldVal) {
+        if (newVal !== oldVal) {
+            $scope.draw();
+        }
+    })
+    ngUrlBind($scope, 'pbv');
+    // MODES management
     $scope.modes = [
         {value: 0, name: 'Osu!', active: findValueInUserProfile('modes', 0), init: false},
         {value: 1, name: 'Taiko', active: findValueInUserProfile('modes', 1), init: false},
         {value: 2, name: 'Catch the beat', active: findValueInUserProfile('modes', 2), init: false},
         {value: 3, name: 'Osu!Mania', active: findValueInUserProfile('modes', 3), init: false}
     ]
-    _.each($scope.modes, function (m) {
+    $scope.m = {};
+    _.each($scope.modes, function (m, i) {
+        $scope.m[i] = m.active ? 1 : 0;
+        $scope.$watch('modes[' + i + '].active', function (newVal, oldVal) {
+            if (oldVal !== newVal) {
+                $scope.m[i] = newVal ? 1 : 0;
+                $scope.draw();
+            }
+        })
+        $scope.$watch('m[' + i + ']', function (newVal, oldVal) {
+            var isActive = newVal === 1;
+            if (m.active !== isActive) {
+                m.active = isActive;
+            }
+        })
         m.init = m.active;
     })
+    ngUrlBind($scope, 'm');
+
+
     $scope.difficulties = [
         {value: 1, name: 'Easy', active: findValueInUserProfile('difficulties', 1), init: false},
         {value: 2, name: 'Normal', active: findValueInUserProfile('difficulties', 2), init: false},
@@ -135,9 +176,24 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
         {value: 4, name: 'Insane', active: findValueInUserProfile('difficulties', 4), init: false},
         {value: 5, name: 'Expert', active: findValueInUserProfile('difficulties', 5), init: false}
     ];
-    _.each($scope.difficulties, function (d) {
+    $scope.d = {}
+    _.each($scope.difficulties, function (d, i) {
+        $scope.d[i] = d.active ? 1 : 0;
+        $scope.$watch('difficulties[' + i + '].active', function (newVal, oldVal) {
+            if (oldVal !== newVal) {
+                $scope.d[i] = newVal ? 1 : 0;
+                $scope.draw();
+            }
+        })
+        $scope.$watch('d[' + i + ']', function (newVal) {
+            var isActive = newVal === 1;
+            if (d.active !== isActive) {
+                d.active = isActive;
+            }
+        })
         d.init = d.active;
     })
+    ngUrlBind($scope, 'd');
     $scope.approved = [
         {value: 0, name: 'Pending', active: false},
         {value: 1, name: 'Ranked', active: true},
@@ -146,6 +202,24 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
         {value: -1, name: 'WIP', active: false},
         {value: -2, name: 'Graveyard', active: false}
     ];
+    $scope.a = {}
+    _.each($scope.approved, function (a, i) {
+        $scope.a[i] = a.active ? 1 : 0;
+        $scope.$watch('approved[' + i + '].active', function (newVal, oldVal) {
+            if (oldVal !== newVal) {
+                $scope.a[i] = newVal ? 1 : 0;
+                $scope.draw();
+            }
+        })
+        $scope.$watch('a[' + i + ']', function (newVal) {
+            var isActive = newVal === 1;
+            if (a.active !== isActive) {
+                a.active = isActive;
+            }
+        })
+    })
+    ngUrlBind($scope, 'a');
+
     $scope.converter = {
         difficulty: {
             '1': 'easy',
@@ -185,74 +259,146 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
         last_update: {label: 'Last update', value: 'last_update', direction: -1}
     };
     $scope.sorting = $scope.sortings.approved;
+    $scope.s = {'c': $scope.sorting.value, 'd': $scope.sorting.direction};
+
+    $scope.$watch('sorting', function (newVal, oldVal) {
+        if (newVal !== oldVal) {
+            $scope.s = {'c': $scope.sorting.value, 'd': $scope.sorting.direction};
+            $scope.draw();
+        }
+    })
+    $scope.$watch('sorting.direction', function (newVal, oldVal) {
+        if (newVal !== oldVal) {
+            $scope.s = {'c': $scope.sorting.value, 'd': $scope.sorting.direction};
+            $scope.draw();
+        }
+    })
+    $scope.$watch('s.c', function (newVal) {
+        if (newVal !== $scope.sorting.value) {
+            for (var k in $scope.sortings) {
+                if ($scope.sortings[k].value === newVal) {
+                    $scope.sorting = $scope.sortings[k];
+                    break;
+                }
+            }
+        }
+    })
+    $scope.$watch('s.d', function (newVal) {
+        if (newVal !== $scope.sorting.direction) {
+            $scope.sorting.direction = newVal;
+        }
+    })
+    ngUrlBind($scope, 's');
     $scope.changeSortingDirection = function () {
         $scope.sorting.direction = -$scope.sorting.direction;
-        $scope.draw();
     }
     $scope.sort = function (sorting) {
         if ($scope.sorting.value !== sorting.value) {
             $scope.sorting = sorting;
-            $scope.sortingDirection = $scope.sorting.direction;
-            $scope.draw();
         }
     }
-    $scope.minDuration = $scope.user.durationMin;
-    $scope.maxDuration = $scope.user.durationMax;
-    var diffNames = [
-        'HPDrainRate',
-        'CircleSize',
-        'OverallDifficulty',
-        'ApproachRate',
-        'DifficultyRating',
-        'Hit_length',
-        'PlayCount',
-        'PlaySuccess',
-        'FavouritedCount',
-        'NegativeUserRating',
-        'PositiveUserRating',
-        'Approved_date',
-        'Last_update',
-        'Submitted_date'
-    ]
 
-    _.each(diffNames, function (diffName) {
-        var minProperty = 'min' + diffName;
-        var maxProperty = 'max' + diffName;
-        if (diffName === 'Approved_date' || diffName === 'Last_update' || diffName === 'Submitted_date') {
-            if ($scope.user[minProperty] != null) {
-                $scope[minProperty] = new Date($scope.user[minProperty])
+    var diffNames = [
+        {name: 'Duration', minified: 'du'},
+        {name: 'HPDrainRate', minified: 'hp'},
+        {name: 'CircleSize', minified: 'cs'},
+        {name: 'OverallDifficulty', minified: 'od'},
+        {name: 'ApproachRate', minified: 'ar'},
+        {name: 'DifficultyRating', minified: 'dr'},
+        {name: 'Hit_length', minified: 'ht'},
+        {name: 'PlayCount', minified: 'pc'},
+        {name: 'PlaySuccess', minified: 'ps'},
+        {name: 'FavouritedCount', minified: 'fc'},
+        {name: 'NegativeUserRating', minified: 'nur'},
+        {name: 'PositiveUserRating', minified: 'pur'},
+        {name: 'Approved_date', minified: 'ad'},
+        {name: 'Last_update', minified: 'lu'},
+        {name: 'Submitted_date', minified: 'sd'}
+    ]
+    $scope.minmaxUnwatcher = {}
+    $scope.mm = {};
+    ngUrlBind($scope, 'mm');
+    $scope.minmax_firstWatch = true;
+    var functionBindWatchOnMinMax = function (diffName, propertyName, minifiedPropertyName) {
+        $scope[propertyName] = null
+        $scope.$watch(function () {
+            return $scope[propertyName]
+        }, function (newVal, oldVal) {
+            if (oldVal !== newVal || $scope.minmax_firstWatch) {
+
+                $scope.mm[minifiedPropertyName] = newVal;
+                if ($scope.minmaxUnwatcher[minifiedPropertyName] === undefined) {
+                    $scope.minmaxUnwatcher[minifiedPropertyName] = $scope.$watch(function () {
+                        return $scope.mm[minifiedPropertyName]
+                    }, function (newVal) {
+                        if (newVal !== $scope[propertyName]) {
+                            if (newVal === null) {
+                                $scope[propertyName] = null;
+                            }
+                            else {
+                                if (diffName === 'Approved_date' || diffName === 'Last_update' || diffName === 'Submitted_date') {
+                                    $scope[propertyName] = new Date(newVal);
+                                }
+                                else {
+                                    $scope[propertyName] = newVal;
+                                }
+                            }
+                        }
+                    })
+                }
+                $scope.draw();
             }
-            if ($scope.user[maxProperty] != null) {
-                $scope[maxProperty] = new Date($scope.user[maxProperty])
+            if (propertyName === 'maxSubmitted_date') {
+                $scope.minmax_firstWatch = false;
+            }
+        })
+        if (diffName === 'Approved_date' || diffName === 'Last_update' || diffName === 'Submitted_date') {
+            if ($scope.user[propertyName] != null || $scope.mm[minifiedPropertyName]) {
+                $scope[propertyName] = $scope.mm[minifiedPropertyName] ? new Date($scope.mm[minifiedPropertyName]) : new Date($scope.user[propertyName])
             }
         }
         else {
-            $scope[minProperty] = $scope.user[minProperty];
-            $scope[maxProperty] = $scope.user[maxProperty];
+            $scope[propertyName] = $scope.mm[minifiedPropertyName] ? $scope.mm[minifiedPropertyName] : $scope.user[propertyName];
         }
+    }
+    _.each(diffNames, function (dn) {
+        var diffName = dn.name;
+        var minProperty = 'min' + diffName;
+        var minifiedMinProperty = dn.minified + 'm';
+        var maxProperty = 'max' + diffName;
+        var minifiedMaxProperty = dn.minified + 'x';
+        functionBindWatchOnMinMax(diffName, minProperty, minifiedMinProperty);
+        functionBindWatchOnMinMax(diffName, maxProperty, minifiedMaxProperty);
     })
 
+
     $scope.pageSize = 20;
-    $scope.pageIndex = 0;
+
+    // PAGE INDEX management
+    $scope.$watch('p', function (newVal, oldVal) {
+        $scope.isNotFirstPage = $scope.p > 0;
+        if (newVal !== oldVal) {
+            $scope.draw();
+        }
+    })
+    $scope.p = 0;
+
+    ngUrlBind($scope, 'p');
     $scope.isNotFirstPage = false;
     $scope.hasNextPage = false;
     $scope.goNextPage = function () {
-        $scope.pageIndex++;
-        $scope.isNotFirstPage = true;
-        $scope.draw();
+        $scope.p++;
+
     }
     $scope.goPreviousPage = function () {
-        $scope.pageIndex--;
-        if ($scope.pageIndex === 0) {
-            $scope.isNotFirstPage = false;
-        }
-        $scope.draw();
+        $scope.p--;
     }
+
+
     $scope.tags = _.map(tagTools.difficulties, function (d) {
         return tagTools.createTag(d, 'difficulty', d.name, d.classes);
     })
-
-
+    ngUrlBind($scope, 'tags');
     $scope.addTagByUI = function (type, value) {
         var tag = {
             type: type,
@@ -260,7 +406,6 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
         }
         $scope.addTag(tag);
     }
-
     $scope.addTag = function (tag) {
         if (_.where($scope.tags, {type: tag.type, value: tag.value}).length === 0) {
             var newTag = tagTools.createTag(tag);
@@ -269,21 +414,30 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
             $scope.draw();
         }
     }
-
     $scope.removeTag = function (tagId) {
         $scope.tags = _.reject($scope.tags, function (tag) {
             return tag.tagId === tagId;
         });
         $scope.draw();
     }
-
-
     $scope.selectedTag = null
+
+
+    $scope.currentPlayedZik = null;
     $scope.playBeatmap = function (beatmapId) {
         var zik = document.getElementById('player')
-        zik.setAttribute('src', '/media/' + beatmapId + '/' + beatmapId + '.mp3');
-        zik.play();
+        if (beatmapId !== $scope.currentPlayedZik) {
+            $scope.currentPlayedZik = beatmapId;
+            zik.setAttribute('src', '/media/' + beatmapId + '/' + beatmapId + '.mp3');
+            zik.play();
+        }
+        else{
+            $scope.currentPlayedZik = null;
+            zik.pause();
+            zik.currentTime = 0;
+        }
     };
+
     $scope.downloadAllLink = null;
 
 
@@ -295,69 +449,71 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
         $('.ao-loader').removeClass('active');
     }
 
+    var draw_timeout = null;
     $scope.draw = function () {
         showLoading();
-        var filters = {
-            difficulties: _.map(_.where($scope.difficulties, {active: true}), function (x) {
-                return x.value;
-            }),
-            modes: _.map(_.where($scope.modes, {active: true}), function (x) {
-                return x.value;
-            }),
-            approved: _.map(_.where($scope.approved, {active: true}), function (x) {
-                return x.value;
-            }),
-            tags: {
-                creator: tagTools.getTagsByType($scope.tags, 'creator'),
-                artist: tagTools.getTagsByType($scope.tags, 'artist'),
-                title: tagTools.getTagsByType($scope.tags, 'title'),
-                source: tagTools.getTagsByType($scope.tags, 'source'),
-                genre: tagTools.getTagsByType($scope.tags, 'genre'),
-                language: tagTools.getTagsByType($scope.tags, 'language'),
-                tags: tagTools.getTagsByType($scope.tags, 'tags')
-            },
-            sorting: {
-                name: $scope.sorting.value,
-                direction: $scope.sorting.direction
-            },
-            minDuration: $scope.minDuration,
-            maxDuration: $scope.maxDuration,
-            playedBeatmapValue: parseInt($scope.playedBeatmapValue, 10)
-        }
-        _.each(diffNames, function (diffName) {
-            var minProperty = 'min' + diffName;
-            var maxProperty = 'max' + diffName;
-            filters[minProperty] = $scope[minProperty];
-            filters[maxProperty] = $scope[maxProperty];
+        window.clearTimeout(draw_timeout);
+        draw_timeout = window.setTimeout(function () {
+            var filters = {
+                difficulties: _.map(_.where($scope.difficulties, {active: true}), function (x) {
+                    return x.value;
+                }),
+                modes: _.map(_.where($scope.modes, {active: true}), function (x) {
+                    return x.value;
+                }),
+                approved: _.map(_.where($scope.approved, {active: true}), function (x) {
+                    return x.value;
+                }),
+                tags: {
+                    creator: tagTools.getTagsByType($scope.tags, 'creator'),
+                    artist: tagTools.getTagsByType($scope.tags, 'artist'),
+                    title: tagTools.getTagsByType($scope.tags, 'title'),
+                    source: tagTools.getTagsByType($scope.tags, 'source'),
+                    genre: tagTools.getTagsByType($scope.tags, 'genre'),
+                    language: tagTools.getTagsByType($scope.tags, 'language'),
+                    tags: tagTools.getTagsByType($scope.tags, 'tags')
+                },
+                sorting: {
+                    name: $scope.sorting.value,
+                    direction: $scope.sorting.direction
+                },
+                playedBeatmapValue: parseInt($scope.pbv, 10)
+            }
+            _.each(diffNames, function (dn) {
+                var diffName = dn.name;
+                var minProperty = 'min' + diffName;
+                var maxProperty = 'max' + diffName;
+                filters[minProperty] = $scope[minProperty];
+                filters[maxProperty] = $scope[maxProperty];
 
-            //console.log(minProperty + ':' + $scope[minProperty])
-            //console.log(maxProperty + ':' + $scope[maxProperty])
-        })
+                //console.log(minProperty + ':' + $scope[minProperty])
+                //console.log(maxProperty + ':' + $scope[maxProperty])
+            })
 
-        beatmapApi.get(function (errMessage) {
+            beatmapApi.get(function (errMessage) {
 
-            },
-            function (res) {
-                //ga('send', 'pageview', '/');
-                _.each(res.packs, function (p) {
-                    p.getPercentUserRating = function () {
-                        return p.positiveUserRating * 100 / (p.positiveUserRating + p.negativeUserRating);
-                    }
-                    p.creator = $.isArray(p.creator) ? p.creator.join(', ') : p.creator;
-                })
+                },
+                function (res) {
+                    //ga('send', 'pageview', '/');
+                    _.each(res.packs, function (p) {
+                        p.getPercentUserRating = function () {
+                            return p.positiveUserRating * 100 / (p.positiveUserRating + p.negativeUserRating);
+                        }
+                        p.creator = $.isArray(p.creator) ? p.creator.join(', ') : p.creator;
+                    })
 
-                $scope.packs = res.packs;
-                $scope.downloadAllLink = res.downloadAllLink;
-                $scope.hasNextPage = res.hasNextPage;
-                hideLoading();
-            },
-            $scope.pageIndex,
-            $scope.pageSize,
-            filters,
-            _.map(_.where($scope.extensions, {active: false}), function (e) {
-                return e.value;
-            }));
-
+                    $scope.packs = res.packs;
+                    $scope.downloadAllLink = res.downloadAllLink;
+                    $scope.hasNextPage = res.hasNextPage;
+                    hideLoading();
+                },
+                $scope.p,
+                $scope.pageSize,
+                filters,
+                _.map(_.where($scope.extensions, {active: false}), function (e) {
+                    return e.value;
+                }));
+        }, 50)
     }
     $scope.draw();
 
@@ -418,7 +574,6 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
                 d.active = !d.active;
             });
         }
-        $scope.draw();
     }
     $scope.changeApproved = function (dValue) {
         var currentApproved = _.where($scope.approved, {value: dValue});
@@ -469,11 +624,12 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
             fileExtensionsToExclude: _.map(_.where($scope.extensions, {active: false}), function (e) {
                 return e.value;
             }),
-            playedBeatmaps: $scope.playedBeatmapValue,
+            playedBeatmaps: $scope.pbv,
             durationMin: $scope.minDuration,
             durationMax: $scope.maxDuration
         }
-        _.each(diffNames, function (diffName) {
+        _.each(diffNames, function (dn) {
+            var diffName = dn.name;
             var minProperty = 'min' + diffName;
             var maxProperty = 'max' + diffName;
             toSave[minProperty] = $scope[minProperty];
@@ -508,7 +664,7 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication']).controller('MainCon
             .sidebar('toggle')
     })
     $('.beatmap-tooltip').popup()
-    $scope.closeExtraFilters = function(){
+    $scope.closeExtraFilters = function () {
         $('.ui.sidebar.filters')
             .sidebar('toggle')
     }

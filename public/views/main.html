@@ -230,7 +230,7 @@
 
                         <div class="inline field" ng-repeat="db in playedBeatmaps">
                             <input type="radio" name="played-beatmaps-radio" id="played-beatmaps-{{db.value}}"
-                                   ng-model="$parent.playedBeatmapValue" value="{{db.value}}" ng-change="draw()"/>
+                                   ng-model="$parent.pbv" value="{{db.value}}" ng-change="draw()"/>
                             <label for="played-beatmaps-{{db.value}}">{{db.name}}</label>
                         </div>
 
