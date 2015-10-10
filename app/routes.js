@@ -22,6 +22,10 @@ var nodemailer = require('nodemailer');
 var path = require('path');
 
 var moment = require('moment');
+
+var RSS = require('./node-rss/index');
+
+
 var AuthTools = require('./authTools');
 var authTools = new AuthTools();
 
@@ -410,6 +414,10 @@ module.exports = function (app) {
         req.pageSize = req.pageSize > 100 ? 100 : req.pageSize;
         next();
     });
+    app.param('isRSS', function (req, res, next, isRSS) {
+        req.isRSS = isRSS === 'true'
+        next();
+    });
     app.param('isMultiPack', function (req, res, next, isMultipack) {
         req.isMultiPack = isMultipack == '1';
         next();
@@ -441,7 +449,7 @@ module.exports = function (app) {
         }
         next();
     })
-    app.get('/api/beatmaps/:pageIndex/:pageSize/:extensionsToExclude', function (req, res) {
+    app.get('/api/beatmaps/:pageIndex/:pageSize/:isRSS/:extensionsToExclude', function (req, res) {
         var filters = req.query.f ? JSON.parse(req.query.f) : null;
 
         Q.when(authTools.updateUser(req.session)).then(function () {
@@ -696,8 +704,49 @@ module.exports = function (app) {
                                             response.downloadAllLink += 'none';
                                         }
                                     }
-                                    rf.sendOkData(res, response);
+                                    if (req.isRSS === true) {
+                                        var feed = new RSS({
+                                            title: 'altOsu',
+                                            description: 'Altosu feed',
+                                            feed_url: req.url,
+                                            site_url: 'www.altosu.org',
+                                            image_url: 'http://www.altosu.org/img/1437607408_osu.png',
+                                            managingEditor: 'altosu.org@gmail.com',
+                                            webMaster: 'altosu.org@gmail.com',
+                                            language: 'en',
+                                            categories: ['Osu!', 'Game']
 
+                                        });
+                                        _.each(response.packs, function (p) {
+                                            var descriptionOfItem = '';
+                                            descriptionOfItem += '<div style="text-align:center;">';
+
+                                            descriptionOfItem += '      <img src="http://www.altosu.org/media/' + p.beatmaps[0].beatmapset_id + '/' + p.beatmaps[0].beatmapset_id + 'l.jpg" />'
+                                            descriptionOfItem += '</br></br>';
+                                            descriptionOfItem += 'this download contains versions: ';
+                                            descriptionOfItem += '</br></br>';
+                                            descriptionOfItem += '      <ul>'
+                                            descriptionOfItem += _.map(p.beatmaps, function (bm) {
+                                                return '<li>' + bm.version + '</li>';
+                                            }).join('');
+                                            descriptionOfItem += '      </ul>'
+
+                                            descriptionOfItem += '</div>'
+
+                                            feed.item({
+                                                title: p.beatmaps[0].artist + p.beatmaps[0].title,
+                                                description: descriptionOfItem,
+                                                url: 'http:www.altosu.org' + p.downloadLink,
+                                                date: p.last_update,
+                                                guid: p.beatmaps[0].beatmapset_id
+                                            })
+                                        })
+                                        res.send(feed.xml(true));
+                                        res.end();
+                                    }
+                                    else {
+                                        rf.sendOkData(res, response);
+                                    }
                                 });
                             }
                             else {
@@ -1094,6 +1143,13 @@ module.exports = function (app) {
         req.session.destroy();
         rf.sendOk(res);
     })
+
+    app.get('/api/rss', function (req, res) {
+        var feed = new RSS();
+        res.send(feed.xml(true));
+        res.end();
+    })
+
     app.get('*', function (req, res) {
         res.sendfile('./public/index.html'); // load the single view file (angular will handle the page changes on the front-end)
     });

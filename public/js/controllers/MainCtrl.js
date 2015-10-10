@@ -50,6 +50,7 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication', 'ngUrlBind']).contro
     $scope.user = userLoader.data.data;
     $scope.loading = true;
     $scope.notLoading = false;
+    $scope.isMe = $scope.user.name === 'Ikaer';
     showLoading();
     var tagTools = new TagTools();
 
@@ -505,6 +506,7 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication', 'ngUrlBind']).contro
                     $scope.packs = res.packs;
                     $scope.downloadAllLink = res.downloadAllLink;
                     $scope.hasNextPage = res.hasNextPage;
+                    $scope.rssfeed = res.rssfeed;
                     hideLoading();
                 },
                 $scope.p,
