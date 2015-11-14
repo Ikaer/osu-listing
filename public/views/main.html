@@ -38,6 +38,17 @@
                         </div>
                         <div class="inline fields">
                             <div class="four wide field">
+                                <label>BPM</label>
+                            </div>
+                            <div class="six wide field">
+                                <input ng-model="minBPM" ng-change="draw()" type="number" placeholder="Minimum"/>
+                            </div>
+                            <div class="six wide field">
+                                <input ng-model="maxBPM" ng-change="draw()" type="number" placeholder="Maximum"/>
+                            </div>
+                        </div>
+                        <div class="inline fields">
+                            <div class="four wide field">
                                 <label>Overall difficulty</label>
                             </div>
                             <div class="six wide field">

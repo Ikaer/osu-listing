@@ -489,7 +489,9 @@ module.exports = function (app) {
                     });
                 }
                 queryTools.addMinAndMaxToQuery('minDuration', 'maxDuration', 'total_length', filters, matchPipeline, false, false);
+                queryTools.addMinAndMaxToQuery('minBPM', 'maxBPM', 'bpm', filters, matchPipeline, false, false);
                 queryTools.addMinAndMaxToQuery('minHPDrainRate', 'maxHPDrainRate', 'diff_drain', filters, matchPipeline, false, false);
+
                 queryTools.addMinAndMaxToQuery('minCircleSize', 'maxCircleSize', 'diff_size', filters, matchPipeline, false, false);
                 queryTools.addMinAndMaxToQuery('minOverallDifficulty', 'maxOverallDifficulty', 'diff_overall', filters, matchPipeline, false, false);
                 queryTools.addMinAndMaxToQuery('minApproachRate', 'maxApproachRate', 'diff_approach', filters, matchPipeline, false, false);

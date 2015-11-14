@@ -301,6 +301,7 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication', 'ngUrlBind']).contro
 
     var diffNames = [
         {name: 'Duration', minified: 'du'},
+        {name: 'BPM', minified: 'bpm'},
         {name: 'HPDrainRate', minified: 'hp'},
         {name: 'CircleSize', minified: 'cs'},
         {name: 'OverallDifficulty', minified: 'od'},

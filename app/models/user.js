@@ -26,6 +26,8 @@ var userSchema = new Schema({
     fileExtensionsToExclude:{type: [String], default:[]},
     durationMin:{type:Number, default:null},
     durationMax:{type:Number, default:null},
+    minBPM: {type:Number, default:null},
+    maxBPM: {type:Number, default:null},
     minHPDrainRate: {type:Number, default:null},
     maxHPDrainRate: {type:Number, default:null},
     minCircleSize: {type:Number, default:null},
