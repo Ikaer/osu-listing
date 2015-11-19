@@ -5,11 +5,33 @@
             <i class="cloud download icon"></i> Download all
         </a>
     </div>
-
-    <div class="ui link cards grid centered ">
+    <!--<div class="mobile_announce" style="right:20%;top:75px;left:20%;">-->
+        <!--<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>-->
+        <!--&lt;!&ndash; MOB_ANNOUNCE &ndash;&gt;-->
+        <!--<ins class="adsbygoogle"-->
+             <!--style="display:inline-block;width:320px;height:100px"-->
+             <!--data-ad-client="ca-pub-5937235277423559"-->
+             <!--data-ad-slot="8085951821"></ins>-->
+        <!--<script>-->
+            <!--(adsbygoogle = window.adsbygoogle || []).push({});-->
+        <!--</script>-->
+    <!--</div>-->
+    <!--<div class="large_announce" style="position:fixed;right:40px;top:20%;bottom:20%;">-->
+        <!--<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>-->
+        <!--&lt;!&ndash; SL_Announce &ndash;&gt;-->
+        <!--<ins class="adsbygoogle"-->
+             <!--style="display:inline-block;width:300px;height:600px"-->
+             <!--data-ad-client="ca-pub-5937235277423559"-->
+             <!--data-ad-slot="3655752221"></ins>-->
+        <!--<script>-->
+            <!--(adsbygoogle = window.adsbygoogle || []).push({});-->
+        <!--</script>-->
+    <!--</div>-->
+    <div class="ui link cards grid centered cards_announce" >
         <!--<div class="ui active dimmer" style="margin-top:50px" >-->
         <!--<div class="ui large text loader">Loading</div>-->
         <!--</div>-->
+
         <div ng-repeat="pack in packs" class="ui card tiny beatmap-card"
              style="width:200px;text-align:left;cursor:default;"
              ng-init="$last ? bindCardsEvents() : null" ng-class="pack.hasBeenPlayedByUser ? 'played':'' ">

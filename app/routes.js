@@ -569,6 +569,8 @@ module.exports = function (app) {
 
                 Q.all(deferreds).then(function () {
                     queryToGetdIds.exec(function (err, packs) {
+
+
                         var response = {
                             packs: [],
                             downloadAllLink: null,
@@ -579,22 +581,36 @@ module.exports = function (app) {
                         }
                         else {
                             if (packs.length > 0) {
-
                                 var matchPipeline = {
                                     $match: {
-                                        $and: [
-                                            {
-                                                beatmap_id: {
-                                                    $in: []
-                                                }
-                                            }
-                                        ]
+                                        $and: []
                                     }
                                 };
+                                if (filters.disableStrict === true) {
+                                    matchPipeline.$match.$and.push({
+                                        beatmapset_id: {
+                                            $in: []
+                                        }
+                                    });
+                                }
+                                else {
+                                    matchPipeline.$match.$and.push({
+                                        beatmap_id: {
+                                            $in: []
+                                        }
+                                    });
+                                }
+
+
                                 _.each(packs, function (p) {
-                                    _.each(p.beatmapsIds, function (bId) {
-                                        matchPipeline.$match.$and[0].beatmap_id.$in.push(bId);
-                                    })
+                                    if (filters.disableStrict === true) {
+                                        matchPipeline.$match.$and[0].beatmapset_id.$in.push(p._id.beatmapset_id);
+                                    }
+                                    else {
+                                        _.each(p.beatmapsIds, function (bId) {
+                                            matchPipeline.$match.$and[0].beatmap_id.$in.push(bId);
+                                        })
+                                    }
                                 })
 
 

@@ -16,4 +16,13 @@
     .search-big{
         display:none!important;
     }
+    /*.mobile_announce{*/
+        /*display:block;*/
+    /*}*/
+    /*.large_announce{*/
+        /*display:none;*/
+    /*}*/
+    /*.ui.cards.cards_announce{*/
+        /*margin-right:0px;*/
+    /*}*/
 }

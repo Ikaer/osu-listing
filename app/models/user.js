@@ -21,6 +21,7 @@ var userSchema = new Schema({
     beatmaps : [Number],
     difficulties : {type:[Number], default:[1,2,3,4,5]},
     modes:{type:[Number], default:[0,1,2,3]},
+    disableStrict:{type: Boolean, default: false},
     creationDate:Date,
     playedBeatmaps:{type:Number, default:0},
     fileExtensionsToExclude:{type: [String], default:[]},

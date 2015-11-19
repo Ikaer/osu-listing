@@ -324,6 +324,10 @@
             <a class="ui item icon aligned ao-filters sidenav-open">
                 <i class="filter icon"></i>
             </a>
+            <a class="ui dropdown item aligned ao-filters" ng-click="changeStrict()">
+                <i class="lock icon" ng-show="!disableStrict.value" ></i>
+                <i class="unlock icon" ng-show="disableStrict.value" ></i>
+            </a>
 
             <!--*************************  SEARCH     ******************************-->
             <div class="ui category search item right aligned search-big" style="width:300px;">
@@ -551,8 +555,17 @@
 
                 <div class="field" ng-repeat="mode in modes">
                     <div class="ui checkbox">
-                        <input id="profile-mode-{{mode.value}}" type="checkbox" ng-model="mode.init">
+                        <input id="profile-mode-{{mode.value}}" type="checkbox" ng-model="mode.init" >
                         <label for="profile-mode-{{mode.value}}">{{mode.name}}</label>
+                    </div>
+                </div>
+            </div>
+            <div class="inline fields">
+                <label>Disable strict mode</label>
+                <div class="field">
+                    <div class="ui checkbox pure-angular">
+                        <input id="profile-strict" type="checkbox" ng-model="disableStrict.init" ng-change="changeDisableStrictInit()">
+                        <label for="profile-strict">Yes</label>
                     </div>
                 </div>
             </div>
@@ -617,7 +630,7 @@
         popup: '.ao-extra-filters-popup',
         position: 'bottom right'
     });
-    $('.ui.checkbox').checkbox();
+    $('.ui.checkbox:not(.pure-angular)').checkbox();
 </script>
 <audio id="player" src="" type="audio/mp3"></audio>
 

@@ -170,6 +170,17 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication', 'ngUrlBind']).contro
     ngUrlBind($scope, 'm');
 
 
+    $scope.disableStrict = {
+        value: ($scope.user.disableStrict !== undefined ? $scope.user.disableStrict : false),
+        init: ($scope.user.disableStrict !== undefined ? $scope.user.disableStrict : false)
+    }
+    $scope.changeStrict = function(){
+        $scope.disableStrict.value = !$scope.disableStrict.value;
+        $scope.draw();
+    }
+    $scope.changeDisableStrictInit = function(){
+        console.log("change:" + $scope.disableStrict.init)
+    }
     $scope.difficulties = [
         {value: 1, name: 'Easy', active: findValueInUserProfile('difficulties', 1), init: false},
         {value: 2, name: 'Normal', active: findValueInUserProfile('difficulties', 2), init: false},
@@ -479,7 +490,8 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication', 'ngUrlBind']).contro
                     name: $scope.sorting.value,
                     direction: $scope.sorting.direction
                 },
-                playedBeatmapValue: parseInt($scope.pbv, 10)
+                playedBeatmapValue: parseInt($scope.pbv, 10),
+                disableStrict : $scope.disableStrict.value
             }
             _.each(diffNames, function (dn) {
                 var diffName = dn.name;
@@ -880,7 +892,8 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication', 'ngUrlBind']).contro
                 difficulties: _.map(_.where($scope.difficulties, {init: true}), function (x) {
                     return x.value
                 }),
-                user_id: $scope.user.user_id
+                user_id: $scope.user.user_id,
+                disableStrict:$scope.disableStrict.init
             }, function () {
                 window.setTimeout(function () {
                     $profileform.find('.dimmer').removeClass('active')

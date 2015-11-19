@@ -137,7 +137,8 @@ AuthTools.prototype.getEmptySimplifiedUser = function () {
         modes: [0, 1, 2, 3],
         fileExtensionsToExclude: [],
         playedBeatmaps: 0,
-        user_id: null
+        user_id: null,
+        disableStrict:false
     }
     _.each(that.diffNames, function (diffName) {
         var minProperty = 'min' + diffName;
@@ -175,6 +176,9 @@ AuthTools.prototype.simplifyUser = function (mongoUser) {
     }
     if (mongoUser.durationMax) {
         user.maxDuration = mongoUser.durationMax;
+    }
+    if(mongoUser.disableStrict){
+        user.disableStrict = mongoUser.disableStrict;
     }
 
     _.each(that.diffNames, function (diffName) {
