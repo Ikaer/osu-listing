@@ -2,6 +2,7 @@
 var express = require('express');
 var app = express();                               // create our app w/ express
 var mongoose = require('mongoose');                     // mongoose for mongodb
+//mongoose.set('debug', true);
 var bodyParser = require('body-parser');    // pull information from HTML POST (express4)
 var methodOverride = require('method-override'); // simulate DELETE and PUT (express4)
 var morgan = require('morgan');
@@ -52,7 +53,8 @@ require('./app/routes')(app);
 // listen (start app with node server.js) ======================================
 var portToList = process.env.PORT === undefined ? '80' : process.env.PORT;
 console.log('App is listing on ' + portToList);
-app.listen(portToList);
+//app.listen(portToList);
+app.listen(4897);
 console.log('App is listing on ' + portToList);
 
 

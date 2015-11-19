@@ -50,7 +50,6 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication', 'ngUrlBind']).contro
     $scope.user = userLoader.data.data;
     $scope.loading = true;
     $scope.notLoading = false;
-    $scope.isMe = $scope.user.name === 'Ikaer';
     showLoading();
     var tagTools = new TagTools();
 
@@ -508,7 +507,7 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication', 'ngUrlBind']).contro
 
                 },
                 function (res) {
-                    //ga('send', 'pageview', '/');
+                    ga('send', 'pageview', '/');
                     _.each(res.packs, function (p) {
                         p.getPercentUserRating = function () {
                             return p.positiveUserRating * 100 / (p.positiveUserRating + p.negativeUserRating);

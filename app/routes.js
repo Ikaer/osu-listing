@@ -1,11 +1,20 @@
 // todo: create rss feed about creator with download link
-
+var rss_version = 'oiuhzaeoruhzeaourh';
 var Beatmap = require('./models/beatmap');
 var User = require('./models/user');
 
 var nconf = require('nconf');
 nconf.file({file: 'config.json'});
 nconf.file('private', 'private.json');
+var storage = require('node-persist');
+
+//then start using it
+storage.initSync();
+var rssIncrement = storage.getItem('rssIncrement');
+if(rssIncrement === null || rssIncrement === undefined){
+    rssIncrement = 0;
+    storage.setItem('rssIncrement', rssIncrement);
+}
 
 var escape = require('regexp.escape');
 
@@ -449,9 +458,15 @@ module.exports = function (app) {
         }
         next();
     })
-    app.get('/api/beatmaps/:pageIndex/:pageSize/:isRSS/:extensionsToExclude', function (req, res) {
-        var filters = req.query.f ? JSON.parse(req.query.f) : null;
 
+    var getBeatmaps = function (req, res) {
+
+
+        var filters = req.query.f ? JSON.parse(req.query.f) : null;
+        req.pageSize = req.pageSize ? req.pageSize : 20;
+        req.pageIndex = req.pageIndex ? req.pageIndex : 0;
+        req.extensionsToExclude = req.extensionsToExclude ? req.extensionsToExclude : [];
+        req.isRSS = req.isRSS !== undefined ? req.isRSS : true;
         Q.when(authTools.updateUser(req.session)).then(function () {
                 var deferreds = [];
                 var matchPipeline = {
@@ -488,26 +503,26 @@ module.exports = function (app) {
                         }
                     });
                 }
-                queryTools.addMinAndMaxToQuery('minDuration', 'maxDuration', 'total_length', filters, matchPipeline, false, false);
-                queryTools.addMinAndMaxToQuery('minBPM', 'maxBPM', 'bpm', filters, matchPipeline, false, false);
-                queryTools.addMinAndMaxToQuery('minHPDrainRate', 'maxHPDrainRate', 'diff_drain', filters, matchPipeline, false, false);
+                if (filters) {
+                    queryTools.addMinAndMaxToQuery('minDuration', 'maxDuration', 'total_length', filters, matchPipeline, false, false);
+                    queryTools.addMinAndMaxToQuery('minBPM', 'maxBPM', 'bpm', filters, matchPipeline, false, false);
+                    queryTools.addMinAndMaxToQuery('minHPDrainRate', 'maxHPDrainRate', 'diff_drain', filters, matchPipeline, false, false);
+                    queryTools.addMinAndMaxToQuery('minCircleSize', 'maxCircleSize', 'diff_size', filters, matchPipeline, false, false);
+                    queryTools.addMinAndMaxToQuery('minOverallDifficulty', 'maxOverallDifficulty', 'diff_overall', filters, matchPipeline, false, false);
+                    queryTools.addMinAndMaxToQuery('minApproachRate', 'maxApproachRate', 'diff_approach', filters, matchPipeline, false, false);
 
-                queryTools.addMinAndMaxToQuery('minCircleSize', 'maxCircleSize', 'diff_size', filters, matchPipeline, false, false);
-                queryTools.addMinAndMaxToQuery('minOverallDifficulty', 'maxOverallDifficulty', 'diff_overall', filters, matchPipeline, false, false);
-                queryTools.addMinAndMaxToQuery('minApproachRate', 'maxApproachRate', 'diff_approach', filters, matchPipeline, false, false);
+                    queryTools.addMinAndMaxToQuery('minDifficultyRating', 'maxDifficultyRating', 'difficultyrating', filters, matchPipeline, false, true);
+                    queryTools.addMinAndMaxToQuery('minHit_length', 'maxHit_length', 'hit_length', filters, matchPipeline, false, false);
+                    queryTools.addMinAndMaxToQuery('minPlayCount', 'maxPlayCount', 'playCount', filters, matchPipeline, false, false);
+                    queryTools.addMinAndMaxToQuery('minPlaySuccess', 'maxPlaySuccess', 'playSuccess', filters, matchPipeline, false, false);
+                    queryTools.addMinAndMaxToQuery('minFavouritedCount', 'maxFavouritedCount', 'favouritedCount', filters, matchPipeline, false, false);
+                    queryTools.addMinAndMaxToQuery('minNegativeUserRating', 'maxNegativeUserRating', 'negativeUserRating', filters, matchPipeline, false, false);
+                    queryTools.addMinAndMaxToQuery('minPositiveUserRating', 'maxPositiveUserRating', 'positiveUserRating', filters, matchPipeline, false, false);
 
-                queryTools.addMinAndMaxToQuery('minDifficultyRating', 'maxDifficultyRating', 'difficultyrating', filters, matchPipeline, false, true);
-                queryTools.addMinAndMaxToQuery('minHit_length', 'maxHit_length', 'hit_length', filters, matchPipeline, false, false);
-                queryTools.addMinAndMaxToQuery('minPlayCount', 'maxPlayCount', 'playCount', filters, matchPipeline, false, false);
-                queryTools.addMinAndMaxToQuery('minPlaySuccess', 'maxPlaySuccess', 'playSuccess', filters, matchPipeline, false, false);
-                queryTools.addMinAndMaxToQuery('minFavouritedCount', 'maxFavouritedCount', 'favouritedCount', filters, matchPipeline, false, false);
-                queryTools.addMinAndMaxToQuery('minNegativeUserRating', 'maxNegativeUserRating', 'negativeUserRating', filters, matchPipeline, false, false);
-                queryTools.addMinAndMaxToQuery('minPositiveUserRating', 'maxPositiveUserRating', 'positiveUserRating', filters, matchPipeline, false, false);
-
-                queryTools.addMinAndMaxToQuery('minApproved_date', 'maxApproved_date', 'approved_date', filters, matchPipeline, true);
-                queryTools.addMinAndMaxToQuery('minLast_update', 'maxLast_update', 'last_update', filters, matchPipeline, true);
-                queryTools.addMinAndMaxToQuery('minSubmitted_date', 'maxSubmitted_date', 'submitted_date', filters, matchPipeline, true);
-
+                    queryTools.addMinAndMaxToQuery('minApproved_date', 'maxApproved_date', 'approved_date', filters, matchPipeline, true);
+                    queryTools.addMinAndMaxToQuery('minLast_update', 'maxLast_update', 'last_update', filters, matchPipeline, true);
+                    queryTools.addMinAndMaxToQuery('minSubmitted_date', 'maxSubmitted_date', 'submitted_date', filters, matchPipeline, true);
+                }
 
                 if (filters && filters.playedBeatmapValue > 0 && req.session.isAuthenticated === true) {
 
@@ -540,7 +555,9 @@ module.exports = function (app) {
 
 
                 var aggregatePipeline = [];
-                aggregatePipeline.push(matchPipeline);
+                if (matchPipeline.$match.$and.length > 0) {
+                    aggregatePipeline.push(matchPipeline);
+                }
 
                 var groupPipe = {
                     $group: {
@@ -723,17 +740,21 @@ module.exports = function (app) {
                                         }
                                     }
                                     if (req.isRSS === true) {
+                                        rssIncrement++;
+                                        storage.setItemSync('rssIncrement', rssIncrement);
                                         var feed = new RSS({
-                                            title: 'altOsu',
+                                            title: 'altOsu_' + rssIncrement,
+                                            pubDate:new Date(),
                                             description: 'Altosu feed',
-                                            feed_url: req.url,
-                                            site_url: 'www.altosu.org',
+                                            site_url: 'http://www.altosu.org',
                                             image_url: 'http://www.altosu.org/img/1437607408_osu.png',
-                                            managingEditor: 'altosu.org@gmail.com',
-                                            webMaster: 'altosu.org@gmail.com',
+                                            managingEditor: 'altosu.org@gmail.com (altosu)',
+                                            webMaster: 'altosu.org@gmail.com (altosu)',
                                             language: 'en',
-                                            categories: ['Osu!', 'Game']
-
+                                            categories: ['Osu!', 'Game'],
+                                            custom_namespaces: {
+                                                'media': 'http://search.yahoo.com/mrss/'
+                                            }
                                         });
                                         _.each(response.packs, function (p) {
                                             var descriptionOfItem = '';
@@ -749,16 +770,40 @@ module.exports = function (app) {
                                             }).join('');
                                             descriptionOfItem += '      </ul>'
 
-                                            descriptionOfItem += '</div>'
-
+                                            descriptionOfItem += '</div>';
+                                            /*
+                                             <image>
+                                             <url>http://www.altosu.org/img/1437607408_osu.png</url>
+                                             <title>altOsu</title>
+                                             <link>http://www.altosu.org</link>
+                                             </image>
+                                             */
                                             feed.item({
-                                                title: p.beatmaps[0].artist + p.beatmaps[0].title,
+                                                title: p.beatmaps[0].artist + ' - ' + p.beatmaps[0].title,
                                                 description: descriptionOfItem,
-                                                url: 'http:www.altosu.org' + p.downloadLink,
-                                                date: p.last_update,
-                                                guid: p.beatmaps[0].beatmapset_id
+                                                url: p.downloadLink,
+                                                guid: p.beatmaps[0].beatmapset_id + '_' + rss_version,
+                                                custom_elements: [
+                                                    {
+                                                        'media:thumbnail': {
+                                                            _attr: {
+                                                                url: 'http://www.altosu.org/media/' + p.beatmaps[0].beatmapset_id + '/' + p.beatmaps[0].beatmapset_id + 'l.jpg'
+                                                            }
+                                                        }
+                                                    }
+                                                ]
+                                                /*
+                                                 custom_elements:[
+                                                 {'enclosure': {
+                                                 _attr: {
+                                                 url: 'http://www.altosu.org/media/' + p.beatmaps[0].beatmapset_id + '/' + p.beatmaps[0].beatmapset_id + 'l.jpg',
+                                                 type:'image/jpeg'
+                                                 }
+                                                 }}
+                                                 ]  */
                                             })
                                         })
+                                        res.setHeader("Content-Type", "application/rss+xml");
                                         res.send(feed.xml(true));
                                         res.end();
                                     }
@@ -777,7 +822,10 @@ module.exports = function (app) {
 
             }
         )
-    });
+    }
+
+    app.get('/feed', getBeatmaps)
+    app.get('/api/beatmaps/:pageIndex/:pageSize/:isRSS/:extensionsToExclude', getBeatmaps);
 
     app.get('/api/download/:isMultiPack/:toDownload/:extensionsToExclude', function (req, res) {
 
