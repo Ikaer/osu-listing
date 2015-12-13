@@ -49,7 +49,7 @@ app.use(authentificator);
 var Beatmap = require('./app/models/beatmap')
 require('./app/routes')(app);
 
-
+//test vs2015
 // listen (start app with node server.js) ======================================
 var portToList = process.env.PORT === undefined ? '80' : process.env.PORT;
 console.log('App is listing on ' + portToList);
