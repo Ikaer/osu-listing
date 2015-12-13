@@ -52,7 +52,8 @@ require('./app/routes')(app);
 // listen (start app with node server.js) ======================================
 var portToList = process.env.PORT === undefined ? '80' : process.env.PORT;
 console.log('App is listing on ' + portToList);
-app.listen(portToList);
+//app.listen(portToList);
+app.listen(5000);
 console.log('App is listing on ' + portToList);
 
 

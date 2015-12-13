@@ -7,11 +7,11 @@ angular.module('BeatmapAPI', []).factory('beatmapApi', ['$http', function ($http
 
             var myUrl = '/api/beatmaps/' + pageIndex + '/' + pageSize + '/false/';
             var rssUrl = '/api/beatmaps/' + pageIndex + '/' + pageSize + '/true/';
-            if(extensionsToExclude && extensionsToExclude.length>0){
+            if (extensionsToExclude && extensionsToExclude.length > 0) {
                 myUrl += extensionsToExclude.join(';')
                 rssUrl += extensionsToExclude.join(';')
             }
-            else{
+            else {
                 myUrl += 'none';
                 rssUrl += 'none';
             }
@@ -20,18 +20,34 @@ angular.module('BeatmapAPI', []).factory('beatmapApi', ['$http', function ($http
                 rssUrl += '?f=' + encodeURIComponent(JSON.stringify(filters));
             }
             $http.get(myUrl).
-                success(function (response) {
-                    if(response.ok){
-                        response.data.rssfeed = rssUrl;
-                        fnCallbackWithData(response.data)
-                    }
-                    else{
-                        err(response.message);
-                    }
-                }).
-                error(function () {
-                    err("cannot get beatmaps");
-                })
+            success(function (response) {
+                if (response.ok) {
+                    response.data.rssfeed = rssUrl;
+                    fnCallbackWithData(response.data)
+                }
+                else {
+                    err(response.message);
+                }
+            }).
+            error(function () {
+                err("cannot get beatmaps");
+            })
+        },
+        search: function (err, fnCallbackWithData, search) {
+            var myUrl = '/api/tagsSemantic/' + search;
+            $http.get(myUrl).
+            success(function (response) {
+                if (response.ok) {
+                    fnCallbackWithData(response.data)
+                }
+                else {
+                    err(response.message);
+                }
+            }).
+            error(function () {
+                err("Cannot get search results");
+            })
+
         },
         createUser: function (pseudo, password, mail, user_id, fnOk, fnKo) {
             var url = '/api/user'

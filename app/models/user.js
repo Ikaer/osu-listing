@@ -56,7 +56,10 @@ var userSchema = new Schema({
     minLast_update: {type:Date, default:null},
     maxLast_update: {type:Date, default:null},
     minSubmitted_date: {type:Date, default:null},
-    maxSubmitted_date: {type:Date, default:null}
+    maxSubmitted_date: {type:Date, default:null},
+    pageSize: {type:Number, default:20},
+    sorting:{type:String, default:'approved_date'},
+    sortingDirection: {type:Number, default:-1}
 });
 
 var hash = function (passwd, salt) {

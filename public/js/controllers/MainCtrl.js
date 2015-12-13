@@ -143,6 +143,8 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication', 'ngUrlBind']).contro
         }
     })
     ngUrlBind($scope, 'pbv');
+
+
     // MODES management
     $scope.modes = [
         {value: 0, name: 'Osu!', active: findValueInUserProfile('modes', 0), init: false},
@@ -170,17 +172,8 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication', 'ngUrlBind']).contro
     ngUrlBind($scope, 'm');
 
 
-    $scope.disableStrict = {
-        value: ($scope.user.disableStrict !== undefined ? $scope.user.disableStrict : false),
-        init: ($scope.user.disableStrict !== undefined ? $scope.user.disableStrict : false)
-    }
-    $scope.changeStrict = function(){
-        $scope.disableStrict.value = !$scope.disableStrict.value;
-        $scope.draw();
-    }
-    $scope.changeDisableStrictInit = function(){
-        console.log("change:" + $scope.disableStrict.init)
-    }
+
+
     $scope.difficulties = [
         {value: 1, name: 'Easy', active: findValueInUserProfile('difficulties', 1), init: false},
         {value: 2, name: 'Normal', active: findValueInUserProfile('difficulties', 2), init: false},
@@ -270,8 +263,8 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication', 'ngUrlBind']).contro
         submitted_date: {label: 'Submitted date', value: 'submitted_date', direction: -1},
         last_update: {label: 'Last update', value: 'last_update', direction: -1}
     };
-    $scope.sorting = $scope.sortings.approved;
-    $scope.s = {'c': $scope.sorting.value, 'd': $scope.sorting.direction};
+    $scope.sorting =  $scope.sortings.approved;
+    $scope.s = {'c': $scope.user.sorting, 'd': $scope.user.sortingDirection};
 
     $scope.$watch('sorting', function (newVal, oldVal) {
         if (newVal !== oldVal) {
@@ -384,8 +377,32 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication', 'ngUrlBind']).contro
         functionBindWatchOnMinMax(diffName, maxProperty, minifiedMaxProperty);
     })
 
+    $scope.pageSizes = [20, 50, 100, 200];
 
-    $scope.pageSize = 20;
+    $scope.pageSize = $scope.user.pageSize;
+    ngUrlBind($scope, 'pageSize');
+    $scope.changePaging = function (pageSize) {
+        if (pageSize != $scope.pageSize) {
+            $scope.pageSize = pageSize;
+        }
+    }
+    $scope.$watch('pageSize', function (newVal, oldVal) {
+        if (newVal !== oldVal) {
+            $scope.draw();
+        }
+    });
+
+    $scope.disableStrict = $scope.user.disableStrict;
+    ngUrlBind($scope, 'disableStrict');
+    $scope.changeStrict = function () {
+        $scope.disableStrict = !$scope.disableStrict;
+        $scope.draw();
+    }
+    $scope.$watch('disableStrict', function (newVal, oldVal) {
+        if (newVal !== oldVal) {
+            $scope.draw();
+        }
+    });
 
     // PAGE INDEX management
     $scope.$watch('p', function (newVal, oldVal) {
@@ -444,7 +461,7 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication', 'ngUrlBind']).contro
             zik.setAttribute('src', '/media/' + beatmapId + '/' + beatmapId + '.mp3');
             zik.play();
         }
-        else{
+        else {
             $scope.currentPlayedZik = null;
             zik.pause();
             zik.currentTime = 0;
@@ -491,7 +508,7 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication', 'ngUrlBind']).contro
                     direction: $scope.sorting.direction
                 },
                 playedBeatmapValue: parseInt($scope.pbv, 10),
-                disableStrict : $scope.disableStrict.value
+                disableStrict: $scope.disableStrict
             }
             _.each(diffNames, function (dn) {
                 var diffName = dn.name;
@@ -633,15 +650,24 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication', 'ngUrlBind']).contro
     }
 
     $scope.saveExtrafilters = function () {
-        var $button = $('#save-extraFilters');
-        $button.addClass('loading');
+        $('.saving-loader').addClass('active');
         var toSave = {
             fileExtensionsToExclude: _.map(_.where($scope.extensions, {active: false}), function (e) {
                 return e.value;
             }),
+            modes: _.map(_.where($scope.modes, {active: true}), function (x) {
+                return x.value
+            }),
+            difficulties: _.map(_.where($scope.difficulties, {active: true}), function (x) {
+                return x.value
+            }),
             playedBeatmaps: $scope.pbv,
             durationMin: $scope.minDuration,
-            durationMax: $scope.maxDuration
+            durationMax: $scope.maxDuration,
+            disableStrict : $scope.disableStrict,
+            pageSize: $scope.pageSize,
+            sorting: $scope.sorting.value,
+            sortingDirection: $scope.sorting.direction
         }
         _.each(diffNames, function (dn) {
             var diffName = dn.name;
@@ -652,32 +678,18 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication', 'ngUrlBind']).contro
         })
         beatmapApi.saveProfile(toSave, function () {
             window.setTimeout(function () {
-                $button.removeClass('loading');
+                $('.saving-loader').removeClass('active');
             }, 1000)
         }, function (message) {
             // todo: handle error message
         })
     }
 
-    $('.ui.search').search({
-        apiSettings: {
-            url: '/api/tagsSemantic/{query}'
-        },
-        type: 'category',
-        onSelect: function (result, response) {
-            $scope.pageIndex = 0;
-            $scope.addTag(result.o);
-        },
-        delay: 100
-    });
+
     $('.sidenav-open, .toBottomPart').click(function () {
         $('.ui.sidebar.filters')
             .sidebar('toggle')
-    })
-    $('.sidenav-search-open').click(function () {
-        $('.ui.sidebar.side-search')
-            .sidebar('toggle')
-    })
+    });
     $('.beatmap-tooltip').popup()
     $scope.closeExtraFilters = function () {
         $('.ui.sidebar.filters')
@@ -886,14 +898,7 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication', 'ngUrlBind']).contro
         if ($profileform.form('is valid')) {
             $profileform.find('.dimmer').addClass('active')
             beatmapApi.saveProfile({
-                modes: _.map(_.where($scope.modes, {init: true}), function (x) {
-                    return x.value
-                }),
-                difficulties: _.map(_.where($scope.difficulties, {init: true}), function (x) {
-                    return x.value
-                }),
-                user_id: $scope.user.user_id,
-                disableStrict:$scope.disableStrict.init
+                user_id: $scope.user.user_id
             }, function () {
                 window.setTimeout(function () {
                     $profileform.find('.dimmer').removeClass('active')
@@ -906,5 +911,29 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication', 'ngUrlBind']).contro
     $scope.showProfileOptions = function () {
         $profileform.modal('show');
     }
+
+
+    $scope.searchInput = "";
+    $scope.results = null;
+    var searchTimeout = null;
+    var launchSearch = function () {
+        console.log('launch search on ' + $scope.searchInput);
+        beatmapApi.search(function (err) {
+        }, function (res) {
+            $scope.results = res;
+        }, $scope.searchInput);
+    }
+    $scope.$watch('searchInput', function (newVal, oldVal) {
+        if (newVal === undefined || newVal === null || newVal.trim() === '') {
+            clearTimeout(searchTimeout);
+            $scope.results = null;
+        }
+        else if (newVal !== oldVal) {
+            clearTimeout(searchTimeout);
+            searchTimeout = window.setTimeout(function () {
+                launchSearch();
+            }, 300);
+        }
+    });
 }]);
 

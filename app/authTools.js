@@ -163,24 +163,33 @@ AuthTools.prototype.simplifyUser = function (mongoUser) {
     if (mongoUser.modes) {
         user.modes = mongoUser.modes;
     }
-    //displayCards:{type:Number, default:0},
-    //fileExtensionsToExclude:{type: [String], default:[]}
     if (mongoUser.playedBeatmaps) {
         user.playedBeatmaps = mongoUser.playedBeatmaps;
     }
     if (mongoUser.fileExtensionsToExclude) {
         user.fileExtensionsToExclude = mongoUser.fileExtensionsToExclude;
     }
+    if(mongoUser.disableStrict){
+        user.disableStrict = mongoUser.disableStrict;
+    }
+    if(mongoUser.pageSize){
+        user.pageSize = mongoUser.pageSize;
+    }
+    if(mongoUser.sorting){
+        user.sorting = mongoUser.sorting;
+    }
+    if(mongoUser.sortingDirection){
+        user.sortingDirection = mongoUser.sortingDirection;
+    }
+
+
+
     if (mongoUser.durationMin) {
         user.minDuration = mongoUser.durationMin;
     }
     if (mongoUser.durationMax) {
         user.maxDuration = mongoUser.durationMax;
     }
-    if(mongoUser.disableStrict){
-        user.disableStrict = mongoUser.disableStrict;
-    }
-
     _.each(that.diffNames, function (diffName) {
         if (diffName !== 'Duration') {
             var minProperty = 'min' + diffName;

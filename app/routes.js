@@ -1,5 +1,3 @@
-// todo: create rss feed about creator with download link
-
 var Beatmap = require('./models/beatmap');
 var User = require('./models/user');
 
@@ -197,20 +195,18 @@ QueryTools.prototype.searchSources = function (search, sortByCount, sortIsDesc) 
 QueryTools.prototype.searchTags = function (search, sortByCount, sortIsDesc) {
     return this.searchGeneric(search, 'tags', sortByCount, sortIsDesc);
 }
-QueryTools.prototype.addResultToTags = function (results, currentTags, name, categoryIndex) {
+QueryTools.prototype.addResultToTags = function (results, currentTags, name) {
     if (currentTags.length > 0) {
         var slicedTags = currentTags.length > 5 ? currentTags.slice(0, 5) : currentTags;
-        var tagsResults = _.map(slicedTags, function (c) {
-            return {
-                title: c.value,
-                o: c
-            }
-        })
-        results.results['category' + categoryIndex] = {
+        results.push({
             name: name,
-            results: tagsResults
-        }
-        return 1
+            results: _.map(slicedTags, function (c) {
+                return {
+                    title: c.value,
+                    o: c
+                }
+            })
+        });
     }
     return 0;
 }
@@ -780,7 +776,10 @@ module.exports = function (app) {
     });
 
     app.get('/api/download/:isMultiPack/:toDownload/:extensionsToExclude', function (req, res) {
-
+        if (req.isMultiPack === true) {
+            res.setHeader('Content-Type', 'application/octet-stream')
+            res.setHeader('Content-Disposition', contentDisposition("pack.zip"));
+        }
         var errorOccurred = function (message, endResponse) {
             console.error(message);
             if (false === req.isMultiPack || true === endResponse) {
@@ -814,8 +813,10 @@ module.exports = function (app) {
                 }
                 else {
                     var fileName = util.format('%s %s - %s.osz', allBeatmaps[0].beatmapset_id, allBeatmaps[0].artist, allBeatmaps[0].title);
-                    res.setHeader('Content-Type', 'application/octet-stream')
-                    res.setHeader('Content-Disposition', contentDisposition(fileName))
+                     if (req.isMultiPack === false) {
+                         res.setHeader('Content-Type', 'application/octet-stream')
+                         res.setHeader('Content-Disposition', contentDisposition(fileName))
+                     }
                     var excludedBeatmaps = _.filter(allBeatmaps, function (beatmap) {
                         return (undefined === _.find(oszFile.beatmapsIds, function (selectedId) {
                             return beatmap.beatmap_id === selectedId;
@@ -825,6 +826,7 @@ module.exports = function (app) {
                     fs.readFile(filePath, function (err, data) {
                         if (err) {
                             errorOccurred(util.format('error when reading %s', filePath));
+                            oszFile.isReady.resolve();
                         }
                         else {
                             try {
@@ -883,7 +885,7 @@ module.exports = function (app) {
 
         Q.all(_.map(req.toDownload, function (f) {
             return f.isReady.promise;
-        })).then(function () {
+        })).spread(function () {
             if (req.isMultiPack === true) {
                 try {
                     archive.finalize(function (err, bytes) {
@@ -924,16 +926,13 @@ module.exports = function (app) {
             queryTools.searchSources(req.params.search, true, true),
             queryTools.searchTags(req.params.search, true, true)
         ]).spread(function (creators, artists, songs, sources, tags) {
-            var categoryIndex = 1;
-            var results = {
-                results: {}
-            }
-            categoryIndex += queryTools.addResultToTags(results, creators, 'Creators', categoryIndex);
-            categoryIndex += queryTools.addResultToTags(results, artists, 'Artists', categoryIndex);
-            categoryIndex += queryTools.addResultToTags(results, songs, 'Songs', categoryIndex);
-            categoryIndex += queryTools.addResultToTags(results, sources, 'Sources', categoryIndex);
-            categoryIndex += queryTools.addResultToTags(results, tags, 'Tags', categoryIndex);
-            res.json(results);
+            var results = [];
+            queryTools.addResultToTags(results, creators, 'Creators');
+            queryTools.addResultToTags(results, artists, 'Artists');
+            queryTools.addResultToTags(results, songs, 'Songs');
+            queryTools.addResultToTags(results, sources, 'Sources');
+            queryTools.addResultToTags(results, tags, 'Tags');
+            rf.sendOkData(res, results);
         }, function (err) {
             res.statusCode = '500';
             res.json = err;

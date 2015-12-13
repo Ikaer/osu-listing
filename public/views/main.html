@@ -1,21 +1,14 @@
-<div class="ui top sidebar filters">
+<div class="ui top sidebar overlay filters">
     <div class="toBottomPart">
-        dsfdsf
     </div>
     <div>
         <div class="ui form" style="background-color:white;padding:10px">
 
             <div style="position:relative">
-                <div style="position: absolute;right:0;top:-15px;" >
+                <div style="position: absolute;right:0;top:-15px;">
                     <button class="ui tiny icon button" ng-click="closeExtraFilters()"
                             id="close-extraFilters">
                         <i class="close icon"></i>
-                    </button>
-                </div>
-                <div style="position: absolute;right:40px;top:-15px;" ng-show="isLogged">
-                    <button class="ui tiny icon button" ng-click="saveExtrafilters()"
-                            id="save-extraFilters">
-                        <i class="save icon"></i>
                     </button>
                 </div>
                 <h4 class="ui dividing header">Extra filters</h4>
@@ -257,173 +250,209 @@
             </div>
         </div>
     </div>
-
 </div>
-<div class="ui right sidebar side-search" style="background-color:white;">
-    <div class="ui container" style="padding:5px;">
-        <div class="ui fluid category search">
-            <div class="ui icon input fluid">
-                <input class="prompt" type="text" placeholder="Search creators / titles / artits ...">
-                <i class="search icon"></i>
+<div class="ui right sidebar right-menu vertical menu overlay" style="z-index:3;width:500px;background-color:#F3F4F5;">
+    <div class="ui category search" style="padding:5px;">
+        <div class="ui icon input" style="width:100%;">
+            <input ng-model="searchInput" class="prompt inverted searchInSidebar" type="text"
+                   placeholder="Search creators / titles / artits ..." style="border-radius:0px;">
+            <i class="search icon"></i>
+        </div>
+        <div class="results transition visible"
+             style="display: block !important;width:100%;border-right-width:0;border-left-width:0;box-shadow: none;"
+             ng-if="results !== undefined && results !== null && results.length>0">
+            <div class="category" ng-repeat="category in results">
+                <div class="name">{{category.name}}</div>
+                <div class="result" ng-repeat="result in category.results">
+                    <div class="content">
+                        <div class="title" ng-click="addTag(result.o)">{{result.title}}</div>
+                    </div>
+                </div>
             </div>
         </div>
-        <div class="results"></div>
+        <div class="no-results" style="text-align:center;padding:40px;color:#BBBBBC;"
+             ng-if="results !== undefined && results !== null && results.length === 0"><h2>No results. Sorry !</h2>
+        </div>
+        <div class="start-typing-to-search" style="text-align:center;padding:40px;color:#BBBBBC;"
+             ng-if="results === undefined || results === null"><h2>Start typing to search artists, songs, creators,
+            source or tags</h2></div>
     </div>
 </div>
+<div class="ui left sidebar left-menu vertical menu  overlay inverted" style="z-index:3">
+    <a class="item" href="/">
+        Home
+    </a>
+    <a class="item about-button">
+        About
+    </a>
+</div>
+
 <div class="pusher">
-    <div class="ui fixed inverted menu ao-menu fluid centered">
-        <div class="ui container ">
-            <a href="/" class="item">
-                <div class="ui dimmer ao-loader">
-                    <div class="ui tiny loader"></div>
-                </div>
-                <img class="logo ao-logo" src="img/1437607408_osu.png"/>
-            </a>
+    <div class="ui fixed inverted menu ao-menu fluid">
 
-
-            <a class="ui dropdown item aligned ao-filters">
-                <span class="header-menu-label-big">Mode</span>
-                <span class="header-menu-label-small">M</span>
-
-                <div class="menu">
-                    <div class="item" ng-repeat="m in modes" ng-click="changeMode(m.value)" style="width:180px;">
-                        <img class="ui image" ng-class="m.active === true ? '':'filter-faded-icon'"
-                             src="/img/mode/{{converter.mode[m.value]}}/mode.png"
-                             style="width:20px;"/>
-                        {{m.name}}
-                    </div>
-                </div>
-            </a>
-            <a class="ui dropdown item aligned ao-filters">
-                <span class="header-menu-label-big">Difficulty</span>
-                <span class="header-menu-label-small">D</span>
-
-                <div class="menu">
-                    <div class="item" ng-repeat="d in difficulties" ng-click="changeDifficulty(d.value)"
-                         style="width:180px;">
-                        <img class="ui image" ng-class="d.active === true ? '':'filter-faded-icon'"
-                             src="/img/mode/osu/{{converter.difficulty[d.value]}}.png"
-                             style="width:20px;"/>
-                        {{d.name}}
-                    </div>
-                </div>
-            </a>
-            <a class="ui dropdown item aligned ao-filters">
-                <span class="header-menu-label-big">Status</span>
-                <span class="header-menu-label-small">S</span>
-
-                <div class="menu">
-                    <div class="item" ng-repeat="d in approved" ng-click="changeApproved(d.value)" style="width:180px;">
-                        <img class="ui image" ng-class="d.active === true ? '':'filter-faded-icon'"
-                             src="/img/approved/{{converter.approved[d.value]}}.png"
-                             style="width:20px;"/>
-                        {{d.name}}
-                    </div>
-                </div>
-            </a>
-            <a class="ui item icon aligned ao-filters sidenav-open">
-                <i class="filter icon"></i>
-            </a>
-            <a class="ui dropdown item aligned ao-filters" ng-click="changeStrict()">
-                <i class="lock icon" ng-show="!disableStrict.value" ></i>
-                <i class="unlock icon" ng-show="disableStrict.value" ></i>
-            </a>
-
-            <!--*************************  SEARCH     ******************************-->
-            <div class="ui category search item right aligned search-big" style="width:300px;">
-                <div class="ui icon input">
-                    <input class="prompt inverted" type="text" placeholder="Search creators / titles / artits ...">
-                    <i class="search icon"></i>
-                </div>
-                <div class="results"></div>
+        <a class="item" id="left-menu-toggle">
+            <div class="ui dimmer ao-loader">
+                <div class="ui tiny loader"></div>
             </div>
-            <a class="ui item icon sidenav-search-open search-little">
-                <i class="search icon"></i>
-            </a>
-            <!--*************************  USER ICONS ******************************-->
-            <a class="item ao-user" ng-class="isLogged ? '':'icon'">
-                <i class="user icon"></i>
-                <span ng-show="isLogged">{{user.name}}</span>
-            </a>
+            <img class="logo ao-logo" src="img/1437607408_osu.png"/>
+        </a>
 
-            <div class="ui flowing popup top left transition hidden ao-user-options">
-                <div class="ui one column middle aligned very relaxed stackable grid">
-                    <div class="column">
-                        <div class="ui blue button" ng-click="showProfileOptions()">Profile</div>
-                        <div class="ui blue submit button" ng-click="logout()">Logout</div>
-                    </div>
+
+        <a class="ui dropdown item aligned ao-filters">
+            <span class="header-menu-label-big">Mode</span>
+            <span class="header-menu-label-small">M</span>
+
+            <div class="menu">
+                <div class="item" ng-repeat="m in modes" ng-click="changeMode(m.value)" style="width:180px;">
+                    <img class="ui image" ng-class="m.active === true ? '':'filter-faded-icon'"
+                         src="/img/mode/{{converter.mode[m.value]}}/mode.png"
+                         style="width:20px;"/>
+                    {{m.name}}
                 </div>
             </div>
-            <div class="ui flowing popup top left transition hidden ao-user-login" style="width:500px;">
-                <div class="ui one column middle aligned very relaxed stackable grid">
-                    <div class="ui column vertical buttons">
-                        <div class="ui form signin-form">
-                            <div class="field">
-                                <label>Username</label>
+        </a>
+        <a class="ui dropdown item aligned ao-filters">
+            <span class="header-menu-label-big">Difficulty</span>
+            <span class="header-menu-label-small">D</span>
 
-                                <div class="ui left icon input">
-                                    <input type="text" placeholder="Pseudo or mail" class="login-pseudo"
-                                           ng-model="username">
-                                    <i class="user icon"></i>
-                                </div>
-                            </div>
-                            <div class="field">
-                                <label>Password</label>
-
-                                <div class="ui left icon input">
-                                    <input type="password" placeholder="Password" autocomplete="off"
-                                           ng-model="password">
-                                    <i class="lock icon"></i>
-                                </div>
-                                <p style="text-align:right;"><a href ng-click="forgotYourPassword()">Forgot you password
-                                    ?</a></p>
-                            </div>
-                            <div class="ui error message"></div>
-                            <div class="ui blue submit button">Login</div>
-                        </div>
-                    </div>
-                    <div class="ui horizontal divider">
-                        Or
-                    </div>
-                    <div class="ui aligned column vertical buttons">
-                        <div class="ui green button log-signup" ng-click="openSignup()">
-                            <i class="signup icon"></i>
-                            Sign Up
-                        </div>
-                    </div>
+            <div class="menu">
+                <div class="item" ng-repeat="d in difficulties" ng-click="changeDifficulty(d.value)"
+                     style="width:180px;">
+                    <img class="ui image" ng-class="d.active === true ? '':'filter-faded-icon'"
+                         src="/img/mode/osu/{{converter.difficulty[d.value]}}.png"
+                         style="width:20px;"/>
+                    {{d.name}}
                 </div>
             </div>
-            <a class="item rss" target="_blank" ng-href="{{rssfeed}}" ng-show="isMe">
-                <i class="rss icon"></i>
-            </a>
+        </a>
+        <a class="ui dropdown item aligned ao-filters">
+            <span class="header-menu-label-big">Status</span>
+            <span class="header-menu-label-small">S</span>
 
+            <div class="menu">
+                <div class="item" ng-repeat="d in approved" ng-click="changeApproved(d.value)" style="width:180px;">
+                    <img class="ui image" ng-class="d.active === true ? '':'filter-faded-icon'"
+                         src="/img/approved/{{converter.approved[d.value]}}.png"
+                         style="width:20px;"/>
+                    {{d.name}}
+                </div>
+            </div>
+        </a>
+        <a class="ui item icon aligned ao-filters sidenav-open">
+            <i class="filter icon"></i>
+        </a>
+        <a class="ui dropdown item aligned ao-filters" ng-click="changeStrict()">
+            <i class="lock icon" ng-show="!disableStrict"></i>
+            <i class="unlock icon" ng-show="disableStrict"></i>
+        </a>
+        <a class="ui item icon aligned ao-filters " data-content="Download" target="_self" download="pack.zip"
+           href="{{downloadAllLink}}">
+            <i class="cloud download icon"></i>
+        </a>
+
+        <!--*************************  USER ICONS ******************************-->
+        <a class="item ao-user right" ng-class="isLogged ? '':'icon'">
+            <i class="user icon"></i>
+            <span ng-show="isLogged">{{user.name}}</span>
+        </a>
+
+        <div class="ui flowing popup top left transition hidden ao-user-options">
+            <div class="ui one column middle aligned very relaxed stackable grid">
+                <div class="column">
+                    <div class="ui blue button" ng-click="showProfileOptions()">Profile</div>
+                    <div class="ui blue submit button" ng-click="logout()">Logout</div>
+                </div>
+            </div>
         </div>
+        <div class="ui flowing popup top left transition hidden ao-user-login" style="width:500px;">
+            <div class="ui one column middle aligned very relaxed stackable grid">
+                <div class="ui column vertical buttons">
+                    <div class="ui form signin-form">
+                        <div class="field">
+                            <label>Username</label>
+
+                            <div class="ui left icon input">
+                                <input type="text" placeholder="Pseudo or mail" class="login-pseudo"
+                                       ng-model="username">
+                                <i class="user icon"></i>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label>Password</label>
+
+                            <div class="ui left icon input">
+                                <input type="password" placeholder="Password" autocomplete="off"
+                                       ng-model="password">
+                                <i class="lock icon"></i>
+                            </div>
+                            <p style="text-align:right;"><a href ng-click="forgotYourPassword()">Forgot you password
+                                ?</a></p>
+                        </div>
+                        <div class="ui error message"></div>
+                        <div class="ui blue submit button">Login</div>
+                    </div>
+                </div>
+                <div class="ui horizontal divider">
+                    Or
+                </div>
+                <div class="ui aligned column vertical buttons">
+                    <div class="ui green button log-signup" ng-click="openSignup()">
+                        <i class="signup icon"></i>
+                        Sign Up
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <a class="item" ng-show="isLogged" ng-click="saveExtrafilters()" id="save-extraFilters">
+            <div class="ui dimmer saving-loader">
+                <div class="ui tiny loader"></div>
+            </div>
+            <i class="save icon"></i>
+        </a>
+        <a class="item rss" target="_blank" ng-href="{{rssfeed}}" ng-show="isMe">
+            <i class="rss icon"></i>
+        </a>
+
+        <a class="ui item icon right-menu-toggle">
+            <i class="search icon"></i>
+        </a>
+
     </div>
     <div style="position:fixed;top:52px;bottom:40px;right:0;left:0;overflow-y:auto;overflow-x:hidden;">
         <div ui-view></div>
     </div>
     <div class="ui menu inverted ao-bottom-menu" style="position:fixed;bottom:0;left:0;right:0;">
-        <div class="ui container">
-            <a class="item" ng-show="isNotFirstPage" ng-click="goPreviousPage()">previous page</a>
 
-            <div class="ui dropdown item ao-sorting right">
-                <input type="hidden" name="gender">
+        <a class="item" ng-show="isNotFirstPage" ng-click="goPreviousPage()">previous</a>
 
-                <div class="default text">{{sorting.label}}</div>
-                <div class="menu">
-                    <div class="item"
-                         ng-repeat="s in sortings" data-value="{{s.value}}" ng-click="sort(s)">
-                        {{s.label}}
-                    </div>
+        <div class="ui dropdown item ao-sorting right">
+            <div class="default text">{{pageSize}}</div>
+            <div class="menu">
+                <div class="item"
+                     ng-repeat="s in pageSizes" data-value="{{s}}" ng-click="changePaging(s)">
+                    {{s}}
                 </div>
             </div>
-            <a class="item"> <i class="sort content icon" ng-click="changeSortingDirection()"
-                                ng-class="sorting.direction === 1 ? 'ascending' : 'descending'"></i></a>
+        </div>
+        <div class="ui dropdown item ao-sorting">
+            <input type="hidden" name="gender">
 
-            <div class="right menu">
-                <a class="item" ng-show="hasNextPage" ng-click="goNextPage()">next page</a>
+            <div class="default text">{{sorting.label}}</div>
+            <div class="menu">
+                <div class="item"
+                     ng-repeat="s in sortings" data-value="{{s.value}}" ng-click="sort(s)">
+                    {{s.label}}
+                </div>
             </div>
         </div>
+        <a class="item"> <i class="sort content icon" ng-click="changeSortingDirection()"
+                            ng-class="sorting.direction === 1 ? 'ascending' : 'descending'"></i></a>
+
+        <div class="right menu">
+            <a class="item" ng-show="hasNextPage" ng-click="goNextPage()">next</a>
+        </div>
+
     </div>
 
     <div class="ui form modal signup">
@@ -540,44 +569,27 @@
                 <label for="options-osu_id">Osu! ID</label>
                 <input type="text" id="options-osu_id" placeholder="" ng-model="user.user_id">
             </div>
-            <div class="inline fields">
-                <label>Starting difficulties</label>
-
-                <div class="field" ng-repeat="difficulty in difficulties">
-                    <div class="ui checkbox">
-                        <input id="profile-difficulty-{{difficulty.value}}" type="checkbox" ng-model="difficulty.init">
-                        <label for="profile-difficulty-{{difficulty.value}}">{{difficulty.name}}</label>
-                    </div>
-                </div>
+            <div class="actions">
+                <div class="ui button blue submit">save</div>
+                <div class="ui button close">close</div>
             </div>
-            <div class="inline fields">
-                <label>Starting modes</label>
-
-                <div class="field" ng-repeat="mode in modes">
-                    <div class="ui checkbox">
-                        <input id="profile-mode-{{mode.value}}" type="checkbox" ng-model="mode.init" >
-                        <label for="profile-mode-{{mode.value}}">{{mode.name}}</label>
-                    </div>
-                </div>
-            </div>
-            <div class="inline fields">
-                <label>Disable strict mode</label>
-                <div class="field">
-                    <div class="ui checkbox pure-angular">
-                        <input id="profile-strict" type="checkbox" ng-model="disableStrict.init" ng-change="changeDisableStrictInit()">
-                        <label for="profile-strict">Yes</label>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="actions">
-            <div class="ui button blue submit">save</div>
-            <div class="ui button close">close</div>
         </div>
     </div>
-
+    <div class="ui modal about">
+        <div class="header">
+            About Altosu
+        </div>
+        <div class="content">
+            Altosu was created on July 21th 2015.<br/>
+            It was designed to be a mirror of  <a target="_blank" href="https://osu.ppy.sh/">Osu! official website</a> with extra neat functionalities.<br/>
+            It was created by <a target="_blank" href="https://osu.ppy.sh/u/4567755">Ikaer</a>.<br/>
+            This is <a target="_blank" href="https://osu.ppy.sh/forum/p/4355419">the forum official thread</a> if you have any questions to ask or bugs to report.<br/>
+        </div>
+        <div class="actions">
+            <div class="ui button about-close">Close</div>
+        </div>
+    </div>
 </div>
-
 <script>
     $('.signup.modal').modal({
         allowMultiple: false
@@ -631,6 +643,25 @@
         position: 'bottom right'
     });
     $('.ui.checkbox:not(.pure-angular)').checkbox();
+
+    $('#left-menu-toggle').click(function () {
+        $('.left-menu').sidebar('toggle');
+    })
+    $('.right-menu-toggle').click(function () {
+        $('.right-menu').sidebar('toggle');
+        window.setTimeout(function () {
+            $('.searchInSidebar').focus();
+        }, 20)
+    })
+
+    $('.about-button').click(function () {
+        $('.modal.about').modal('show')
+    });
+    $('.about-close').click(function () {
+        $('.modal.about').modal('hide')
+    });
+
+
 </script>
 <audio id="player" src="" type="audio/mp3"></audio>
 

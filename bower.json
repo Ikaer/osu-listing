@@ -12,7 +12,7 @@
     "angular-bootstrap": "~0.13.0",
     "jquery-ui": "~1.11.4",
     "angular-ui-router": "~0.2.15",
-    "semantic-ui": "~2.0.6",
+    "semantic-ui": "~2.1.6",
     "angular-cookies": "~1.4.3",
     "ngUrlBind": "~0.0.2"
   },
