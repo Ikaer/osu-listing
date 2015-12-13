@@ -138,7 +138,10 @@ AuthTools.prototype.getEmptySimplifiedUser = function () {
         fileExtensionsToExclude: [],
         playedBeatmaps: 0,
         user_id: null,
-        disableStrict:false
+        disableStrict:false,
+        pageSize:20,
+        sorting:'approved_date',
+        sortingDirection: -1
     }
     _.each(that.diffNames, function (diffName) {
         var minProperty = 'min' + diffName;
