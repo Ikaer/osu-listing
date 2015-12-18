@@ -978,20 +978,15 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication', 'ngUrlBind']).contro
         if ($scope.disableYT === false) {
             if (beatmap == null) {  // video container events
                 if (isLeaving === true) {
-                    console.log('container -- is leaving');
                     enterVideoPlayerOrIconTimeout = window.setTimeout(startYoutubeLeavingTimeout, 200);
                 }
                 else {
-                    console.log('container -- is entering');
                     window.clearTimeout(loadNewVideoTimeout);
                     var playerContainerBeatmapId = $playerContainer.attr('beatmap_id');
-                    console.log(playerContainerBeatmapId + ' (player) vs ' + $scope.playedVideoBeatmapId + ' (scope)')
                     if ($playerContainer.attr('beatmap_id') == $scope.playedVideoBeatmapId) {
-                        console.log('container -- same beatmap id -- keep playing');
                         window.clearTimeout(enterVideoPlayerOrIconTimeout);
                     }
                     else {
-                        console.log('container -- not the same beatmap id -- STOP playing');
                     }
                 }
             }
@@ -1000,11 +995,9 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication', 'ngUrlBind']).contro
                 var $icon = $(evt.target);
 
                 if (isLeaving === true) {
-                    console.log('icon -- is leaving');
                     enterVideoPlayerOrIconTimeout = window.setTimeout(startYoutubeLeavingTimeout, 200);
                 }
                 else {
-                    console.log('icon -- is entering');
                     window.clearTimeout(enterVideoPlayerOrIconTimeout);
 
                     if (beatmapId == $scope.playedVideoBeatmapId) { // already playing beatmap

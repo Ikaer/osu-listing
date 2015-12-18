@@ -139,6 +139,7 @@ AuthTools.prototype.getEmptySimplifiedUser = function () {
         playedBeatmaps: 0,
         user_id: null,
         disableStrict: false,
+        disableYT:false,
         pageSize: 20,
         sorting: 'approved_date',
         sortingDirection: -1
