@@ -39,6 +39,7 @@
                 <img class="ao-beatmap-image" alt="" src="/media/{{pack.beatmapset_id}}/{{pack.beatmapset_id}}l.jpg" o>
             </div>
             <div class="content">
+                <div style="background-color:red;position:absolute;bottom:0;right:0;margin-right:0%;margin-left:0%;"></div>
                 <div class="header"><a style="color:black" ng-click="addTagByUI('title', pack.title)">{{pack.title}}</a>
                 </div>
                 <div class="event">
@@ -60,8 +61,11 @@
             </div>
             <div class="extra content flowing center">
                 <div class="" ng-repeat="beatmap in pack.beatmaps | orderBy:'difficultyrating'" style="display:inline;">
-                    <div style="display:inline;position:relative;">
-                        <img id="popover-{{beatmap.beatmap_id}}"
+                    <div style="display:inline;position:relative;"   >
+                        <!---->
+                        <img
+                             ng-mouseenter="searchYoutTube(beatmap, $event, false)"
+                             ng-mouseleave="searchYoutTube(beatmap, $event, true)"
                              src="/img/mode/{{converter.mode[beatmap.mode]}}/{{converter.difficulty[beatmap.difficulty]}}.png"
                              style="width:20px;margin-left:2px;opacity:0.8;"/>
 

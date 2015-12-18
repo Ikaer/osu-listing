@@ -288,6 +288,7 @@
 </div>
 
 <div class="pusher">
+
     <div class="ui fixed inverted menu ao-menu fluid">
 
         <a class="item" id="left-menu-toggle">
@@ -345,10 +346,10 @@
             <i class="lock icon" ng-show="!disableStrict"></i>
             <i class="unlock icon" ng-show="disableStrict"></i>
         </a>
-        <a class="ui item icon aligned ao-filters " data-content="Download" target="_self" download="pack.zip"
-           href="{{downloadAllLink}}">
-            <i class="cloud download icon"></i>
-        </a>
+        <!--<a class="ui item icon aligned ao-filters " data-content="Download" target="_self" download="pack.zip"-->
+           <!--href="{{downloadAllLink}}">-->
+            <!--<i class="cloud download icon"></i>-->
+        <!--</a>-->
 
         <!--*************************  USER ICONS ******************************-->
         <a class="item ao-user right" ng-class="isLogged ? '':'icon'">
@@ -420,7 +421,7 @@
 
     </div>
     <div style="position:fixed;top:52px;bottom:40px;right:0;left:0;overflow-y:auto;overflow-x:hidden;">
-        <div ui-view></div>
+        <div id="jquery_on_events" ui-view></div>
     </div>
     <div class="ui menu inverted ao-bottom-menu" style="position:fixed;bottom:0;left:0;right:0;margin:0;">
 
@@ -581,9 +582,11 @@
         </div>
         <div class="content">
             Altosu was created on July 21th 2015.<br/>
-            It was designed to be a mirror of  <a target="_blank" href="https://osu.ppy.sh/">Osu! official website</a> with extra neat functionalities.<br/>
+            It was designed to be a mirror of <a target="_blank" href="https://osu.ppy.sh/">Osu! official website</a>
+            with extra neat functionalities.<br/>
             It was created by <a target="_blank" href="https://osu.ppy.sh/u/4567755">Ikaer</a>.<br/>
-            This is <a target="_blank" href="https://osu.ppy.sh/forum/p/4355419">the forum official thread</a> if you have any questions to ask or bugs to report.<br/>
+            This is <a target="_blank" href="https://osu.ppy.sh/forum/p/4355419">the forum official thread</a> if you
+            have any questions to ask or bugs to report.<br/>
         </div>
         <div class="actions">
             <div class="ui button about-close">Close</div>
@@ -591,6 +594,8 @@
     </div>
 </div>
 <script>
+
+
     $('.signup.modal').modal({
         allowMultiple: false
     })
@@ -664,7 +669,18 @@
 
 </script>
 <audio id="player" src="" type="audio/mp3"></audio>
-
+<div id="popover_youtube_content" style="position:absolute;height:390px;width:640px;display:none;"
+     ng-mouseenter="searchYoutTube(null, $event, false)"
+     ng-mouseleave="searchYoutTube(null, $event, true)"
+>
+    <div class="ui active dimmer">
+        <div class="ui text loader">Loading</div>
+    </div>
+    <div class="header" style="padding:3px;color:white;background-color:black;text-align:center;">
+        <h3 class="title"></h3>
+    </div>
+    <div id="youtube_player"></div>
+</div>
 
 
 

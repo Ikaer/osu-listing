@@ -49,6 +49,23 @@ angular.module('BeatmapAPI', []).factory('beatmapApi', ['$http', function ($http
             })
 
         },
+        searchYouTube: function (err, fnCallbackWithData, beatmapId) {
+            var myUrl = '/api/youtube/' + beatmapId
+            $http.get(myUrl).
+            success(function (response) {
+                if (response.ok) {
+                    fnCallbackWithData(response.data)
+                }
+                else {
+                    err(response.message);
+                }
+            }).
+            error(function () {
+                err("Cannot get search results");
+            })
+
+        },
+
         createUser: function (pseudo, password, mail, user_id, fnOk, fnKo) {
             var url = '/api/user'
             $http.post(url, {

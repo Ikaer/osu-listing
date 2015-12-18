@@ -11,11 +11,11 @@ var storage = require('node-persist');
 //then start using it
 storage.initSync();
 var rssIncrement = storage.getItem('rssIncrement');
-if(rssIncrement === null || rssIncrement === undefined){
+if (rssIncrement === null || rssIncrement === undefined) {
     rssIncrement = 0;
     storage.setItem('rssIncrement', rssIncrement);
 }
-
+var request = require('request');
 var escape = require('regexp.escape');
 
 var _ = require('underscore');
@@ -742,7 +742,7 @@ module.exports = function (app) {
                                         storage.setItemSync('rssIncrement', rssIncrement);
                                         var feed = new RSS({
                                             title: 'altOsu_' + rssIncrement,
-                                            pubDate:new Date(),
+                                            pubDate: new Date(),
                                             description: 'Altosu feed',
                                             site_url: 'http://www.altosu.org',
                                             image_url: 'http://www.altosu.org/img/1437607408_osu.png',
@@ -863,10 +863,10 @@ module.exports = function (app) {
                 }
                 else {
                     var fileName = util.format('%s %s - %s.osz', allBeatmaps[0].beatmapset_id, allBeatmaps[0].artist, allBeatmaps[0].title);
-                     if (req.isMultiPack === false) {
-                         res.setHeader('Content-Type', 'application/octet-stream')
-                         res.setHeader('Content-Disposition', contentDisposition(fileName))
-                     }
+                    if (req.isMultiPack === false) {
+                        res.setHeader('Content-Type', 'application/octet-stream')
+                        res.setHeader('Content-Disposition', contentDisposition(fileName))
+                    }
                     var excludedBeatmaps = _.filter(allBeatmaps, function (beatmap) {
                         return (undefined === _.find(oszFile.beatmapsIds, function (selectedId) {
                             return beatmap.beatmap_id === selectedId;
@@ -1216,6 +1216,30 @@ module.exports = function (app) {
         res.send(feed.xml(true));
         res.end();
     })
+
+    app.get('/api/youtube/:beatmapId', function (req, res) {
+        Beatmap.findOne({beatmap_id: req.params.beatmapId}, function (err, beatmap) {
+            if (err) rf.sendError(res, err.message);
+            else {
+                if (beatmap === null) {
+                    rf.sendError(res, 'Cant find the beatmap')
+                }
+                else {
+                    var url = 'https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=1'
+                    url += '&q=OSU!+' + beatmap.title + '+' + beatmap.artist + '+' + beatmap.version;
+                    url += '&key=' + nconf.get('youtubeApiKey');
+                    request(url, function (error, response, body) {
+                        if (error) {
+                            rf.sendError(res, 'call to youtube API returns an error:' + error)
+                        } else {
+                            var ytResponse = JSON.parse(body);
+                            rf.sendOkData(res, ytResponse);
+                        }
+                    });
+                }
+            }
+        })
+    });
 
     app.get('*', function (req, res) {
         res.sendfile('./public/index.html'); // load the single view file (angular will handle the page changes on the front-end)

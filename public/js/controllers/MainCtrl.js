@@ -171,8 +171,6 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication', 'ngUrlBind']).contro
     ngUrlBind($scope, 'm');
 
 
-
-
     $scope.difficulties = [
         {value: 1, name: 'Easy', active: findValueInUserProfile('difficulties', 1), init: false},
         {value: 2, name: 'Normal', active: findValueInUserProfile('difficulties', 2), init: false},
@@ -262,7 +260,7 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication', 'ngUrlBind']).contro
         submitted_date: {label: 'Submitted date', value: 'submitted_date', direction: -1},
         last_update: {label: 'Last update', value: 'last_update', direction: -1}
     };
-    $scope.sorting =  $scope.sortings.approved;
+    $scope.sorting = $scope.sortings.approved;
     $scope.s = {'c': $scope.user.sorting, 'd': $scope.user.sortingDirection};
 
     $scope.$watch('sorting', function (newVal, oldVal) {
@@ -536,6 +534,7 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication', 'ngUrlBind']).contro
                     $scope.downloadAllLink = res.downloadAllLink;
                     $scope.hasNextPage = res.hasNextPage;
                     $scope.rssfeed = res.rssfeed;
+
                     hideLoading();
                 },
                 $scope.p,
@@ -663,7 +662,7 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication', 'ngUrlBind']).contro
             playedBeatmaps: $scope.pbv,
             durationMin: $scope.minDuration,
             durationMax: $scope.maxDuration,
-            disableStrict : $scope.disableStrict,
+            disableStrict: $scope.disableStrict,
             pageSize: $scope.pageSize,
             sorting: $scope.sorting.value,
             sortingDirection: $scope.sorting.direction
@@ -934,5 +933,147 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication', 'ngUrlBind']).contro
             }, 300);
         }
     });
+
+    $scope.playedVideoBeatmapId = null;
+    $scope.playerYT = null;
+    $scope.disableYT = false;
+    $scope.$watch('searchInput', function (newVal, oldVal) {
+        if (newVal == false) {
+            startYoutubeLeavingTimeout();
+        }
+    });
+
+    var enterVideoPlayerOrIconTimeout;
+    var loadNewVideoTimeout;
+
+    function startYoutubeLeavingTimeout() {
+        $('#popover_youtube_content').hide();
+        if ($scope.playerYT) {
+            $scope.playerYT.stopVideo();
+        }
+        $scope.playedVideoBeatmapId = null;
+    }
+
+    var $playerContainer = $('#popover_youtube_content');
+    var $playerContainerTitle = $playerContainer.find('.title');
+
+    function youtube_toggleDimmer(activateIt) {
+        if (activateIt === true) {
+            $playerContainer.find('.dimmer').addClass('active');
+        }
+        else {
+            $playerContainer.find('.dimmer').removeClass('active');
+        }
+    }
+
+    $scope.searchYoutTube = function (beatmap, evt, isLeaving) {
+        if ($scope.disableYT === false) {
+            if (beatmap == null) {  // video container events
+                if (isLeaving === true) {
+                    console.log('container -- is leaving');
+                    enterVideoPlayerOrIconTimeout = window.setTimeout(startYoutubeLeavingTimeout, 200);
+                }
+                else {
+                    console.log('container -- is entering');
+                    window.clearTimeout(loadNewVideoTimeout);
+                    var playerContainerBeatmapId = $playerContainer.attr('beatmap_id');
+                    console.log(playerContainerBeatmapId + ' (player) vs ' + $scope.playedVideoBeatmapId + ' (scope)')
+                    if ($playerContainer.attr('beatmap_id') == $scope.playedVideoBeatmapId) {
+                        console.log('container -- same beatmap id -- keep playing');
+                        window.clearTimeout(enterVideoPlayerOrIconTimeout);
+                    }
+                    else {
+                        console.log('container -- not the same beatmap id -- STOP playing');
+                    }
+                }
+            }
+            else {
+                var beatmapId = beatmap.beatmap_id;
+                var $icon = $(evt.target);
+
+                if (isLeaving === true) {
+                    console.log('icon -- is leaving');
+                    enterVideoPlayerOrIconTimeout = window.setTimeout(startYoutubeLeavingTimeout, 200);
+                }
+                else {
+                    console.log('icon -- is entering');
+                    window.clearTimeout(enterVideoPlayerOrIconTimeout);
+
+                    if (beatmapId == $scope.playedVideoBeatmapId) { // already playing beatmap
+                        // Do nothing
+                    }
+                    else {
+                        function loadNewVideo() {
+                            youtube_toggleDimmer(true);
+                            $playerContainerTitle.html(beatmap.title + ' - ' + beatmap.artist + ' [' + beatmap.version + ']')
+                            $scope.playedVideoBeatmapId = beatmapId;
+                            $playerContainer.show().position({
+                                of: $icon,
+                                my: "center bottom",
+                                at: "center top",
+                                collision: "flipfit flip",
+                                using: function (offset, feedback) {
+                                    var left = offset.left;
+                                    var top = offset.top;
+                                    if (feedback.vertical == 'bottom') {
+                                        top = top - 35;
+                                    }
+                                    else {
+                                        top = top + 10;
+                                    }
+                                    $(this).css('top', top).css('left', left);
+                                }
+                            }).attr('beatmap_id', beatmapId);
+
+
+                            beatmapApi.searchYouTube(function (err) {
+                                console.log(err);
+                            }, function (ytResponse) {
+                                var playerYT_Id = 'youtube_player'
+
+                                var videoID = null;
+                                if (ytResponse.items && ytResponse.items.length == 1) {
+                                    videoID = ytResponse.items[0].id.videoId;
+                                }
+
+                                if ($scope.playerYT) {
+                                    $scope.playerYT.loadVideoById(videoID);
+                                    var state = $scope.playerYT.getPlayerState();
+                                    if (state != 1) {
+                                        $scope.playerYT.playVideo();
+                                        youtube_toggleDimmer(false);
+                                    }
+                                }
+                                else {
+                                    $scope.playerYT = new YT.Player(playerYT_Id, {
+                                        height: '390',
+                                        width: '640',
+                                        videoId: videoID,
+                                        events: {
+                                            'onReady': function (event) {
+                                                event.target.playVideo();
+                                                youtube_toggleDimmer(false);
+                                            }
+                                        }
+                                    });
+                                }
+
+                            }, beatmapId);
+                        }
+
+                        if ($scope.playedVideoBeatmapId == null) {
+                            loadNewVideo();
+                        }
+                        else { // player is playing something just not the current beatmap
+                            // it's maybe a cross over to get to the player
+                            loadNewVideoTimeout = window.setTimeout(loadNewVideo, 200);
+                        }
+
+
+                    }
+                }
+            }
+        }
+    }
 }]);
 
