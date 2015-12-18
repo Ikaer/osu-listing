@@ -138,9 +138,9 @@ AuthTools.prototype.getEmptySimplifiedUser = function () {
         fileExtensionsToExclude: [],
         playedBeatmaps: 0,
         user_id: null,
-        disableStrict:false,
-        pageSize:20,
-        sorting:'approved_date',
+        disableStrict: false,
+        pageSize: 20,
+        sorting: 'approved_date',
         sortingDirection: -1
     }
     _.each(that.diffNames, function (diffName) {
@@ -172,19 +172,21 @@ AuthTools.prototype.simplifyUser = function (mongoUser) {
     if (mongoUser.fileExtensionsToExclude) {
         user.fileExtensionsToExclude = mongoUser.fileExtensionsToExclude;
     }
-    if(mongoUser.disableStrict){
+    if (mongoUser.disableStrict) {
         user.disableStrict = mongoUser.disableStrict;
     }
-    if(mongoUser.pageSize){
+    if (mongoUser.pageSize) {
         user.pageSize = mongoUser.pageSize;
     }
-    if(mongoUser.sorting){
+    if (mongoUser.sorting) {
         user.sorting = mongoUser.sorting;
     }
-    if(mongoUser.sortingDirection){
+    if (mongoUser.sortingDirection) {
         user.sortingDirection = mongoUser.sortingDirection;
     }
-
+    if (mongoUser.disableYT) {
+        user.disableYT = mongoUser.disableYT;
+    }
 
 
     if (mongoUser.durationMin) {

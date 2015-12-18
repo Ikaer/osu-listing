@@ -340,20 +340,30 @@
             </div>
         </a>
         <a class="ui item icon aligned ao-filters sidenav-open">
-            <i class="filter icon"></i>
+            <i class="filter icon large"></i>
         </a>
-        <a class="ui dropdown item aligned ao-filters" ng-click="changeStrict()">
-            <i class="lock icon" ng-show="!disableStrict"></i>
-            <i class="unlock icon" ng-show="disableStrict"></i>
+        <a class="ui item icon aligned ao-filters" ng-click="changeStrict()">
+            <i class="lock icon large" ng-show="!disableStrict"></i>
+            <i class="unlock icon large" ng-show="disableStrict"></i>
         </a>
         <!--<a class="ui item icon aligned ao-filters " data-content="Download" target="_self" download="pack.zip"-->
         <!--href="{{downloadAllLink}}">-->
         <!--<i class="cloud download icon"></i>-->
         <!--</a>-->
+        <a class="ui item  aligned ao-filters" ng-click="changeYTState()">
+            <i class="big icons">
+                <i class="youtube icon " ></i>
+                <i class="corner dont icon red "  ng-show="disableYT"></i>
+
+            </i>
+            <!--<i class="youtube icon " ng-show="!disableYT"></i>-->
+            <!--<i class="youtube square icon " ng-show="disableYT"></i>-->
+        </a>
+
 
         <!--*************************  USER ICONS ******************************-->
         <a class="item ao-user right" ng-class="isLogged ? '':'icon'">
-            <i class="user icon"></i>
+            <i class="user icon large"></i>
             <span ng-show="isLogged">{{user.name}}</span>
         </a>
 
@@ -409,14 +419,14 @@
             <div class="ui dimmer saving-loader">
                 <div class="ui tiny loader"></div>
             </div>
-            <i class="save icon"></i>
+            <i class="save icon large"></i>
         </a>
         <a class="item rss" target="_blank" ng-href="{{rssfeed}}" ng-show="isMe">
-            <i class="rss icon"></i>
+            <i class="rss large icon"></i>
         </a>
 
         <a class="ui item icon right-menu-toggle">
-            <i class="search icon"></i>
+            <i class="search large icon"></i>
         </a>
 
     </div>
@@ -673,19 +683,26 @@
      style="position:absolute;height:420px;width:640px;display:none;z-index:10000;background-color:black;"
      ng-mouseenter="searchYoutTube(null, $event, false)"
      ng-mouseleave="searchYoutTube(null, $event, true)"
-        >
-    <div class="ui active dimmer">
-        <div class="ui text loader">Loading</div>
-    </div>
+>
+
     <div class="header top" style="color:white;text-align:center;height:30px;display:table;width:100%;">
         <div style="display:table-row;">
-            <h3 class="title"  style="display:table-cell;vertical-align: middle;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;"></h3>
+            <div style="display:table-cell;vertical-align: middle">
+                <h3 class="title" style="overflow:hidden;white-space:nowrap;text-overflow:ellipsis;width:640px;"></h3>
+            </div>
         </div>
     </div>
-    <div id="youtube_player"></div>
-    <div class="header bottom" style="color:white;text-align:center;display:none;height:30px;display:table;width:100%;">
+    <div style="position:relative">
+        <div class="ui active dimmer">
+            <div class="ui text loader">Loading</div>
+        </div>
+        <div id="youtube_player"></div>
+    </div>
+    <div class="header bottom" style="color:white;text-align:center;display:none;height:30px;width:100%;">
         <div style="display:table-row;">
-            <h3 class="title" style="display:table-cell;vertical-align: middle;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;"></h3>
+            <div style="display:table-cell;vertical-align: middle;">
+                <h3 class="title" style="overflow:hidden;white-space:nowrap;text-overflow:ellipsis;width:640px;"></h3>
+            </div>
         </div>
     </div>
 </div>

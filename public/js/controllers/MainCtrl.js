@@ -663,6 +663,7 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication', 'ngUrlBind']).contro
             durationMin: $scope.minDuration,
             durationMax: $scope.maxDuration,
             disableStrict: $scope.disableStrict,
+            disableYT:$scope.disableYT,
             pageSize: $scope.pageSize,
             sorting: $scope.sorting.value,
             sortingDirection: $scope.sorting.direction
@@ -915,7 +916,6 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication', 'ngUrlBind']).contro
     $scope.results = null;
     var searchTimeout = null;
     var launchSearch = function () {
-        console.log('launch search on ' + $scope.searchInput);
         beatmapApi.search(function (err) {
         }, function (res) {
             $scope.results = res;
@@ -936,12 +936,17 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication', 'ngUrlBind']).contro
 
     $scope.playedVideoBeatmapId = null;
     $scope.playerYT = null;
-    $scope.disableYT = false;
-    $scope.$watch('searchInput', function (newVal, oldVal) {
+    $scope.disableYT =  $scope.user.disableYT;
+    ngUrlBind($scope, 'disableYT');
+    $scope.$watch('disableYT', function (newVal, oldVal) {
         if (newVal == false) {
             startYoutubeLeavingTimeout();
         }
     });
+
+    $scope.changeYTState = function(){
+        $scope.disableYT = !$scope.disableYT;
+    }
 
     var enterVideoPlayerOrIconTimeout;
     var loadNewVideoTimeout;
@@ -1008,7 +1013,7 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication', 'ngUrlBind']).contro
                     else {
                         function loadNewVideo() {
                             youtube_toggleDimmer(true);
-                            $playerContainerTitle.html(beatmap.title + ' - ' + beatmap.artist + ' [' + beatmap.version + ']' + 'ioshjdfoisodifhodsfhoisdofihdosifsoi')
+                            $playerContainerTitle.html(beatmap.title + ' - ' + beatmap.artist + ' [' + beatmap.version + ']');
                             $scope.playedVideoBeatmapId = beatmapId;
                             $playerContainer.show().position({
                                 of: $icon,
@@ -1020,11 +1025,11 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication', 'ngUrlBind']).contro
                                     var top = offset.top;
                                     if (feedback.vertical == 'bottom') {
                                         $playerContainerTitle_top.hide();
-                                        $playerContainerTitle_bottom.show();
+                                        $playerContainerTitle_bottom.css('display', 'table');
                                         top = top - 35;
                                     }
                                     else {
-                                        $playerContainerTitle_top.show();
+                                        $playerContainerTitle_top.css('display', 'table');
                                         $playerContainerTitle_bottom.hide();
                                         top = top + 10;
                                     }

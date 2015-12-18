@@ -59,7 +59,8 @@ var userSchema = new Schema({
     maxSubmitted_date: {type:Date, default:null},
     pageSize: {type:Number, default:20},
     sorting:{type:String, default:'approved_date'},
-    sortingDirection: {type:Number, default:-1}
+    sortingDirection: {type:Number, default:-1},
+    disableYT:{type:Boolean, default: false}
 });
 
 var hash = function (passwd, salt) {
