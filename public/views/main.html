@@ -347,8 +347,8 @@
             <i class="unlock icon" ng-show="disableStrict"></i>
         </a>
         <!--<a class="ui item icon aligned ao-filters " data-content="Download" target="_self" download="pack.zip"-->
-           <!--href="{{downloadAllLink}}">-->
-            <!--<i class="cloud download icon"></i>-->
+        <!--href="{{downloadAllLink}}">-->
+        <!--<i class="cloud download icon"></i>-->
         <!--</a>-->
 
         <!--*************************  USER ICONS ******************************-->
@@ -669,17 +669,25 @@
 
 </script>
 <audio id="player" src="" type="audio/mp3"></audio>
-<div id="popover_youtube_content" style="position:absolute;height:390px;width:640px;display:none;"
+<div id="popover_youtube_content"
+     style="position:absolute;height:420px;width:640px;display:none;z-index:10000;background-color:black;"
      ng-mouseenter="searchYoutTube(null, $event, false)"
      ng-mouseleave="searchYoutTube(null, $event, true)"
->
+        >
     <div class="ui active dimmer">
         <div class="ui text loader">Loading</div>
     </div>
-    <div class="header" style="padding:3px;color:white;background-color:black;text-align:center;">
-        <h3 class="title"></h3>
+    <div class="header top" style="color:white;text-align:center;height:30px;display:table;width:100%;">
+        <div style="display:table-row;">
+            <h3 class="title"  style="display:table-cell;vertical-align: middle;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;"></h3>
+        </div>
     </div>
     <div id="youtube_player"></div>
+    <div class="header bottom" style="color:white;text-align:center;display:none;height:30px;display:table;width:100%;">
+        <div style="display:table-row;">
+            <h3 class="title" style="display:table-cell;vertical-align: middle;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;"></h3>
+        </div>
+    </div>
 </div>
 
 

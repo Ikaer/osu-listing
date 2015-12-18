@@ -1217,7 +1217,7 @@ module.exports = function (app) {
         res.end();
     })
 
-    app.get('/api/youtube/:beatmapId', function (req, res) {
+    function GetYoutubeVideo(req, res, removeVersion) {
         Beatmap.findOne({beatmap_id: req.params.beatmapId}, function (err, beatmap) {
             if (err) rf.sendError(res, err.message);
             else {
@@ -1226,19 +1226,38 @@ module.exports = function (app) {
                 }
                 else {
                     var url = 'https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=1'
-                    url += '&q=OSU!+' + beatmap.title + '+' + beatmap.artist + '+' + beatmap.version;
+                    url += '&q=OSU!+' + encodeURIComponent(beatmap.title) + '+' + encodeURIComponent(beatmap.artist);
+                    if (removeVersion === true) {
+                    } else {
+                        url += '+' + encodeURIComponent(beatmap.version);
+                    }
                     url += '&key=' + nconf.get('youtubeApiKey');
                     request(url, function (error, response, body) {
                         if (error) {
                             rf.sendError(res, 'call to youtube API returns an error:' + error)
                         } else {
-                            var ytResponse = JSON.parse(body);
-                            rf.sendOkData(res, ytResponse);
+                            var ytResponse = null;
+                            try {
+                                var ytResponse = JSON.parse(body);
+                            }
+                            catch (e) {
+                                console.log(body);
+                            }
+                            if (ytResponse && ytResponse.items && ytResponse.items.length == 0) {
+                                GetYoutubeVideo(req, res, true);
+                            }
+                            else {
+                                rf.sendOkData(res, ytResponse);
+                            }
                         }
                     });
                 }
             }
         })
+    }
+
+    app.get('/api/youtube/:beatmapId', function (req, res) {
+        GetYoutubeVideo(req, res);
     });
 
     app.get('*', function (req, res) {

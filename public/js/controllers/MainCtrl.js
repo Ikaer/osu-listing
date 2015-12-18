@@ -950,12 +950,15 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication', 'ngUrlBind']).contro
         $('#popover_youtube_content').hide();
         if ($scope.playerYT) {
             $scope.playerYT.stopVideo();
+            $scope.playerYT.loadVideoById(null);
         }
         $scope.playedVideoBeatmapId = null;
     }
 
     var $playerContainer = $('#popover_youtube_content');
     var $playerContainerTitle = $playerContainer.find('.title');
+    var $playerContainerTitle_top = $playerContainer.find('.header.top');
+    var $playerContainerTitle_bottom = $playerContainer.find('.header.bottom');
 
     function youtube_toggleDimmer(activateIt) {
         if (activateIt === true) {
@@ -1005,7 +1008,7 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication', 'ngUrlBind']).contro
                     else {
                         function loadNewVideo() {
                             youtube_toggleDimmer(true);
-                            $playerContainerTitle.html(beatmap.title + ' - ' + beatmap.artist + ' [' + beatmap.version + ']')
+                            $playerContainerTitle.html(beatmap.title + ' - ' + beatmap.artist + ' [' + beatmap.version + ']' + 'ioshjdfoisodifhodsfhoisdofihdosifsoi')
                             $scope.playedVideoBeatmapId = beatmapId;
                             $playerContainer.show().position({
                                 of: $icon,
@@ -1016,9 +1019,13 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication', 'ngUrlBind']).contro
                                     var left = offset.left;
                                     var top = offset.top;
                                     if (feedback.vertical == 'bottom') {
+                                        $playerContainerTitle_top.hide();
+                                        $playerContainerTitle_bottom.show();
                                         top = top - 35;
                                     }
                                     else {
+                                        $playerContainerTitle_top.show();
+                                        $playerContainerTitle_bottom.hide();
                                         top = top + 10;
                                     }
                                     $(this).css('top', top).css('left', left);
@@ -1032,7 +1039,7 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication', 'ngUrlBind']).contro
                                 var playerYT_Id = 'youtube_player'
 
                                 var videoID = null;
-                                if (ytResponse.items && ytResponse.items.length == 1) {
+                                if (ytResponse && ytResponse.items && ytResponse.items.length == 1) {
                                     videoID = ytResponse.items[0].id.videoId;
                                 }
 
