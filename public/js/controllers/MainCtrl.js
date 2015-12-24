@@ -951,6 +951,12 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication', 'ngUrlBind']).contro
     var enterVideoPlayerOrIconTimeout;
     var loadNewVideoTimeout;
 
+    window.setInterval(function(){
+        if($('#popover_youtube_content').css('display') == 'none'){
+            startYoutubeLeavingTimeout();
+        }
+    }, 100);
+
     function startYoutubeLeavingTimeout() {
         $('#popover_youtube_content').hide();
         if ($scope.playerYT) {
@@ -982,7 +988,6 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication', 'ngUrlBind']).contro
                 }
                 else {
                     window.clearTimeout(loadNewVideoTimeout);
-                    var playerContainerBeatmapId = $playerContainer.attr('beatmap_id');
                     if ($playerContainer.attr('beatmap_id') == $scope.playedVideoBeatmapId) {
                         window.clearTimeout(enterVideoPlayerOrIconTimeout);
                     }
