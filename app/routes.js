@@ -1180,27 +1180,28 @@ module.exports = function (app) {
     app.get('/api/user/authenticate/:pseudoOrMail/:password', function (req, res) {
         User.findOne({$or: [{name: req.params.pseudoOrMail}, {email: req.params.pseudoOrMail}]}, function (err, user) {
             var result = {
-                userFound: false,
-                passwordOk: false,
-                mailVerified: false,
+                userAndPasswordOk: false,
+                //passwordOk: false,
+                //mailVerified: false,
                 name: null
             }
             if (err) {
                 rf.sendError(res, err.message);
             }
             else {
-                if (user !== null) {
-                    result.userFound = true;
+                if (user !== null && true === user.isValidPassword(req.params.password)) {
+                    result.userAndPasswordOk = true;
+                    //result.userFound = true;
                     result.name = user.name;
-                    result.passwordOk = user.isValidPassword(req.params.password)
-                    result.mailVerified = user.mailHasBeenVerified;
-                    if (result.passwordOk) {
-                        req.session.isAuthenticated = true;
-                        req.session.user = user;
-                        req.session.simplifiedUser = authTools.simplifyUser(user);
-                        req.session.userName = user.name;
-                        req.session.save();
-                    }
+                    //result.passwordOk = user.isValidPassword(req.params.password)
+                    //result.mailVerified = user.mailHasBeenVerified;
+                    //if (result.passwordOk) {
+                    req.session.isAuthenticated = true;
+                    req.session.user = user;
+                    req.session.simplifiedUser = authTools.simplifyUser(user);
+                    req.session.userName = user.name;
+                    req.session.save();
+                    //}
                 }
                 rf.sendOkData(res, result);
             }

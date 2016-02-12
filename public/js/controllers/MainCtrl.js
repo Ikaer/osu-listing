@@ -835,18 +835,13 @@ angular.module('MainCtrl', ['BeatmapAPI', 'Authentication', 'ngUrlBind']).contro
             $('.mail-sent-fail').modal('show');
         });
     })
+    //send-another-email a refaire
     $signingForm.on('submit', function () {
         if ($signingForm.form('is valid')) {
             authService.Login($scope.username, $scope.password, function (response) {
                 var errors = [];
-                if (response.userFound === false) {
-                    errors.push('This user or email does not exist.');
-                }
-                else if (response.mailVerified === false) {
-                    errors.push('That account has been created, but you have not yet clicked the verification link in your e-mail. <a class="send-another-email" >Send another email</a>');
-                }
-                else if (response.passwordOk === false) {
-                    errors.push(' Password is wrong.');
+                if (response.userAndPasswordOk === false) {
+                    errors.push('Login or password is wrong');
                 }
                 if (errors.length > 0) {
                     $signingForm.form('add errors', errors);
